@@ -1,0 +1,136 @@
+// Prisma Schema for KCN Land B2B Portal
+
+datasource db {
+  provider = "postgresql" // or "mysql", "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  admin
+  editor
+  user
+  investor
+}
+
+enum PropertyType {
+  SALE
+  RENT
+  KCN_PROJECT
+  STANDARD_FACTORY
+  COLD_LOGISTICS
+}
+
+model User {
+  id           String            @id @default(uuid())
+  name         String
+  email        String            @unique
+  passwordHash String
+  phone        String?
+  role         Role              @default(user)
+  avatarUrl    String?
+  properties   Property[]
+  savedProps   SavedProperty[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model Category {
+  code        String     @id
+  name        String
+  icon        String     @default("Warehouse")
+  description String?
+  isActive    Boolean    @default(true)
+  properties  Property[]
+  createdAt   DateTime   @default(now())
+}
+
+model Property {
+  id              String            @id @default(uuid())
+  title           String
+  categoryCode    String
+  category        Category          @relation(fields: [categoryCode], references: [code])
+  province        String
+  district        String?
+  kcn             String
+  price           BigInt
+  priceDisplay    String?
+  area            String
+  power           String            @default("1.000 kVA")
+  pccc            String            @default("Tự Động (Sprinkler)")
+  thumbnailUrl    String
+  videoUrl        String?
+  audioUrl        String?
+  audioDuration   String?           @default("01:30")
+  model3dEnabled  Boolean           @default(true)
+  description     String?
+  status          String            @default("published")
+  emailNotified   Boolean           @default(false)
+  createdById     String?
+  createdBy       User?             @relation(fields: [createdById], references: [id])
+  gallery         PropertyGallery[]
+  savedByUsers    SavedProperty[]
+  broadcastLogs   BroadcastLog[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([price])
+  @@index([province])
+  @@index([kcn])
+  @@index([categoryCode])
+  @@index([status])
+}
+
+model PropertyGallery {
+  id         Int      @id @default(autoincrement())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  imageUrl   String
+  sortOrder  Int      @default(0)
+}
+
+model SavedProperty {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model Subscriber {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?
+  phone     String?
+  channel   String   @default("email")
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+}
+
+model HomepageNotice {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  badge     String   @default("Quy Hoạch KCN")
+  linkUrl   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model BroadcastLog {
+  id              Int      @id @default(autoincrement())
+  propertyId      String
+  property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  channel         String
+  totalRecipients Int      @default(0)
+  successCount    Int      @default(0)
+  failedCount     Int      @default(0)
+  responsePayload String?
+  createdAt       DateTime @default(now())
+}

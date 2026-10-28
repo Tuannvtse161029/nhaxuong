@@ -1,0 +1,240 @@
+import { useState } from 'react'
+import {
+  X,
+  Heart,
+  MapPin,
+  Film,
+  Image,
+  Zap,
+  ShieldCheck,
+  Maximize2,
+  Box,
+  Phone,
+  Mail,
+} from 'lucide-react'
+import type { Property } from '@/types/property.types'
+import { useProperties } from '@/context/PropertyContext'
+import { AudioPlayer } from '@/components/audio/AudioPlayer'
+import { cn } from '@/utils/cn'
+
+interface PropertyDetailModalProps {
+  isOpen: boolean
+  onClose: () => void
+  property: Property | null
+}
+
+export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetailModalProps) {
+  const { isSaved, toggleSaveProperty, open3DModal } = useProperties()
+  const [activeMediaTab, setActiveMediaTab] = useState<'video' | 'photo'>('video')
+
+  if (!isOpen || !property) return null
+
+  const saved = isSaved(property.id)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative flex flex-col w-full max-w-4xl max-h-[92vh] rounded-3xl bg-white shadow-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/70 dark:bg-slate-950/60">
+          <div className="flex items-center gap-2.5 min-w-0 pr-4">
+            <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+              {property.typeDisplay}
+            </span>
+            <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+              {property.title}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => toggleSaveProperty(property.id)}
+              className={cn(
+                'flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 transition',
+                saved ? 'text-red-500 bg-red-50 dark:bg-red-950/40' : 'text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              )}
+              title="Lưu tin yêu thích"
+            >
+              <Heart className={cn('w-4 h-4', saved ? 'fill-red-500' : '')} />
+            </button>
+
+            <button
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 transition"
+              title="Đóng"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Media Switcher: Video Flycam vs Photo */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
+                <button
+                  type="button"
+                  onClick={() => setActiveMediaTab('video')}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition',
+                    activeMediaTab === 'video'
+                      ? 'bg-slate-900 text-white shadow-sm dark:bg-teal-600'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                  )}
+                >
+                  <Film className="w-3.5 h-3.5" />
+                  <span>Video Drone (1080p HD)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveMediaTab('photo')}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition',
+                    activeMediaTab === 'photo'
+                      ? 'bg-slate-900 text-white shadow-sm dark:bg-teal-600'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                  )}
+                >
+                  <Image className="w-3.5 h-3.5" />
+                  <span>Hình Ảnh Thực Tế</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onClose()
+                  open3DModal(property)
+                }}
+                className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300 transition"
+              >
+                <Box className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span>Xem Mô Hình 3D Xoay 360°</span>
+              </button>
+            </div>
+
+            {/* Video / Image Display */}
+            <div className="relative aspect-video w-full rounded-2xl bg-black overflow-hidden shadow-inner">
+              {activeMediaTab === 'video' ? (
+                <video
+                  src={
+                    property.videoUrl ||
+                    'https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4'
+                  }
+                  controls
+                  playsInline
+                  autoPlay
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <img
+                  src={property.image}
+                  alt={property.title}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Embedded Custom Audio Player (.mp3) */}
+          <div className="space-y-1.5">
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Thuyết minh âm thanh (.mp3)
+            </span>
+            <AudioPlayer
+              src={property.audioUrl}
+              title={`Thuyết minh: ${property.title}`}
+            />
+          </div>
+
+          {/* Specs Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                Khuôn viên đất
+              </span>
+              <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                <Maximize2 className="w-3.5 h-3.5 text-blue-500" />
+                {property.area}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                Giá niêm yết
+              </span>
+              <p className="text-sm font-bold text-teal-700 dark:text-teal-400">
+                {property.priceDisplay}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                Công suất điện
+              </span>
+              <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                {property.power}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                Hệ thống PCCC
+              </span>
+              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                {property.pccc}
+              </p>
+            </div>
+          </div>
+
+          {/* Location & Detailed Description */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+              <MapPin className="w-4 h-4 text-red-500" />
+              <span>Vị trí: <b>{property.kcn}</b>, {property.province}</span>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/40">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                Thông tin chi tiết quy hoạch & hạ tầng
+              </h4>
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                {property.desc}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Footer / Contact CTAs */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950/50">
+          <div className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
+            <span>Ngày đăng: <b>{property.created}</b> • Đã kiểm duyệt pháp lý</span>
+          </div>
+
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            {/* Contact Email CTA */}
+            <a
+              href="mailto:contact@nhaxuong.com?subject=Tư vấn mặt bằng"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 dark:bg-slate-700 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-900 transition"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Gửi Email Báo Giá</span>
+            </a>
+
+            {/* Hotline Call CTA */}
+            <a
+              href="tel:0901234567"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-teal-800 transition"
+            >
+              <Phone className="w-4 h-4" />
+              <span>Gọi 090 123 4567</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

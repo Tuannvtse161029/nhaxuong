@@ -1,0 +1,66 @@
+# =========================
+# Hệ điều hành (OS Junk)
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+*.cab
+*.lnk
+*.tmp
+*.bak
+*.swp
+
+# =========================
+# Trình soạn thảo / IDEs
+# =========================
+.vscode/
+.vs/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sw?
+.history/
+
+# =========================
+# Log files & Database tạm
+# =========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.sqlite
+*.db
+
+# =========================
+# File môi trường (Chứa secrets)
+# =========================
+.env
+.env.local
+.env.*
+appsettings.Development.json
+**/appsettings.Development.json
+publish/
+
+# =========================
+# Thư mục Build của .NET / C#
+# =========================
+[Bb]in/
+[Oo]bj/
+
+# =========================
+# Frontend / React / Vite
+# =========================
+node_modules/
+dist/
+build/
+.eslintcache
+.vite/
+**/coverage/
+**/dist/
+**/node_modules/

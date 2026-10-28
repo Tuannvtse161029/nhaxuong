@@ -1,0 +1,6 @@
+@Nhaxuong.API_HostAddress = http://localhost:5152
+
+GET {{Nhaxuong.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
