@@ -1,7 +1,7 @@
 export const ENV = {
-  APP_TITLE: import.meta.env.VITE_APP_TITLE || 'React Starter App',
-  APP_DESCRIPTION: import.meta.env.VITE_APP_DESCRIPTION || 'Enterprise React Application',
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  APP_TITLE: import.meta.env.VITE_APP_TITLE || 'Nền Tảng BĐS Công Nghiệp & Nhà Xưởng',
+  APP_DESCRIPTION: import.meta.env.VITE_APP_DESCRIPTION || 'Hệ thống giao dịch & cho thuê kho xưởng trực tuyến',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   API_TIMEOUT: Number(import.meta.env.VITE_API_TIMEOUT) || 15000,
   USE_MOCK_API: import.meta.env.VITE_USE_MOCK_API === 'true',
   IS_DEV: import.meta.env.DEV,
