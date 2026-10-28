@@ -9,7 +9,7 @@ Dự án nền tảng BĐS Công nghiệp (Frontend React 19 + Three.js + Vite v
 | Phần | Nền tảng | Trạng thái | Đường dẫn trực tiếp |
 | :--- | :--- | :--- | :--- |
 | **Frontend (FE)** | **Vercel** | ![Deployed](https://img.shields.io/badge/Vercel-LIVE-success?style=for-the-badge&logo=vercel) | [nhaxuong-fe.vercel.app](https://nhaxuong-fe.vercel.app) |
-| **Backend (BE)** | **Render** | ![Ready to Deploy](https://img.shields.io/badge/Render-Blueprint%20Ready-blue?style=for-the-badge&logo=render) | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Tuannvtse161029/nhaxuong) |
+| **Backend (BE)** | **Render** | ![Deployed](https://img.shields.io/badge/Render-LIVE-success?style=for-the-badge&logo=render) | [nhaxuong-backend.onrender.com](https://nhaxuong-backend.onrender.com) |
 
 ---
 
