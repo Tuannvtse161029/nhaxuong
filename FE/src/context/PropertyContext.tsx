@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import type { Property, Category, Notice, Subscriber, PropertyFilterState } from '@/types/property.types'
+import type { Property, PropertyType, Category, Notice, Subscriber, PropertyFilterState } from '@/types/property.types'
 import {
   INITIAL_PROPERTIES,
   INITIAL_CATEGORIES,
@@ -95,14 +95,13 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   })
   const [categories, setCategories] = useState<Category[]>(() => {
     const saved = storage.getItem<Category[]>('kcn_categories', INITIAL_CATEGORIES)
-    const existingCodes = new Set(saved.map((c) => c.code))
+    const validCodes = new Set(INITIAL_CATEGORIES.map((c) => c.code))
+    const cleaned = saved.filter((c) => validCodes.has(c.code) || c.code.startsWith('CAT_'))
+    const existingCodes = new Set(cleaned.map((c) => c.code))
     const missing = INITIAL_CATEGORIES.filter((c) => !existingCodes.has(c.code))
-    if (missing.length > 0) {
-      const merged = [...saved, ...missing]
-      storage.setItem('kcn_categories', merged)
-      return merged
-    }
-    return saved
+    const merged = [...cleaned, ...missing]
+    storage.setItem('kcn_categories', merged)
+    return merged
   })
   const [notices, setNotices] = useState<Notice[]>(() =>
     storage.getItem('kcn_notices', INITIAL_NOTICES)
@@ -126,25 +125,26 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   // Ensure default categories and recycled steel properties exist even on previously cached browser sessions
   useEffect(() => {
     setCategories((prev) => {
-      const existingCodes = new Set(prev.map((c) => c.code))
+      const validCodes = new Set(INITIAL_CATEGORIES.map((c) => c.code))
+      const cleaned = prev.filter((c) => validCodes.has(c.code) || c.code.startsWith('CAT_'))
+      const existingCodes = new Set(cleaned.map((c) => c.code))
       const missing = INITIAL_CATEGORIES.filter((c) => !existingCodes.has(c.code))
-      if (missing.length > 0) {
-        const next = [...prev, ...missing]
-        storage.setItem('kcn_categories', next)
-        return next
-      }
-      return prev
+      const next = [...cleaned, ...missing]
+      storage.setItem('kcn_categories', next)
+      return next
     })
 
     setProperties((prev) => {
       const existingIds = new Set(prev.map((p) => p.id))
       const missing = INITIAL_PROPERTIES.filter((p) => !existingIds.has(p.id))
-      if (missing.length > 0) {
-        const next = [...missing, ...prev]
-        storage.setItem('kcn_properties', next)
-        return next
-      }
-      return prev
+      const merged = [...missing, ...prev].map((p) => {
+        if ((p.type as string) === 'KCN_PROJECT' || (p.type as string) === 'STANDARD_FACTORY' || (p.type as string) === 'COLD_LOGISTICS') {
+          return { ...p, type: 'SALE' as PropertyType, typeDisplay: 'Bán Nhà Xưởng' }
+        }
+        return p
+      })
+      storage.setItem('kcn_properties', merged)
+      return merged
     })
   }, [])
 

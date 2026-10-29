@@ -127,7 +127,7 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                {property.type === 'RECYCLED_STEEL' ? 'Khối Lượng / Diện Tích' : 'Khuôn viên đất'}
+                {property.type === 'RECYCLED_STEEL' ? 'Khối Lượng / Diện Tích' : 'Diện Tích / Khuôn Viên'}
               </span>
               <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1">
                 <Maximize2 className="w-3.5 h-3.5 text-blue-500" />
@@ -151,21 +151,21 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
 
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                {property.type === 'RECYCLED_STEEL' ? 'Chủng Loại / Mác Thép' : 'Công suất điện'}
+                Vị Trí
               </span>
-              <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5 text-amber-500" />
-                {property.power}
+              <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1 truncate" title={`${property.kcn}, ${property.province}`}>
+                <MapPin className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                <span className="truncate">{property.kcn}</span>
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
-                {property.type === 'RECYCLED_STEEL' ? 'Kiểm Định & Chất Lượng' : 'Hệ thống PCCC'}
+                Hotline Tư Vấn
               </span>
-              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                {property.pccc}
+              <p className="text-sm font-bold text-teal-700 dark:text-teal-400 flex items-center gap-1">
+                <Phone className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                <span>{property.brokerPhone || '090 123 4567'}</span>
               </p>
             </div>
           </div>

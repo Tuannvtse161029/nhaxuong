@@ -202,32 +202,30 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </p>
         </div>
 
-        {/* 3. Nhà Xưởng Specifications Grid */}
+        {/* 3. Specifications Grid */}
         <div className="grid grid-cols-3 gap-1.5 py-2.5 px-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-100 dark:border-slate-800 text-center text-[11px]">
           <div>
             <span className="text-slate-400 dark:text-slate-500 block text-[9.5px] uppercase font-bold tracking-wider">
-              {property.type === 'RECYCLED_STEEL' ? 'Khối Lượng' : 'Khuôn Viên'}
+              {property.type === 'RECYCLED_STEEL' ? 'Khối Lượng' : 'Diện Tích'}
             </span>
             <b className="text-slate-900 dark:text-white font-bold truncate block mt-0.5">
               {property.area}
             </b>
           </div>
           <div className="border-x border-slate-200/70 dark:border-slate-700 px-1">
-            <span className="text-slate-400 dark:text-slate-500 block text-[9.5px] uppercase font-bold tracking-wider flex items-center justify-center gap-0.5">
-              <Zap className="w-2.5 h-2.5 text-amber-500" />
-              {property.type === 'RECYCLED_STEEL' ? 'Mác Thép' : 'Trạm Điện'}
+            <span className="text-slate-400 dark:text-slate-500 block text-[9.5px] uppercase font-bold tracking-wider">
+              Vị Trí
             </span>
-            <b className="text-slate-900 dark:text-white font-bold truncate block mt-0.5">
-              {property.power}
+            <b className="text-slate-900 dark:text-white font-bold truncate block mt-0.5" title={property.kcn}>
+              {property.kcn}
             </b>
           </div>
           <div>
-            <span className="text-slate-400 dark:text-slate-500 block text-[9.5px] uppercase font-bold tracking-wider flex items-center justify-center gap-0.5">
-              <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
-              {property.type === 'RECYCLED_STEEL' ? 'Chất Lượng' : 'PCCC'}
+            <span className="text-slate-400 dark:text-slate-500 block text-[9.5px] uppercase font-bold tracking-wider">
+              Đơn Giá
             </span>
             <b className="text-teal-700 dark:text-teal-400 font-bold truncate block mt-0.5">
-              {property.pccc.split(' ')[0]}
+              {property.unitPrice || 'Thương lượng'}
             </b>
           </div>
         </div>

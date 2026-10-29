@@ -1,4 +1,4 @@
-export type PropertyType = 'ALL' | 'SALE' | 'RENT' | 'KCN_PROJECT' | 'STANDARD_FACTORY' | 'COLD_LOGISTICS' | 'RECYCLED_STEEL'
+export type PropertyType = 'ALL' | 'SALE' | 'RENT' | 'RECYCLED_STEEL'
 
 export interface Property {
   id: string
@@ -10,14 +10,14 @@ export interface Property {
   kcn: string
   price: number // in VND
   priceDisplay: string
-  area: string // e.g. "12.000 m2"
-  power: string // e.g. "1.500 kVA"
-  pccc: string // e.g. "Tự Động (Sprinkler)"
+  area: string // e.g. "12.000 m2" or "85 Tấn"
+  power?: string
+  pccc?: string
   image: string
   gallery?: string[]
   videoUrl?: string
-  audioUrl?: string // .mp3 audio voiceover description
-  audioDuration?: string // e.g. "01:45"
+  audioUrl?: string
+  audioDuration?: string
   desc: string
   created: string
   emailNotified?: boolean

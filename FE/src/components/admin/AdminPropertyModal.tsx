@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Mail, Layers } from 'lucide-react'
+import { X, Mail, Layers, Warehouse } from 'lucide-react'
 import type { Property, PropertyType } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
 import { Button } from '@/components/common/Button'
@@ -17,23 +17,16 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   const { addProperty, updateProperty, categories } = useProperties()
 
   const [title, setTitle] = useState('')
-  const [type, setType] = useState<PropertyType>('RECYCLED_STEEL')
+  const [type, setType] = useState<PropertyType>('SALE')
   const [province, setProvince] = useState('Bình Dương')
-  const [kcn, setKcn] = useState('Kho Bãi ICD Tân Cảng')
-  const [price, setPrice] = useState(980000000)
-  const [unitPrice, setUnitPrice] = useState('306.000 đ/m²')
-  const [area, setArea] = useState('3.200 m2')
-  const [power, setPower] = useState('Kết cấu thép Zamil SS400')
-  const [pccc, setPccc] = useState('Sơn chống rỉ, chịu tải 95%')
-  const [brokerName, setBrokerName] = useState('Đỗ Hoàng Nam (Chuyên Viên Sắt Thép)')
-  const [brokerPhone, setBrokerPhone] = useState('0912 888 999')
-  const [videoUrl, setVideoUrl] = useState(
-    'https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4'
-  )
-  const [audioUrl, setAudioUrl] = useState('https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3')
-  const [image, setImage] = useState(
-    'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80'
-  )
+  const [kcn, setKcn] = useState('')
+  const [price, setPrice] = useState(0)
+  const [unitPrice, setUnitPrice] = useState('')
+  const [area, setArea] = useState('')
+  const [brokerPhone, setBrokerPhone] = useState('090 123 4567')
+  const [videoUrl, setVideoUrl] = useState('')
+  const [audioUrl, setAudioUrl] = useState('')
+  const [image, setImage] = useState('')
   const [desc, setDesc] = useState('')
   const [triggerEmail, setTriggerEmail] = useState(true)
 
@@ -43,34 +36,26 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setType(property.type)
       setProvince(property.province)
       setKcn(property.kcn || '')
-      setPrice(property.price)
+      setPrice(property.price || 0)
       setUnitPrice(property.unitPrice || '')
-      setArea(property.area)
-      setPower(property.power || '')
-      setPccc(property.pccc || '')
-      setBrokerName(property.brokerName || 'Ban Quản Lý Kho Xưởng')
+      setArea(property.area || '')
       setBrokerPhone(property.brokerPhone || '090 123 4567')
       setVideoUrl(property.videoUrl || '')
       setAudioUrl(property.audioUrl || '')
-      setImage(property.image)
-      setDesc(property.desc)
+      setImage(property.image || '')
+      setDesc(property.desc || '')
     } else {
       setTitle('')
-      setType('RECYCLED_STEEL')
+      setType('SALE')
       setProvince('Bình Dương')
-      setKcn('Kho Bãi ICD Tân Cảng')
-      setPrice(980000000)
-      setUnitPrice('306.000 đ/m²')
-      setArea('3.200 m2')
-      setPower('Kết cấu thép Zamil SS400')
-      setPccc('Sơn chống rỉ, chịu tải 95%')
-      setBrokerName('Đỗ Hoàng Nam (Chuyên Viên Sắt Thép)')
-      setBrokerPhone('0912 888 999')
-      setVideoUrl(
-        'https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4'
-      )
-      setAudioUrl('https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3')
-      setImage('https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80')
+      setKcn('')
+      setPrice(0)
+      setUnitPrice('')
+      setArea('')
+      setBrokerPhone('090 123 4567')
+      setVideoUrl('')
+      setAudioUrl('')
+      setImage('')
       setDesc('')
     }
   }, [property, isOpen])
@@ -96,24 +81,25 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
     const priceDisplay = formatCurrency(price)
 
+    const defaultImage = isRecycledSteel
+      ? 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80'
+      : 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
+
     const propertyPayload = {
-      title,
+      title: title.trim(),
       type,
       typeDisplay,
       province,
-      kcn: kcn.trim() || (isRecycledSteel ? 'Kho Bãi Tập Kết Thép' : 'KCN Chuẩn'),
+      kcn: kcn.trim() || 'Vị trí bãi kho',
       price,
       priceDisplay,
       unitPrice: unitPrice.trim(),
-      area,
-      power,
-      pccc,
-      brokerName,
-      brokerPhone,
-      videoUrl,
-      audioUrl,
-      image,
-      desc,
+      area: area.trim(),
+      brokerPhone: brokerPhone.trim() || '090 123 4567',
+      videoUrl: videoUrl.trim(),
+      audioUrl: audioUrl.trim(),
+      image: image.trim() || defaultImage,
+      desc: desc.trim(),
     }
 
     if (property) {
@@ -132,17 +118,21 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/70 dark:bg-slate-950/50">
           <div>
             <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-              {isRecycledSteel && <Layers className="w-5 h-5 text-teal-600" />}
+              {isRecycledSteel ? (
+                <Layers className="w-5 h-5 text-teal-600" />
+              ) : (
+                <Warehouse className="w-5 h-5 text-teal-600" />
+              )}
               {property
                 ? 'Chỉnh Sửa Thông Tin Mặt Hàng'
                 : isRecycledSteel
-                ? 'Thêm Mới Sắt Thép Tái Sử Dụng & Xuất Bản'
+                ? 'Thêm Mới Sắt Thép Tái Sử Dụng'
                 : 'Thêm Mới & Xuất Bản Nhà Xưởng'}
             </h3>
             <p className="text-[11px] text-slate-400">
               {isRecycledSteel
-                ? 'Điền đầy đủ thông số khối lượng, mác thép, vị trí bãi kho và liên kết video'
-                : 'Điền thông tin nhà xưởng, trạm điện, PCCC và liên kết video drone'}
+                ? 'Điền thông tin vị trí bãi kho, khối lượng thép, giá bán và video hình ảnh'
+                : 'Điền thông tin vị trí kho xưởng, diện tích, giá bán/thuê và video hình ảnh'}
             </p>
           </div>
           <button
@@ -177,10 +167,6 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                 onChange={(e) => setType(e.target.value as PropertyType)}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-semibold"
               >
-                {/* Fallback to ensure Sắt Thép Tái Sử Dụng is always selectable even on older caches */}
-                {!categories.some((c) => c.code === 'RECYCLED_STEEL') && (
-                  <option value="RECYCLED_STEEL">Sắt Thép Tái Sử Dụng</option>
-                )}
                 {categories.map((c) => (
                   <option key={c.code} value={c.code}>
                     {c.name}
@@ -191,7 +177,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Tỉnh / Thành Phố (Vị trí hàng)
+                Tỉnh / Thành Phố
               </label>
               <select
                 value={province}
@@ -209,17 +195,17 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label={isRecycledSteel ? 'Vị trí Bãi Kho / Tập Kết' : 'Khu Công Nghiệp / Vị Trí'}
+              label="Vị trí"
               value={kcn}
               onChange={(e) => setKcn(e.target.value)}
-              placeholder={isRecycledSteel ? 'VD: Kho Bãi ICD Tân Cảng, KCN VSIP 1' : 'VD: KCN VSIP 1, KCN Amata'}
+              placeholder={isRecycledSteel ? 'VD: Kho Bãi ICD Tân Cảng, Đường ĐT 743...' : 'VD: KCN VSIP 1, KCN Sóng Thần 2...'}
               required
             />
             <Input
-              label={isRecycledSteel ? 'Diện tích / Khối lượng (m2 hoặc Tấn)' : 'Khuôn viên (m2)'}
+              label={isRecycledSteel ? 'Khối lượng / Diện tích (Tấn hoặc m2)' : 'Diện tích / Khuôn viên (m2)'}
               value={area}
               onChange={(e) => setArea(e.target.value)}
-              placeholder={isRecycledSteel ? 'VD: 3.200 m2 hoặc 85 Tấn' : 'VD: 10.000 m2'}
+              placeholder={isRecycledSteel ? 'VD: 85 Tấn hoặc 3.200 m2' : 'VD: 10.000 m2 hoặc 5.000 m2'}
               required
             />
           </div>
@@ -229,60 +215,38 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               label="Giá niêm yết (VNĐ)"
               type="number"
               step={10000000}
-              value={price}
+              value={price || ''}
               onChange={(e) => setPrice(Number(e.target.value))}
-              helperText={`Định dạng: ${formatCurrency(price)}`}
+              helperText={price > 0 ? `Định dạng: ${formatCurrency(price)}` : 'Nhập giá bán hoặc thuê'}
               required
             />
             <Input
-              label={isRecycledSteel ? 'Đơn giá tham chiếu (m2 hoặc kg)' : 'Đơn giá tham chiếu (m2 / tháng)'}
+              label={isRecycledSteel ? 'Đơn giá tham chiếu (đ/kg hoặc đ/m2)' : 'Đơn giá tham chiếu (m2 / tháng)'}
               value={unitPrice}
               onChange={(e) => setUnitPrice(e.target.value)}
-              placeholder={isRecycledSteel ? 'VD: 306.000 đ/m² hoặc 14.700 đ/kg' : 'VD: 4.5 Triệu/m2 hoặc 70.000 đ/m2'}
+              placeholder={isRecycledSteel ? 'VD: 14.700 đ/kg hoặc 306.000 đ/m²' : 'VD: 4.0 Triệu/m2 hoặc 70.000 đ/m2/tháng'}
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label={isRecycledSteel ? 'Mác thép / Chủng loại kết cấu' : 'Công suất trạm điện (kVA)'}
-              value={power}
-              onChange={(e) => setPower(e.target.value)}
-              placeholder={isRecycledSteel ? 'VD: Thép SS400, Khung Zamil, Dầm H350' : 'VD: 1.500 kVA, 2x1000 kVA'}
-            />
-            <Input
-              label={isRecycledSteel ? 'Chất lượng kiểm định & Bề mặt' : 'Hệ thống PCCC'}
-              value={pccc}
-              onChange={(e) => setPccc(e.target.value)}
-              placeholder={isRecycledSteel ? 'VD: Đạt 95%, Sơn chống rỉ, Đầy đủ bulong' : 'VD: Tự Động (Sprinkler), Thẩm duyệt'}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Người phụ trách / Liên hệ bãi"
-              value={brokerName}
-              onChange={(e) => setBrokerName(e.target.value)}
-              placeholder="VD: Đỗ Hoàng Nam (Chuyên Viên Sắt Thép)"
-            />
-            <Input
-              label="Hotline liên hệ"
-              value={brokerPhone}
-              onChange={(e) => setBrokerPhone(e.target.value)}
-              placeholder="VD: 0912 888 999"
-            />
-          </div>
+          <Input
+            label="Hotline liên hệ tư vấn"
+            value={brokerPhone}
+            onChange={(e) => setBrokerPhone(e.target.value)}
+            placeholder="VD: 090 123 4567"
+          />
 
           <Input
             label="URL Video Drone MP4 (Hover Autoplay)"
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
-            placeholder="https://.../drone-video.mp4"
+            placeholder="https://.../video.mp4"
           />
 
           <Input
             label="URL Hình Ảnh Thumbnail"
             value={image}
             onChange={(e) => setImage(e.target.value)}
+            placeholder="https://images.unsplash.com/..."
           />
 
           <div>
@@ -295,8 +259,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               onChange={(e) => setDesc(e.target.value)}
               placeholder={
                 isRecycledSteel
-                  ? 'VD: Khung dầm H400, bản mã dày, giằng xà gồ C200 đầy đủ, có cẩu trục 25 tấn hỗ trợ bốc xếp...'
-                  : 'Nhập chi tiết về trần cao, sàn tải trọng, đường container...'
+                  ? 'VD: Khung dầm H400, bản mã dày, giằng xà gồ C200 đầy đủ, có cẩu trục hỗ trợ bốc xếp...'
+                  : 'Nhập chi tiết về trần cao, sàn tải trọng, đường container, bàn giao...'
               }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />

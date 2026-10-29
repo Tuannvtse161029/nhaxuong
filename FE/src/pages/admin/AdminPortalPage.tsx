@@ -260,8 +260,8 @@ export function AdminPortalPage() {
                     <th className="py-3 px-4">Ảnh</th>
                     <th className="py-3 px-4">Tiêu Đề</th>
                     <th className="py-3 px-4">Phân Loại</th>
-                    <th className="py-3 px-4">Vị Trí KCN</th>
-                    <th className="py-3 px-4">Diện Tích</th>
+                    <th className="py-3 px-4">Vị Trí</th>
+                    <th className="py-3 px-4">Diện Tích / Khối Lượng</th>
                     <th className="py-3 px-4">Giá Niêm Yết</th>
                     <th className="py-3 px-4">Video & Audio</th>
                     <th className="py-3 px-4 text-center">Thao Tác</th>

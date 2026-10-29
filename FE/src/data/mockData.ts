@@ -70,9 +70,9 @@ export const INITIAL_PROPERTIES: Property[] = [
   },
   {
     id: 'prop-3',
-    title: 'Chuyển Nhượng 3.5 Ha Đất Công Nghiệp SKC Tại KCN Long Đức',
-    type: 'KCN_PROJECT',
-    typeDisplay: 'Dự Án Đất KCN',
+    title: 'Chuyển Nhượng 3.5 Ha Đất Nhà Xưởng Công Nghiệp Tại KCN Long Đức',
+    type: 'SALE',
+    typeDisplay: 'Bán Nhà Xưởng',
     province: 'Đồng Nai',
     district: 'Long Thành',
     kcn: 'KCN Long Đức',
@@ -212,12 +212,9 @@ export const INITIAL_PROPERTIES: Property[] = [
 ]
 
 export const INITIAL_CATEGORIES: Category[] = [
-  { code: 'SALE', name: 'Bán Nhà Xưởng', icon: 'Warehouse', desc: 'Xưởng tiêu chuẩn, hoàn công đầy đủ, trạm điện riêng', active: true },
-  { code: 'RENT', name: 'Cho Thuê Kho Bãi', icon: 'Boxes', desc: 'Kho logistics, dock leveler, PCCC tự động', active: true },
+  { code: 'SALE', name: 'Bán Nhà Xưởng', icon: 'Warehouse', desc: 'Xưởng tiêu chuẩn sản xuất, hoàn công đầy đủ, trạm điện riêng', active: true },
+  { code: 'RENT', name: 'Cho Thuê Kho Bãi', icon: 'Boxes', desc: 'Kho logistics, dock leveler, bãi trung chuyển tiêu chuẩn', active: true },
   { code: 'RECYCLED_STEEL', name: 'Sắt Thép Tái Sử Dụng', icon: 'Layers', desc: 'Khung nhà xưởng tiền chế cũ, thép dầm H, I, U, xà gồ Z, C và tôn tái sử dụng', active: true },
-  { code: 'KCN_PROJECT', name: 'Dự Án Đất KCN', icon: 'MapPin', desc: 'Đất sạch công nghiệp SKC, hạ tầng đồng bộ', active: true },
-  { code: 'STANDARD_FACTORY', name: 'Xưởng Xây Sẵn FDI', icon: 'Building2', desc: 'Xưởng xây sẵn tiêu chuẩn quốc tế, trần cao 11m', active: true },
-  { code: 'COLD_LOGISTICS', name: 'Kho Lạnh Công Nghiệp', icon: 'Snowflake', desc: 'Kho lạnh âm sâu đạt chuẩn ISO/HACCP', active: true },
 ]
 
 export const INITIAL_NOTICES: Notice[] = [
