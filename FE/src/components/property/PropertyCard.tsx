@@ -285,7 +285,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
               onClick={() => openDetailModal(property)}
               className="flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-teal-700 active:scale-95 transition dark:bg-teal-600 dark:hover:bg-teal-700"
             >
-              <span>Xem Tin</span>
+              <span>Xem Chi Tiết</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

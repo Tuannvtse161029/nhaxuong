@@ -34,7 +34,6 @@ export function HomePage() {
     closeModal,
     openSubscribeModal,
     open3DModal,
-    openAdminEditModal,
     properties,
     setFilterState,
   } = useProperties()
@@ -322,28 +321,29 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* 5. CALL TO ACTION BANNER: KÝ GỬI & ĐĂNG BÁN NHÀ XƯỞNG */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 p-8 sm:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
+      {/* 5. CALL TO ACTION: DÀNH CHO KHÁCH HÀNG TÌM KIẾM MUA / THUÊ KHO XƯỞNG */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 p-8 sm:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
         <div className="space-y-2 max-w-xl">
           <span className="text-[11px] font-bold uppercase tracking-wider text-teal-400 block">
-            Dành Cho Chủ Sở Hữu & Chủ Đầu Tư KCN
+            Tư Vấn Mua Bán & Thuê Mặt Bằng Sản Xuất
           </span>
           <h3 className="text-2xl sm:text-3xl font-black text-white">
-            Bạn Có Nhà Xưởng, Kho Bãi Cần Bán Hoặc Cho Thuê?
+            Bạn Cần Tìm Mặt Bằng Nhà Xưởng Đúng Nhu Cầu?
           </h3>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Đăng ký ký gửi ngay để tiếp cận hơn <b>3.600+ nhà đầu tư</b>, doanh nghiệp FDI và đối tác logistics
-            đang tìm kiếm mặt bằng sản xuất trên toàn quốc.
+            Liên hệ ngay với đội ngũ chuyên gia của <b>NHAXUONG.VN</b> để nhận danh sách mặt bằng trống,
+            bảng báo giá chi tiết, hồ sơ hoàn công PCCC và được hỗ trợ xe đưa đón khảo sát thực tế miễn phí.
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full md:w-auto">
           <button
             type="button"
-            onClick={() => openAdminEditModal()}
+            onClick={openSubscribeModal}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-teal-700 transition"
           >
-            <span>Ký Gửi & Đăng Tin Ngay</span>
+            <Mail className="w-4 h-4" />
+            <span>Liên Hệ Nhận Báo Giá Ngay</span>
             <ArrowRight className="w-4 h-4" />
           </button>
           <a

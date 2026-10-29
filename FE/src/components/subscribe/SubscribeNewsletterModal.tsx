@@ -49,10 +49,10 @@ export function SubscribeNewsletterModal({ isOpen, onClose }: SubscribeNewslette
             </div>
             <div>
               <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                Nhận Bản Tin BĐS Công Nghiệp
+                Liên Hệ Tư Vấn Mua / Thuê Xưởng
               </h3>
               <p className="text-[11px] text-slate-400">
-                Đã có <b>{subscribers.length + 3620}</b> nhà đầu tư đăng ký theo dõi
+                Chuyên viên sẽ gửi báo giá & hồ sơ pháp lý chi tiết trong 15 phút
               </p>
             </div>
           </div>
@@ -136,7 +136,7 @@ export function SubscribeNewsletterModal({ isOpen, onClose }: SubscribeNewslette
             )}
 
             <Button type="submit" className="w-full mt-2" size="lg">
-              Xác Nhận Đăng Ký
+              Xác Nhận Gửi Yêu Cầu Tư Vấn Mua / Thuê
             </Button>
           </form>
         )}

@@ -55,7 +55,7 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                 <Mail className="w-4 h-4 text-teal-600 shrink-0" />
-                <span>Email Hợp Tác Ký Gửi: contact@nhaxuong.vn</span>
+                <span>Email Tư Vấn & CSKH: contact@nhaxuong.vn</span>
               </div>
             </div>
           </div>
@@ -136,7 +136,7 @@ export function Footer() {
             <span>•</span>
             <span className="hover:text-teal-600 transition-colors cursor-pointer">Chính sách bảo mật</span>
             <span>•</span>
-            <span className="hover:text-teal-600 transition-colors cursor-pointer">Bảng giá quảng cáo & Ký gửi</span>
+            <span className="hover:text-teal-600 transition-colors cursor-pointer">Hướng Dẫn Mua & Thuê Xưởng</span>
           </div>
         </div>
       </div>

@@ -191,14 +191,14 @@ export function Header() {
                   )}
                 </button>
 
-                {/* Nút Đăng Tin BĐS Mua Bán / Cho Thuê */}
+                {/* Nút Khách Hàng: Tư Vấn Mua / Thuê */}
                 <button
                   type="button"
-                  onClick={() => openAdminEditModal()}
+                  onClick={openSubscribeModal}
                   className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:bg-teal-700 transition"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Ký Gửi & Đăng Tin Xưởng</span>
+                  <PhoneCall className="w-3.5 h-3.5" />
+                  <span>Tư Vấn Mua / Thuê</span>
                 </button>
               </>
             ) : (
