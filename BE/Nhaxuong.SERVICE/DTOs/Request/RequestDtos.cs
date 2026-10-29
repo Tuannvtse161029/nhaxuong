@@ -40,15 +40,11 @@ namespace Nhaxuong.SERVICE.DTOs.Request
         public string Type { get; set; } = "SALE"; // SALE, RENT, RECYCLED_STEEL
         public string? TypeDisplay { get; set; }
         public string Province { get; set; } = string.Empty;
-        public string? District { get; set; }
-        public string Kcn { get; set; } = string.Empty; // Vị trí
+        public string Kcn { get; set; } = string.Empty; // Vị trí kho bãi / KCN
         public long Price { get; set; }
         public string? UnitPrice { get; set; }
         public string Area { get; set; } = string.Empty;
-        public string? Power { get; set; }
-        public string? Pccc { get; set; }
         public string? BrokerPhone { get; set; }
-        public string? BrokerName { get; set; }
         public string? VideoUrl { get; set; }
         public string? AudioUrl { get; set; }
         public string? Image { get; set; }

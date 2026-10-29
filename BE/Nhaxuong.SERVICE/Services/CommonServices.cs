@@ -120,14 +120,13 @@ namespace Nhaxuong.SERVICE.Services
                 Phone = s.Phone,
                 Channel = s.Channel,
                 Status = s.Status,
-                Time = s.Time
+                Time = s.CreatedAt.ToString("HH:mm dd/MM/yyyy")
             }).ToList();
         }
 
         public async Task<SubscriberDto> CreateAsync(CreateSubscriberRequest request)
         {
             var now = DateTime.UtcNow;
-            var timeStr = $"{DateTime.Now:HH:mm} Hôm nay";
 
             var entity = new Subscriber
             {
@@ -137,7 +136,6 @@ namespace Nhaxuong.SERVICE.Services
                 Phone = request.Phone,
                 Channel = string.IsNullOrWhiteSpace(request.Channel) ? "email" : request.Channel,
                 Status = "Đang Nhận Tin",
-                Time = timeStr,
                 CreatedAt = now
             };
 
@@ -152,7 +150,7 @@ namespace Nhaxuong.SERVICE.Services
                 Phone = entity.Phone,
                 Channel = entity.Channel,
                 Status = entity.Status,
-                Time = entity.Time
+                Time = entity.CreatedAt.ToString("HH:mm dd/MM/yyyy")
             };
         }
     }

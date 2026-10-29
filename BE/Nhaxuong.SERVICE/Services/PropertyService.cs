@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Nhaxuong.MODEL.Configurations;
 using Nhaxuong.MODEL.Entities;
@@ -118,7 +117,6 @@ namespace Nhaxuong.SERVICE.Services
             var typeDisplay = ResolveTypeDisplay(request.Type, request.TypeDisplay);
             var priceDisplay = FormatPrice(request.Price, request.Type);
             var now = DateTime.UtcNow;
-            var timeStr = $"{DateTime.Now:HH:mm dd/MM/yyyy}";
 
             var entity = new PropertyItem
             {
@@ -127,16 +125,12 @@ namespace Nhaxuong.SERVICE.Services
                 Type = request.Type?.ToUpper() ?? "SALE",
                 TypeDisplay = typeDisplay,
                 Province = request.Province,
-                District = request.District,
                 Kcn = request.Kcn ?? string.Empty,
                 Price = request.Price,
                 PriceDisplay = priceDisplay,
                 UnitPrice = request.UnitPrice,
                 Area = request.Area ?? string.Empty,
-                Power = request.Power,
-                Pccc = request.Pccc,
                 BrokerPhone = request.BrokerPhone,
-                BrokerName = request.BrokerName,
                 Image = string.IsNullOrWhiteSpace(request.Image)
                     ? "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80"
                     : request.Image,
@@ -144,7 +138,6 @@ namespace Nhaxuong.SERVICE.Services
                 AudioUrl = request.AudioUrl,
                 Desc = request.Desc ?? string.Empty,
                 EmailNotified = request.TriggerEmail,
-                Created = timeStr,
                 CreatedAt = now
             };
 
@@ -166,16 +159,12 @@ namespace Nhaxuong.SERVICE.Services
             entity.Type = request.Type?.ToUpper() ?? entity.Type;
             entity.TypeDisplay = ResolveTypeDisplay(entity.Type, request.TypeDisplay);
             entity.Province = request.Province;
-            entity.District = request.District;
             entity.Kcn = request.Kcn ?? entity.Kcn;
             entity.Price = request.Price;
             entity.PriceDisplay = FormatPrice(request.Price, entity.Type);
             entity.UnitPrice = request.UnitPrice;
             entity.Area = request.Area ?? entity.Area;
-            entity.Power = request.Power;
-            entity.Pccc = request.Pccc;
             entity.BrokerPhone = request.BrokerPhone;
-            entity.BrokerName = request.BrokerName;
             if (!string.IsNullOrWhiteSpace(request.Image))
             {
                 entity.Image = request.Image;
@@ -237,19 +226,6 @@ namespace Nhaxuong.SERVICE.Services
 
         private static PropertyDto MapToDto(PropertyItem entity)
         {
-            List<string>? gallery = null;
-            if (!string.IsNullOrWhiteSpace(entity.GalleryJson))
-            {
-                try
-                {
-                    gallery = JsonSerializer.Deserialize<List<string>>(entity.GalleryJson);
-                }
-                catch
-                {
-                    gallery = null;
-                }
-            }
-
             return new PropertyDto
             {
                 Id = entity.Id,
@@ -257,29 +233,18 @@ namespace Nhaxuong.SERVICE.Services
                 Type = entity.Type,
                 TypeDisplay = entity.TypeDisplay,
                 Province = entity.Province,
-                District = entity.District,
                 Kcn = entity.Kcn,
                 Price = entity.Price,
                 PriceDisplay = entity.PriceDisplay,
                 UnitPrice = entity.UnitPrice,
                 Area = entity.Area,
-                Power = entity.Power,
-                Pccc = entity.Pccc,
                 BrokerPhone = entity.BrokerPhone,
-                BrokerName = entity.BrokerName,
                 Image = entity.Image,
-                Gallery = gallery,
                 VideoUrl = entity.VideoUrl,
                 AudioUrl = entity.AudioUrl,
-                AudioDuration = entity.AudioDuration,
                 Desc = entity.Desc,
-                CeilingHeight = entity.CeilingHeight,
-                FloorLoad = entity.FloorLoad,
-                LegalStatus = entity.LegalStatus,
-                RoadAccess = entity.RoadAccess,
-                Verified = entity.Verified,
                 EmailNotified = entity.EmailNotified,
-                Created = entity.Created
+                Created = entity.CreatedAt.ToString("HH:mm dd/MM/yyyy")
             };
         }
     }

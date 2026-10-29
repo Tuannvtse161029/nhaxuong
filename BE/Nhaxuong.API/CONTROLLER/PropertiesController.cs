@@ -8,8 +8,6 @@ namespace Nhaxuong.API.CONTROLLER
     [Route("api/v1/properties")]
     [Route("api/properties")]
     [Route("properties")]
-    [Route("api/items")]
-    [Route("items")]
     public class PropertiesController : ControllerBase
     {
         private readonly IPropertyService _propertyService;

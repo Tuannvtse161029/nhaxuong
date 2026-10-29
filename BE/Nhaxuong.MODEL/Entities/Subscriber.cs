@@ -25,9 +25,6 @@ namespace Nhaxuong.MODEL.Entities
         [MaxLength(50)]
         public string Status { get; set; } = "Đang Nhận Tin";
 
-        [MaxLength(50)]
-        public string Time { get; set; } = DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm");
-
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
