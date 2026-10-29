@@ -75,7 +75,7 @@ const DEFAULT_FILTER: PropertyFilterState = {
   type: 'ALL',
   keyword: '',
   province: 'Toàn Quốc',
-  kcn: 'Tất cả KCN',
+  kcn: 'Tất cả bãi kho',
   minPrice: 0,
   maxPrice: 150000000000, // 150 tỷ
   sortBy: 'newest',
@@ -193,8 +193,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       if (filterState.province !== 'Toàn Quốc' && p.province !== filterState.province) {
         return false
       }
-      // KCN
-      if (filterState.kcn !== 'Tất cả KCN' && p.kcn !== filterState.kcn) {
+      // Bãi kho / KCN
+      if (filterState.kcn !== 'Tất cả bãi kho' && filterState.kcn !== 'Tất cả KCN' && p.kcn !== filterState.kcn) {
         return false
       }
       // Price range

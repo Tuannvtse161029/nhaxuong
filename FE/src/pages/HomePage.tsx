@@ -166,21 +166,6 @@ export function HomePage() {
               Hiển thị <b className="text-slate-900 dark:text-white">{filteredProperties.length}</b> nhà xưởng phù hợp với tiêu chí của bạn
             </p>
           </div>
-
-          <div className="flex items-center gap-2 text-xs">
-            <span className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 font-bold text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
-              <Box className="w-3.5 h-3.5 text-amber-600" />
-              <span>Mô Hình 3D HTML</span>
-            </span>
-            <span className="flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 font-bold text-teal-800 dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-300">
-              <Headphones className="w-3.5 h-3.5 text-teal-600" />
-              <span>Audio .mp3</span>
-            </span>
-            <span className="hidden sm:flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-bold text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Nghiệm Thu PCCC</span>
-            </span>
-          </div>
         </div>
 
         {/* Properties Grid */}

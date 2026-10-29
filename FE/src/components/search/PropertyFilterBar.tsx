@@ -99,13 +99,13 @@ export function PropertyFilterBar() {
           </div>
         </div>
 
-        {/* 3. KCN */}
+        {/* 3. Bãi kho */}
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-            Khu Công Nghiệp (KCN)
+            Bãi kho
           </label>
           <div className="relative">
-            <Factory className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-teal-600" />
+            <Warehouse className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-teal-600" />
             <select
               value={filterState.kcn}
               onChange={(e) => setFilterState({ kcn: e.target.value })}

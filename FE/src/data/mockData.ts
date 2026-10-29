@@ -219,7 +219,7 @@ export const PROVINCES_LIST = [
 ]
 
 export const KCN_LIST = [
-  'Tất cả KCN',
+  'Tất cả bãi kho',
   'KCN VSIP 1',
   'KCN Sóng Thần 2',
   'KCN Long Đức',
