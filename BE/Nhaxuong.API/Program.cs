@@ -141,6 +141,22 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
+// Normalize routes: Auto-prefix requests missing /api (e.g. /properties, /categories, /notices, /auth)
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value ?? "";
+    if (!string.IsNullOrEmpty(path) 
+        && path != "/"
+        && !path.StartsWith("/api", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/healthz", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/uploads", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Request.Path = "/api" + path;
+    }
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
