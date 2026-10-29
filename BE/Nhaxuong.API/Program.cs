@@ -1,13 +1,78 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Nhaxuong.MODEL.Configurations;
+using Nhaxuong.SERVICE.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+// 1. Add Controllers
+builder.Services.AddControllers();
+
+// 2. Configure Database Context (InMemory or SqlServer)
+var useInMemory = builder.Configuration.GetValue<bool>("UseInMemoryDatabase", false) 
+                  || Environment.GetEnvironmentVariable("USE_INMEMORY_DB") == "true"
+                  || string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("DefaultConnection"));
+
+if (useInMemory)
 {
-    c.SwaggerDoc("v1", new() { Title = "Nhaxuong Industrial Real Estate API", Version = "v1" });
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseInMemoryDatabase("NhaxuongDb"));
+    Console.WriteLine("--> [Database] Using InMemory Database (NhaxuongDb)");
+}
+else
+{
+    var connString = builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(connString, sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorNumbersToAdd: null);
+        }));
+    Console.WriteLine("--> [Database] Using SQL Server Database");
+}
+
+// 3. Register Application Services (DI)
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPropertyService, PropertyService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ISubscriberService, SubscriberService>();
+builder.Services.AddScoped<INoticeService, NoticeService>();
+
+// 4. Configure JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "Nhaxuong_DevOnly_LocalJwtSecretKey_ChangeInProduction_AtLeast32Bytes";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "Nhaxuong";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "NhaxuongUsers";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ClockSkew = TimeSpan.Zero
+    };
 });
 
-// Configure CORS for Vercel Frontend and local development
+builder.Services.AddAuthorization();
+
+// 5. Configure CORS for Vercel Frontend and local development
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -18,12 +83,76 @@ builder.Services.AddCors(options =>
     });
 });
 
+// 6. Configure Swagger with JWT Support
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Nhà Xưởng & Sắt Thép Tái Sử Dụng API",
+        Version = "v1",
+        Description = "Hệ thống API RESTful quản lý Nhà Xưởng, Cho Thuê Kho Bãi, Sắt Thép Tái Sử Dụng và Xác Thực Người Dùng."
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Nhập mã JWT Bearer token theo định dạng: Bearer {token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// 7. Seed Database and ensure schema created
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var db = services.GetRequiredService<AppDbContext>();
+        if (db.Database.IsRelational())
+        {
+            db.Database.Migrate();
+            Console.WriteLine("--> [Database] Relational database migrations applied successfully.");
+        }
+        else
+        {
+            db.Database.EnsureCreated();
+            Console.WriteLine("--> [Database] InMemory database initialized successfully.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"--> [Database Warning] Migration/EnsureCreated: {ex.Message}");
+    }
+}
+
+// 8. Configure HTTP Request Pipeline
 app.UseCors("AllowAll");
 
-// Enable Swagger UI in both Development and Production for easy testing on Render
+// Static files for uploaded images / documents
+app.UseStaticFiles();
+
+// Enable Swagger UI in both Development and Production for Render
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -31,13 +160,28 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-// Root & Healthcheck endpoints for Render deployment monitoring
+app.UseAuthentication();
+app.UseAuthorization();
+
+// 9. Map API Controllers
+app.MapControllers();
+
+// 10. Root & Healthcheck endpoints for Render deployment monitoring
 app.MapGet("/", () => Results.Ok(new
 {
-    service = "Nhaxuong Industrial Real Estate API",
+    service = "Nhà Xưởng & Sắt Thép Tái Sử Dụng API",
     status = "Healthy",
     environment = app.Environment.EnvironmentName,
     swagger = "/swagger",
+    endpoints = new
+    {
+        auth = "/api/v1/auth",
+        properties = "/api/v1/properties",
+        categories = "/api/v1/categories",
+        subscribers = "/api/v1/subscribers",
+        notices = "/api/v1/notices",
+        uploads = "/api/v1/uploads"
+    },
     timestamp = DateTime.UtcNow
 }));
 

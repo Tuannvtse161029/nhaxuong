@@ -7,6 +7,8 @@ import {
   INITIAL_SUBSCRIBERS,
 } from '@/data/mockData'
 import { storage } from '@/utils/storage'
+import { propertyApi } from '@/api/propertyApi'
+import { ENV } from '@/config/env.config'
 
 interface ToastItem {
   id: string
@@ -146,6 +148,29 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       storage.setItem('kcn_properties', merged)
       return merged
     })
+
+    // Fetch live backend data if not in mock mode
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.getProperties().then((data) => {
+        if (data && data.length > 0) setProperties(data)
+      }).catch((err) => console.log('Offline / Initial BE load fallback:', err.message))
+
+      propertyApi.getCategories().then((data) => {
+        if (data && data.length > 0) setCategories(data)
+      }).catch(() => {})
+
+      propertyApi.getNotices().then((data) => {
+        if (data && data.length > 0) setNotices(data)
+      }).catch(() => {})
+
+      propertyApi.getSubscribers().then((data) => {
+        if (data && data.length > 0) setSubscribers(data)
+      }).catch(() => {})
+
+      propertyApi.getTicker().then((data) => {
+        if (data?.ticker) setActiveNoticeText(data.ticker)
+      }).catch(() => {})
+    }
   }, [])
 
   // Sync to localStorage
@@ -266,6 +291,12 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 
     setProperties((prev) => [newProp, ...prev])
 
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.createProperty({ ...propertyData, triggerEmail }).catch((err) => {
+        console.warn('API sync warning:', err.message)
+      })
+    }
+
     if (triggerEmail) {
       showToast(
         `✉️ <b>Email Broadcast:</b> Đã phát hành bản tin email kèm video drone và thông số nhà xưởng!`,
@@ -278,6 +309,13 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     setProperties((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
     )
+
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.updateProperty(id, updated).catch((err) => {
+        console.warn('API sync warning:', err.message)
+      })
+    }
+
     if (triggerBroadcast) {
       showToast(
         `✉️ <b>Email Broadcast:</b> Đã thông báo cập nhật giá & mặt bằng tới các nhà đầu tư quan tâm!`,
@@ -290,21 +328,36 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 
   const deleteProperty = (id: string) => {
     setProperties((prev) => prev.filter((p) => p.id !== id))
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.deleteProperty(id).catch((err) => {
+        console.warn('API sync warning:', err.message)
+      })
+    }
     showToast('Đã xóa mặt hàng khỏi hệ thống')
   }
 
   // Categories
   const addCategory = (cat: Category) => {
     setCategories((prev) => [...prev, cat])
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.createCategory(cat).catch((err) => {
+        console.warn('API sync warning:', err.message)
+      })
+    }
     showToast(`Đã thêm danh mục mới: ${cat.name}`)
   }
 
   const deleteCategory = (code: string) => {
-    if (['SALE', 'RENT', 'KCN_PROJECT'].includes(code)) {
+    if (['SALE', 'RENT', 'KCN_PROJECT', 'RECYCLED_STEEL'].includes(code)) {
       alert('Không thể xóa danh mục hệ thống cốt lõi!')
       return
     }
     setCategories((prev) => prev.filter((c) => c.code !== code))
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.deleteCategory(code).catch((err) => {
+        console.warn('API sync warning:', err.message)
+      })
+    }
     showToast('Đã xóa danh mục')
   }
 
@@ -317,11 +370,21 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     }
     setNotices((prev) => [newNotice, ...prev])
     setActiveNoticeText(newNotice.title)
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.createNotice(n).catch((err) => {
+        console.warn('API sync warning:', err.message)
+      })
+    }
     showToast('Đã đăng thông báo mới lên trang chủ')
   }
 
   const deleteNotice = (id: string) => {
     setNotices((prev) => prev.filter((n) => n.id !== id))
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.deleteNotice(id).catch((err) => {
+        console.warn('API sync warning:', err.message)
+      })
+    }
     showToast('Đã gỡ thông báo')
   }
 
@@ -333,6 +396,11 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       time: new Date().toLocaleTimeString('vi-VN') + ' Hôm nay',
     }
     setSubscribers((prev) => [newSub, ...prev])
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.createSubscriber(sub).catch((err) => {
+        console.warn('API sync warning:', err.message)
+      })
+    }
     showToast(`🎉 Cảm ơn bạn! Đã đăng ký nhận bản tin qua ${sub.channel.toUpperCase()} thành công.`, 'success')
   }
 
