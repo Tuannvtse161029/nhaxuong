@@ -139,7 +139,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               {property ? 'Chỉnh Sửa Thông Tin Mặt Hàng' : 'Thêm Mới & Xuất Bản Nhà Xưởng'}
             </h3>
             <p className="text-[11px] text-slate-400">
-              Điền thông số kỹ thuật, liên kết video drone và tệp âm thanh thuyết minh
+              Điền thông tin bất động sản và liên kết video drone
             </p>
           </div>
           <button
@@ -198,13 +198,6 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Khu Công Nghiệp (KCN)"
-              value={kcn}
-              onChange={(e) => setKcn(e.target.value)}
-              placeholder="VD: KCN VSIP 1"
-              required
-            />
-            <Input
               label="Giá niêm yết (VNĐ)"
               type="number"
               step={10000000}
@@ -213,26 +206,11 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               helperText={`Định dạng: ${formatCurrency(price)}`}
               required
             />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Input
               label="Khuôn viên (m2)"
               value={area}
               onChange={(e) => setArea(e.target.value)}
               placeholder="VD: 10.000 m2"
-            />
-            <Input
-              label="Trạm điện (kVA)"
-              value={power}
-              onChange={(e) => setPower(e.target.value)}
-              placeholder="VD: 1.500 kVA"
-            />
-            <Input
-              label="Hệ thống PCCC"
-              value={pccc}
-              onChange={(e) => setPccc(e.target.value)}
-              placeholder="VD: Tự Động (Sprinkler)"
             />
           </div>
 
@@ -241,13 +219,6 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
             placeholder="https://.../drone-video.mp4"
-          />
-
-          <Input
-            label="URL Tệp Âm Thanh .mp3 (Custom Audio Player Voiceover)"
-            value={audioUrl}
-            onChange={(e) => setAudioUrl(e.target.value)}
-            placeholder="https://.../description.mp3"
           />
 
           <Input

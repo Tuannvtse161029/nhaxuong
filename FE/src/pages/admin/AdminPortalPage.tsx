@@ -53,7 +53,6 @@ export function AdminPortalPage() {
 
   // Category form state
   const [newCatName, setNewCatName] = useState('')
-  const [newCatCode, setNewCatCode] = useState('')
 
   // Notice form state
   const [newNoticeTitle, setNewNoticeTitle] = useState('')
@@ -63,7 +62,6 @@ export function AdminPortalPage() {
   // Calculate statistics
   const totalListedValue = properties.reduce((acc, cur) => acc + (cur.price || 0), 0)
   const totalWithVideo = properties.filter((p) => p.videoUrl).length
-  const totalWithAudio = properties.filter((p) => p.audioUrl).length
 
   // Filtered properties for Admin table
   const adminFilteredProps = properties.filter((p) => {
@@ -77,16 +75,16 @@ export function AdminPortalPage() {
 
   const handleAddCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newCatName.trim() || !newCatCode.trim()) return
+    if (!newCatName.trim()) return
+    const generatedCode = 'CAT_' + Date.now().toString(36).toUpperCase()
     addCategory({
       name: newCatName.trim(),
-      code: newCatCode.trim().toUpperCase(),
+      code: generatedCode,
       icon: 'Warehouse',
       desc: 'Danh mục tùy chỉnh',
       active: true,
     })
     setNewCatName('')
-    setNewCatCode('')
   }
 
   const handleAddNoticeSubmit = (e: React.FormEvent) => {
@@ -121,8 +119,8 @@ export function AdminPortalPage() {
         </button>
       </div>
 
-      {/* 4 Stat Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 3 Stat Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
           <span className="text-[11px] font-bold text-slate-400 block uppercase">Tổng Kho Xưởng</span>
           <div className="flex items-center justify-between mt-1">
@@ -163,21 +161,6 @@ export function AdminPortalPage() {
           </div>
           <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block mt-1">
             100% video HD 1080p
-          </span>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-          <span className="text-[11px] font-bold text-slate-400 block uppercase">Audio .mp3 Thuyết Minh</span>
-          <div className="flex items-center justify-between mt-1">
-            <b className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">
-              {totalWithAudio} / {properties.length}
-            </b>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300 text-sm">
-              <Headphones className="w-4 h-4" />
-            </span>
-          </div>
-          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold block mt-1">
-            Tích hợp Player riêng biệt
           </span>
         </div>
       </div>
@@ -382,7 +365,6 @@ export function AdminPortalPage() {
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-400 uppercase text-[10px] dark:bg-slate-950 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Tên Danh Mục</th>
-                    <th className="py-3 px-4">Mã Code</th>
                     <th className="py-3 px-4 text-center">Số Lượng Mặt Hàng</th>
                     <th className="py-3 px-4 text-center">Thao Tác</th>
                   </tr>
@@ -395,7 +377,6 @@ export function AdminPortalPage() {
                         <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-200">
                           {c.name}
                         </td>
-                        <td className="py-3 px-4 font-mono text-slate-500">{c.code}</td>
                         <td className="py-3 px-4 text-center font-bold text-teal-700 dark:text-teal-400">
                           {count} bài viết
                         </td>
@@ -432,20 +413,6 @@ export function AdminPortalPage() {
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Mã Code (Chữ hoa)
-                </label>
-                <input
-                  type="text"
-                  placeholder="VD: CHEMICAL_WAREHOUSE"
-                  value={newCatCode}
-                  onChange={(e) => setNewCatCode(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 p-2.5 text-xs font-mono text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   required
                 />
               </div>

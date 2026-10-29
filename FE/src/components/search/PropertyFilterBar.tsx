@@ -12,7 +12,6 @@ export function PropertyFilterBar() {
     { type: 'ALL', label: 'Tất Cả Kho Xưởng', icon: Boxes, countBadge: '2.500+' },
     { type: 'SALE', label: 'Bán Nhà Xưởng', icon: Warehouse, countBadge: '1.200+' },
     { type: 'RENT', label: 'Cho Thuê Kho Bãi', icon: Building, countBadge: '980+' },
-    { type: 'KCN_PROJECT', label: 'Dự Án Đất KCN (SKC)', icon: Factory, countBadge: '320+' },
   ]
 
   const quickFilterPills = [

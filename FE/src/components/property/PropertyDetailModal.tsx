@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import type { Property } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
-import { AudioPlayer } from '@/components/audio/AudioPlayer'
 import { cn } from '@/utils/cn'
 
 interface PropertyDetailModalProps {
@@ -135,17 +134,6 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
                 />
               )}
             </div>
-          </div>
-
-          {/* Embedded Custom Audio Player (.mp3) */}
-          <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              Thuyết minh âm thanh (.mp3)
-            </span>
-            <AudioPlayer
-              src={property.audioUrl}
-              title={`Thuyết minh: ${property.title}`}
-            />
           </div>
 
           {/* Specs Grid */}
