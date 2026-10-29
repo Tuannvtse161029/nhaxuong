@@ -79,7 +79,9 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       ? 'Bán Nhà Xưởng'
       : type === 'RENT'
       ? 'Cho Thuê Kho Bãi'
-      : 'Dự Án Đất KCN'
+      : type === 'RECYCLED_STEEL'
+      ? 'Sắt Thép Tái Sử Dụng'
+      : 'Khác'
 
     const priceDisplay = formatCurrency(price)
 
@@ -154,7 +156,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
         <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-4">
           <Input
             label="Tiêu đề bài đăng"
-            placeholder="VD: Bán 10.000m2 Nhà xưởng KCN VSIP 1..."
+            placeholder="VD: Bán 10.000m2 Nhà xưởng KCN VSIP 1, Thanh lý khung thép tiền chế 3.000m2..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -207,10 +209,10 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               required
             />
             <Input
-              label="Khuôn viên (m2)"
+              label={type === 'RECYCLED_STEEL' ? 'Diện tích / Khối lượng (m2 hoặc Tấn)' : 'Khuôn viên (m2)'}
               value={area}
               onChange={(e) => setArea(e.target.value)}
-              placeholder="VD: 10.000 m2"
+              placeholder={type === 'RECYCLED_STEEL' ? 'VD: 3.200 m2 hoặc 85 Tấn' : 'VD: 10.000 m2'}
             />
           </div>
 

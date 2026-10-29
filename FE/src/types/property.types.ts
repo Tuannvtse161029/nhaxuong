@@ -1,4 +1,4 @@
-export type PropertyType = 'ALL' | 'SALE' | 'RENT' | 'KCN_PROJECT' | 'STANDARD_FACTORY' | 'COLD_LOGISTICS'
+export type PropertyType = 'ALL' | 'SALE' | 'RENT' | 'KCN_PROJECT' | 'STANDARD_FACTORY' | 'COLD_LOGISTICS' | 'RECYCLED_STEEL'
 
 export interface Property {
   id: string

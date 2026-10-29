@@ -16,6 +16,7 @@ import {
 import { useProperties } from '@/context/PropertyContext'
 import { useTheme } from '@/hooks/useTheme'
 import { Link, useNavigate } from 'react-router-dom'
+import { cn } from '@/utils/cn'
 
 export function Header() {
   const {
@@ -27,6 +28,7 @@ export function Header() {
     open3DModal,
     openAdminEditModal,
     properties,
+    filterState,
     setFilterState,
   } = useProperties()
   const { theme, toggleTheme } = useTheme()
@@ -104,7 +106,12 @@ export function Header() {
                   navigate('/')
                   setFilterState({ type: 'ALL' })
                 }}
-                className="px-3 py-2 rounded-xl text-xs font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white transition"
+                className={cn(
+                  'px-3 py-2 rounded-xl text-xs transition',
+                  filterState.type === 'ALL'
+                    ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
+                    : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                )}
               >
                 Tất Cả Nhà Xưởng
               </button>
@@ -114,7 +121,12 @@ export function Header() {
                   navigate('/')
                   setFilterState({ type: 'SALE' })
                 }}
-                className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                className={cn(
+                  'px-3 py-2 rounded-xl text-xs transition',
+                  filterState.type === 'SALE'
+                    ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
+                    : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                )}
               >
                 Bán Nhà Xưởng
               </button>
@@ -124,9 +136,29 @@ export function Header() {
                   navigate('/')
                   setFilterState({ type: 'RENT' })
                 }}
-                className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                className={cn(
+                  'px-3 py-2 rounded-xl text-xs transition',
+                  filterState.type === 'RENT'
+                    ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
+                    : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                )}
               >
                 Cho Thuê Kho Bãi
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  navigate('/')
+                  setFilterState({ type: 'RECYCLED_STEEL' })
+                }}
+                className={cn(
+                  'px-3 py-2 rounded-xl text-xs transition',
+                  filterState.type === 'RECYCLED_STEEL'
+                    ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
+                    : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                )}
+              >
+                Sắt Thép Tái Sử Dụng
               </button>
             </nav>
           ) : (

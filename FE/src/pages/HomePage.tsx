@@ -79,23 +79,12 @@ export function HomePage() {
         </div>
 
         <div className="relative z-10 max-w-4xl">
-          {/* Badge Sàn Giao Dịch Nhà Xưởng */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-bold text-teal-300 backdrop-blur-md mb-4 shadow-xs">
-            <span className="h-2 w-2 rounded-full bg-teal-400 animate-ping" />
-            <span>SÀN GIAO DỊCH NHÀ XƯỞNG VIỆT NAM (NHAXUONG.VN)</span>
-          </div>
-
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight font-sans">
-            Mua Bán, Cho Thuê Nhà Xưởng & Đất Khu Công Nghiệp Chuẩn FDI
+            Nhà Xưởng & Bãi kho
           </h1>
 
-          <p className="mt-3 text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Nền tảng tra cứu và giao dịch kho xưởng hàng đầu với công nghệ <b>Mô hình 3D Tour 360°</b> và <b>Video Flycam 1080p</b>. Toàn bộ tin đăng đã được thẩm định
-            pháp lý <b>Sổ hồng SKC</b> và <b>Nghiệm thu PCCC</b>.
-          </p>
-
           {/* Real Estate Market Statistics Bar */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 px-4 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-md text-xs">
+          <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 px-4 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-md text-xs">
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 block">Nguồn Cung Xưởng</span>
               <b className="text-base sm:text-lg font-black text-white">2.500+</b>
@@ -116,31 +105,6 @@ export function HomePage() {
               <b className="text-base sm:text-lg font-black text-amber-400">3.600+</b>
               <span className="text-[10px] text-amber-400 block">Đang kết nối</span>
             </div>
-          </div>
-
-          {/* Quick Actions Strip */}
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                const firstProp = properties[0]
-                if (firstProp) open3DModal(firstProp)
-              }}
-              className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg hover:bg-teal-700 transition"
-            >
-              <Box className="w-4 h-4 text-amber-300" />
-              <span>Xem Thử Mô Hình 3D Xoay 360°</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={openSubscribeModal}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/90 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-200 hover:bg-slate-800 backdrop-blur-md transition"
-            >
-              <Mail className="w-4 h-4 text-teal-400" />
-              <span>Đăng Ký Nhận Báo Cáo Thị Trường Nhà Xưởng</span>
-            </button>
           </div>
         </div>
 

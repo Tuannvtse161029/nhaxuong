@@ -1,4 +1,4 @@
-import { Search, MapPin, Factory, Building, Boxes, Warehouse, Filter, Sparkles, Check } from 'lucide-react'
+import { Search, MapPin, Factory, Building, Boxes, Warehouse, Filter, Sparkles, Check, Layers } from 'lucide-react'
 import { useProperties } from '@/context/PropertyContext'
 import { DualPriceRangeSlider } from './DualPriceRangeSlider'
 import { PROVINCES_LIST, KCN_LIST } from '@/data/mockData'
@@ -12,6 +12,7 @@ export function PropertyFilterBar() {
     { type: 'ALL', label: 'Tất Cả Kho Xưởng', icon: Boxes, countBadge: '2.500+' },
     { type: 'SALE', label: 'Bán Nhà Xưởng', icon: Warehouse, countBadge: '1.200+' },
     { type: 'RENT', label: 'Cho Thuê Kho Bãi', icon: Building, countBadge: '980+' },
+    { type: 'RECYCLED_STEEL', label: 'Sắt Thép Tái Sử Dụng', icon: Layers, countBadge: '450+' },
   ]
 
   const quickFilterPills = [

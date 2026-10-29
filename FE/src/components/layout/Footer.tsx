@@ -73,6 +73,9 @@ export function Footer() {
                 <ArrowRight className="w-3 h-3 text-teal-500" /> Cho Thuê Kho Logistics & CFS
               </li>
               <li className="hover:text-teal-600 dark:hover:text-teal-400 cursor-pointer flex items-center gap-1.5">
+                <ArrowRight className="w-3 h-3 text-teal-500" /> Sắt Thép Tái Sử Dụng
+              </li>
+              <li className="hover:text-teal-600 dark:hover:text-teal-400 cursor-pointer flex items-center gap-1.5">
                 <ArrowRight className="w-3 h-3 text-teal-500" /> Chuyển Nhượng Đất KCN (SKC)
               </li>
               <li className="hover:text-teal-600 dark:hover:text-teal-400 cursor-pointer flex items-center gap-1.5">
