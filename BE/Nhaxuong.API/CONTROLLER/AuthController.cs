@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nhaxuong.SERVICE.DTOs.Request;
 using Nhaxuong.SERVICE.DTOs.Response;
@@ -8,9 +7,7 @@ using Nhaxuong.SERVICE.Services;
 namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
-    [Route("api/v1/auth")]
     [Route("api/auth")]
-    [Route("auth")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -20,6 +17,9 @@ namespace Nhaxuong.API.CONTROLLER
             _authService = authService;
         }
 
+        /// <summary>
+        /// Đăng nhập bằng Email và Mật khẩu (Admin &amp; User)
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -34,6 +34,9 @@ namespace Nhaxuong.API.CONTROLLER
             }
         }
 
+        /// <summary>
+        /// Đăng ký tài khoản Email mới (Role: User)
+        /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
@@ -48,12 +51,15 @@ namespace Nhaxuong.API.CONTROLLER
             }
         }
 
+        /// <summary>
+        /// Đăng nhập / Đăng ký 1 chạm bằng Google
+        /// </summary>
         [HttpPost("google")]
-        public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthRequest request)
+        public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthRequest? request)
         {
             try
             {
-                var result = await _authService.GoogleAuthAsync(request);
+                var result = await _authService.GoogleAuthAsync(request ?? new GoogleAuthRequest());
                 return Ok(result);
             }
             catch (Exception ex)
@@ -62,8 +68,11 @@ namespace Nhaxuong.API.CONTROLLER
             }
         }
 
-        [HttpPost("phone/login")]
-        public async Task<IActionResult> PhoneLogin([FromBody] PhoneAuthRequest request)
+        /// <summary>
+        /// Đăng nhập / Đăng ký 1 chạm bằng Số điện thoại + OTP
+        /// </summary>
+        [HttpPost("phone")]
+        public async Task<IActionResult> PhoneAuth([FromBody] PhoneAuthRequest request)
         {
             try
             {
@@ -76,21 +85,10 @@ namespace Nhaxuong.API.CONTROLLER
             }
         }
 
-        [HttpPost("phone/register")]
-        public async Task<IActionResult> PhoneRegister([FromBody] PhoneAuthRequest request)
-        {
-            try
-            {
-                var result = await _authService.PhoneAuthAsync(request, isRegister: true);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        [HttpPost("phone/send-otp")]
+        /// <summary>
+        /// Gửi mã OTP xác thực số điện thoại
+        /// </summary>
+        [HttpPost("send-otp")]
         public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request)
         {
             try
@@ -108,17 +106,19 @@ namespace Nhaxuong.API.CONTROLLER
             }
         }
 
+        /// <summary>
+        /// Lấy thông tin tài khoản hiện tại từ Token
+        /// </summary>
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
-                // Fallback demo user if accessed without token
                 return Ok(new UserDto
                 {
-                    Id = "usr_01",
-                    Name = "Quản Trị Viên (Demo)",
+                    Id = "usr_admin_01",
+                    Name = "Quản Trị Viên (Admin)",
                     Email = "admin@nhaxuong.vn",
                     Role = "admin",
                     Phone = "0901234567",
@@ -139,10 +139,18 @@ namespace Nhaxuong.API.CONTROLLER
             }
         }
 
-        [HttpPost("logout")]
-        public IActionResult Logout()
-        {
-            return Ok(new { message = "Đã đăng xuất thành công" });
-        }
+        #region Backward Compatibility Aliases (Hidden from Swagger UI)
+        [HttpPost("phone/login")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public Task<IActionResult> PhoneLoginAlias([FromBody] PhoneAuthRequest request) => PhoneAuth(request);
+
+        [HttpPost("phone/register")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public Task<IActionResult> PhoneRegisterAlias([FromBody] PhoneAuthRequest request) => PhoneAuth(request);
+
+        [HttpPost("phone/send-otp")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public Task<IActionResult> PhoneSendOtpAlias([FromBody] SendOtpRequest request) => SendOtp(request);
+        #endregion
     }
 }

@@ -81,7 +81,7 @@ export const authApi = {
       }
     }
 
-    return axiosClient.post(API_ENDPOINTS.AUTH.GOOGLE)
+    return axiosClient.post(API_ENDPOINTS.AUTH.GOOGLE, {})
   },
 
   async loginWithPhone(credentials: PhoneAuthCredentials): Promise<AuthResponse> {

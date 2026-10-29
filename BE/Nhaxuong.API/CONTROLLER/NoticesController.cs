@@ -5,9 +5,7 @@ using Nhaxuong.SERVICE.Services;
 namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
-    [Route("api/v1/notices")]
     [Route("api/notices")]
-    [Route("notices")]
     public class NoticesController : ControllerBase
     {
         private readonly INoticeService _noticeService;

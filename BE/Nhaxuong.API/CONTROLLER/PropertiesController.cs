@@ -5,9 +5,7 @@ using Nhaxuong.SERVICE.Services;
 namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
-    [Route("api/v1/properties")]
     [Route("api/properties")]
-    [Route("properties")]
     public class PropertiesController : ControllerBase
     {
         private readonly IPropertyService _propertyService;

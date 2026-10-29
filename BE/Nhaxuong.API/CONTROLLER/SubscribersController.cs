@@ -5,9 +5,7 @@ using Nhaxuong.SERVICE.Services;
 namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
-    [Route("api/v1/subscribers")]
     [Route("api/subscribers")]
-    [Route("subscribers")]
     public class SubscribersController : ControllerBase
     {
         private readonly ISubscriberService _subscriberService;

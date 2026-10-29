@@ -5,9 +5,7 @@ using Nhaxuong.SERVICE.Services;
 namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
-    [Route("api/v1/categories")]
     [Route("api/categories")]
-    [Route("categories")]
     public class CategoriesController : ControllerBase
     {
         private readonly ICategoryService _categoryService;

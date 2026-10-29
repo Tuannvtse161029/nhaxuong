@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
-    [Route("api/v1/uploads")]
     [Route("api/uploads")]
-    [Route("uploads")]
     public class UploadsController : ControllerBase
     {
         private readonly IWebHostEnvironment _env;

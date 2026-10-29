@@ -11,30 +11,19 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Add Controllers
 builder.Services.AddControllers();
 
-// 2. Configure Database Context (InMemory or SqlServer)
-var useInMemory = builder.Configuration.GetValue<bool>("UseInMemoryDatabase", false) 
-                  || Environment.GetEnvironmentVariable("USE_INMEMORY_DB") == "true"
-                  || string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("DefaultConnection"));
+// 2. Configure SQL Server Database Context (NhaxuongDb on 35.240.181.166)
+var connString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=tcp:35.240.181.166,1433;Database=NhaxuongDb;User Id=sa;Password=baopro2147!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true";
 
-if (useInMemory)
-{
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseInMemoryDatabase("NhaxuongDb"));
-    Console.WriteLine("--> [Database] Using InMemory Database (NhaxuongDb)");
-}
-else
-{
-    var connString = builder.Configuration.GetConnectionString("DefaultConnection");
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(connString, sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 3,
-                maxRetryDelay: TimeSpan.FromSeconds(5),
-                errorNumbersToAdd: null);
-        }));
-    Console.WriteLine("--> [Database] Using SQL Server Database");
-}
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connString, sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorNumbersToAdd: null);
+    }));
+Console.WriteLine("--> [Database] Connected to SQL Server (NhaxuongDb)");
 
 // 3. Register Application Services (DI)
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -122,27 +111,19 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// 7. Seed Database and ensure schema created
+// 7. Apply Database Migrations on Startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var db = services.GetRequiredService<AppDbContext>();
-        if (db.Database.IsRelational())
-        {
-            db.Database.Migrate();
-            Console.WriteLine("--> [Database] Relational database migrations applied successfully.");
-        }
-        else
-        {
-            db.Database.EnsureCreated();
-            Console.WriteLine("--> [Database] InMemory database initialized successfully.");
-        }
+        db.Database.Migrate();
+        Console.WriteLine("--> [Database] Migrations verified and applied to NhaxuongDb.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"--> [Database Warning] Migration/EnsureCreated: {ex.Message}");
+        Console.WriteLine($"--> [Database Warning] Migration: {ex.Message}");
     }
 }
 
