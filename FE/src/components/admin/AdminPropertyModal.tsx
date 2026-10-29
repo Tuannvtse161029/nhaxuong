@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Mail } from 'lucide-react'
+import { X, Mail, Layers } from 'lucide-react'
 import type { Property, PropertyType } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
 import { Button } from '@/components/common/Button'
@@ -17,19 +17,22 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   const { addProperty, updateProperty, categories } = useProperties()
 
   const [title, setTitle] = useState('')
-  const [type, setType] = useState<PropertyType>('SALE')
+  const [type, setType] = useState<PropertyType>('RECYCLED_STEEL')
   const [province, setProvince] = useState('Bình Dương')
-  const [kcn, setKcn] = useState('KCN VSIP 1')
-  const [price, setPrice] = useState(48000000000)
-  const [area, setArea] = useState('12.000 m2')
-  const [power, setPower] = useState('1.500 kVA')
-  const [pccc, setPccc] = useState('Tự Động (Sprinkler)')
+  const [kcn, setKcn] = useState('Kho Bãi ICD Tân Cảng')
+  const [price, setPrice] = useState(980000000)
+  const [unitPrice, setUnitPrice] = useState('306.000 đ/m²')
+  const [area, setArea] = useState('3.200 m2')
+  const [power, setPower] = useState('Kết cấu thép Zamil SS400')
+  const [pccc, setPccc] = useState('Sơn chống rỉ, chịu tải 95%')
+  const [brokerName, setBrokerName] = useState('Đỗ Hoàng Nam (Chuyên Viên Sắt Thép)')
+  const [brokerPhone, setBrokerPhone] = useState('0912 888 999')
   const [videoUrl, setVideoUrl] = useState(
     'https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4'
   )
   const [audioUrl, setAudioUrl] = useState('https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3')
   const [image, setImage] = useState(
-    'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
+    'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80'
   )
   const [desc, setDesc] = useState('')
   const [triggerEmail, setTriggerEmail] = useState(true)
@@ -39,34 +42,42 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setTitle(property.title)
       setType(property.type)
       setProvince(property.province)
-      setKcn(property.kcn)
+      setKcn(property.kcn || '')
       setPrice(property.price)
+      setUnitPrice(property.unitPrice || '')
       setArea(property.area)
-      setPower(property.power)
-      setPccc(property.pccc)
+      setPower(property.power || '')
+      setPccc(property.pccc || '')
+      setBrokerName(property.brokerName || 'Ban Quản Lý Kho Xưởng')
+      setBrokerPhone(property.brokerPhone || '090 123 4567')
       setVideoUrl(property.videoUrl || '')
       setAudioUrl(property.audioUrl || '')
       setImage(property.image)
       setDesc(property.desc)
     } else {
       setTitle('')
-      setType('SALE')
+      setType('RECYCLED_STEEL')
       setProvince('Bình Dương')
-      setKcn('KCN VSIP 1')
-      setPrice(25000000000)
-      setArea('8.000 m2')
-      setPower('1.000 kVA')
-      setPccc('Tự Động (Sprinkler)')
+      setKcn('Kho Bãi ICD Tân Cảng')
+      setPrice(980000000)
+      setUnitPrice('306.000 đ/m²')
+      setArea('3.200 m2')
+      setPower('Kết cấu thép Zamil SS400')
+      setPccc('Sơn chống rỉ, chịu tải 95%')
+      setBrokerName('Đỗ Hoàng Nam (Chuyên Viên Sắt Thép)')
+      setBrokerPhone('0912 888 999')
       setVideoUrl(
         'https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4'
       )
       setAudioUrl('https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3')
-      setImage('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80')
+      setImage('https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80')
       setDesc('')
     }
   }, [property, isOpen])
 
   if (!isOpen) return null
+
+  const isRecycledSteel = type === 'RECYCLED_STEEL'
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,47 +96,30 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
     const priceDisplay = formatCurrency(price)
 
+    const propertyPayload = {
+      title,
+      type,
+      typeDisplay,
+      province,
+      kcn: kcn.trim() || (isRecycledSteel ? 'Kho Bãi Tập Kết Thép' : 'KCN Chuẩn'),
+      price,
+      priceDisplay,
+      unitPrice: unitPrice.trim(),
+      area,
+      power,
+      pccc,
+      brokerName,
+      brokerPhone,
+      videoUrl,
+      audioUrl,
+      image,
+      desc,
+    }
+
     if (property) {
-      updateProperty(
-        property.id,
-        {
-          title,
-          type,
-          typeDisplay,
-          province,
-          kcn,
-          price,
-          priceDisplay,
-          area,
-          power,
-          pccc,
-          videoUrl,
-          audioUrl,
-          image,
-          desc,
-        },
-        triggerEmail
-      )
+      updateProperty(property.id, propertyPayload, triggerEmail)
     } else {
-      addProperty(
-        {
-          title,
-          type,
-          typeDisplay,
-          province,
-          kcn,
-          price,
-          priceDisplay,
-          area,
-          power,
-          pccc,
-          videoUrl,
-          audioUrl,
-          image,
-          desc,
-        },
-        triggerEmail
-      )
+      addProperty(propertyPayload, triggerEmail)
     }
 
     onClose()
@@ -137,11 +131,18 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/70 dark:bg-slate-950/50">
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-base">
-              {property ? 'Chỉnh Sửa Thông Tin Mặt Hàng' : 'Thêm Mới & Xuất Bản Nhà Xưởng'}
+            <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+              {isRecycledSteel && <Layers className="w-5 h-5 text-teal-600" />}
+              {property
+                ? 'Chỉnh Sửa Thông Tin Mặt Hàng'
+                : isRecycledSteel
+                ? 'Thêm Mới Sắt Thép Tái Sử Dụng & Xuất Bản'
+                : 'Thêm Mới & Xuất Bản Nhà Xưởng'}
             </h3>
             <p className="text-[11px] text-slate-400">
-              Điền thông tin nhà xưởng và liên kết video drone
+              {isRecycledSteel
+                ? 'Điền đầy đủ thông số khối lượng, mác thép, vị trí bãi kho và liên kết video'
+                : 'Điền thông tin nhà xưởng, trạm điện, PCCC và liên kết video drone'}
             </p>
           </div>
           <button
@@ -156,7 +157,11 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
         <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-4">
           <Input
             label="Tiêu đề bài đăng"
-            placeholder="VD: Bán 10.000m2 Nhà xưởng KCN VSIP 1, Thanh lý khung thép tiền chế 3.000m2..."
+            placeholder={
+              isRecycledSteel
+                ? 'VD: Thanh lý khung thép tiền chế Zamil 3.200m2, Lô dầm H300 tháo dỡ 85 Tấn...'
+                : 'VD: Bán 10.000m2 Nhà xưởng KCN VSIP 1, Cho thuê kho CFS 5.000m2...'
+            }
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -170,8 +175,12 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as PropertyType)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-semibold"
               >
+                {/* Fallback to ensure Sắt Thép Tái Sử Dụng is always selectable even on older caches */}
+                {!categories.some((c) => c.code === 'RECYCLED_STEEL') && (
+                  <option value="RECYCLED_STEEL">Sắt Thép Tái Sử Dụng</option>
+                )}
                 {categories.map((c) => (
                   <option key={c.code} value={c.code}>
                     {c.name}
@@ -182,7 +191,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Tỉnh / Thành Phố
+                Tỉnh / Thành Phố (Vị trí hàng)
               </label>
               <select
                 value={province}
@@ -200,6 +209,23 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
+              label={isRecycledSteel ? 'Vị trí Bãi Kho / Tập Kết' : 'Khu Công Nghiệp / Vị Trí'}
+              value={kcn}
+              onChange={(e) => setKcn(e.target.value)}
+              placeholder={isRecycledSteel ? 'VD: Kho Bãi ICD Tân Cảng, KCN VSIP 1' : 'VD: KCN VSIP 1, KCN Amata'}
+              required
+            />
+            <Input
+              label={isRecycledSteel ? 'Diện tích / Khối lượng (m2 hoặc Tấn)' : 'Khuôn viên (m2)'}
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              placeholder={isRecycledSteel ? 'VD: 3.200 m2 hoặc 85 Tấn' : 'VD: 10.000 m2'}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
               label="Giá niêm yết (VNĐ)"
               type="number"
               step={10000000}
@@ -209,10 +235,40 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               required
             />
             <Input
-              label={type === 'RECYCLED_STEEL' ? 'Diện tích / Khối lượng (m2 hoặc Tấn)' : 'Khuôn viên (m2)'}
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-              placeholder={type === 'RECYCLED_STEEL' ? 'VD: 3.200 m2 hoặc 85 Tấn' : 'VD: 10.000 m2'}
+              label={isRecycledSteel ? 'Đơn giá tham chiếu (m2 hoặc kg)' : 'Đơn giá tham chiếu (m2 / tháng)'}
+              value={unitPrice}
+              onChange={(e) => setUnitPrice(e.target.value)}
+              placeholder={isRecycledSteel ? 'VD: 306.000 đ/m² hoặc 14.700 đ/kg' : 'VD: 4.5 Triệu/m2 hoặc 70.000 đ/m2'}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label={isRecycledSteel ? 'Mác thép / Chủng loại kết cấu' : 'Công suất trạm điện (kVA)'}
+              value={power}
+              onChange={(e) => setPower(e.target.value)}
+              placeholder={isRecycledSteel ? 'VD: Thép SS400, Khung Zamil, Dầm H350' : 'VD: 1.500 kVA, 2x1000 kVA'}
+            />
+            <Input
+              label={isRecycledSteel ? 'Chất lượng kiểm định & Bề mặt' : 'Hệ thống PCCC'}
+              value={pccc}
+              onChange={(e) => setPccc(e.target.value)}
+              placeholder={isRecycledSteel ? 'VD: Đạt 95%, Sơn chống rỉ, Đầy đủ bulong' : 'VD: Tự Động (Sprinkler), Thẩm duyệt'}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Người phụ trách / Liên hệ bãi"
+              value={brokerName}
+              onChange={(e) => setBrokerName(e.target.value)}
+              placeholder="VD: Đỗ Hoàng Nam (Chuyên Viên Sắt Thép)"
+            />
+            <Input
+              label="Hotline liên hệ"
+              value={brokerPhone}
+              onChange={(e) => setBrokerPhone(e.target.value)}
+              placeholder="VD: 0912 888 999"
             />
           </div>
 
@@ -231,13 +287,17 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Mô tả chi tiết quy hoạch & hạ tầng
+              {isRecycledSteel ? 'Mô tả chi tiết lô thép / tháo dỡ / vận chuyển' : 'Mô tả chi tiết quy hoạch & hạ tầng'}
             </label>
             <textarea
               rows={3}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
-              placeholder="Nhập chi tiết về trần cao, sàn tải trọng, đường container..."
+              placeholder={
+                isRecycledSteel
+                  ? 'VD: Khung dầm H400, bản mã dày, giằng xà gồ C200 đầy đủ, có cẩu trục 25 tấn hỗ trợ bốc xếp...'
+                  : 'Nhập chi tiết về trần cao, sàn tải trọng, đường container...'
+              }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
           </div>
@@ -256,7 +316,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               />
               <span className="flex items-center gap-1.5 font-medium">
                 <Mail className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                Gửi Email Bản Tin Real-time kèm thông số nhà xưởng & báo giá
+                Gửi Email Bản Tin Real-time kèm thông số mặt hàng & báo giá
               </span>
             </label>
           </div>

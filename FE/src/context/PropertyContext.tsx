@@ -82,12 +82,28 @@ const DEFAULT_FILTER: PropertyFilterState = {
 }
 
 export function PropertyProvider({ children }: { children: ReactNode }) {
-  const [properties, setProperties] = useState<Property[]>(() =>
-    storage.getItem('kcn_properties', INITIAL_PROPERTIES)
-  )
-  const [categories, setCategories] = useState<Category[]>(() =>
-    storage.getItem('kcn_categories', INITIAL_CATEGORIES)
-  )
+  const [properties, setProperties] = useState<Property[]>(() => {
+    const saved = storage.getItem<Property[]>('kcn_properties', INITIAL_PROPERTIES)
+    const existingIds = new Set(saved.map((p) => p.id))
+    const missing = INITIAL_PROPERTIES.filter((p) => !existingIds.has(p.id))
+    if (missing.length > 0) {
+      const merged = [...missing, ...saved]
+      storage.setItem('kcn_properties', merged)
+      return merged
+    }
+    return saved
+  })
+  const [categories, setCategories] = useState<Category[]>(() => {
+    const saved = storage.getItem<Category[]>('kcn_categories', INITIAL_CATEGORIES)
+    const existingCodes = new Set(saved.map((c) => c.code))
+    const missing = INITIAL_CATEGORIES.filter((c) => !existingCodes.has(c.code))
+    if (missing.length > 0) {
+      const merged = [...saved, ...missing]
+      storage.setItem('kcn_categories', merged)
+      return merged
+    }
+    return saved
+  })
   const [notices, setNotices] = useState<Notice[]>(() =>
     storage.getItem('kcn_notices', INITIAL_NOTICES)
   )
@@ -106,6 +122,31 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   const [activeModal, setActiveModal] = useState<PropertyContextType['activeModal']>('none')
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
   const [toasts, setToasts] = useState<ToastItem[]>([])
+
+  // Ensure default categories and recycled steel properties exist even on previously cached browser sessions
+  useEffect(() => {
+    setCategories((prev) => {
+      const existingCodes = new Set(prev.map((c) => c.code))
+      const missing = INITIAL_CATEGORIES.filter((c) => !existingCodes.has(c.code))
+      if (missing.length > 0) {
+        const next = [...prev, ...missing]
+        storage.setItem('kcn_categories', next)
+        return next
+      }
+      return prev
+    })
+
+    setProperties((prev) => {
+      const existingIds = new Set(prev.map((p) => p.id))
+      const missing = INITIAL_PROPERTIES.filter((p) => !existingIds.has(p.id))
+      if (missing.length > 0) {
+        const next = [...missing, ...prev]
+        storage.setItem('kcn_properties', next)
+        return next
+      }
+      return prev
+    })
+  }, [])
 
   // Sync to localStorage
   useEffect(() => {
