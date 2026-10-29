@@ -10,7 +10,6 @@ import {
   Maximize2,
   Box,
   Phone,
-  Mail,
 } from 'lucide-react'
 import type { Property } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
@@ -99,18 +98,6 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
                   <span>Hình Ảnh Thực Tế</span>
                 </button>
               </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  onClose()
-                  open3DModal(property)
-                }}
-                className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300 transition"
-              >
-                <Box className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>Xem Mô Hình 3D Xoay 360°</span>
-              </button>
             </div>
 
             {/* Video / Image Display */}
@@ -222,20 +209,20 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
         </div>
 
         {/* Modal Footer / Contact CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950/50">
-          <div className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
-            <span>Chuyên viên: <b>{property.brokerName || 'Ban Quản Lý Nhà Xưởng'}</b> • Hotline: <b>{property.brokerPhone || '090 123 4567'}</b></span>
-          </div>
-
+        <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950/50">
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            {/* Contact Email CTA */}
-            <a
-              href={`mailto:contact@nhaxuong.vn?subject=Yêu cầu báo giá mặt bằng: ${encodeURIComponent(property.title)}`}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 dark:bg-slate-700 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-900 transition"
+            {/* 3D Demo CTA */}
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                open3DModal(property)
+              }}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 dark:bg-slate-700 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-900 transition cursor-pointer"
             >
-              <Mail className="w-4 h-4" />
-              <span>Nhận Báo Giá & Hồ Sơ</span>
-            </a>
+              <Box className="w-4 h-4 text-amber-400" />
+              <span>Xem demo mô hình 3D</span>
+            </button>
 
             {/* Hotline Call CTA */}
             <a
