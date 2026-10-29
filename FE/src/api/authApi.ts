@@ -81,7 +81,7 @@ export const authApi = {
       }
     }
 
-    return axiosClient.post('/auth/google')
+    return axiosClient.post(API_ENDPOINTS.AUTH.GOOGLE)
   },
 
   async loginWithPhone(credentials: PhoneAuthCredentials): Promise<AuthResponse> {
@@ -102,7 +102,7 @@ export const authApi = {
       }
     }
 
-    return axiosClient.post('/auth/phone/login', credentials)
+    return axiosClient.post(API_ENDPOINTS.AUTH.PHONE_LOGIN, credentials)
   },
 
   async registerWithPhone(credentials: PhoneAuthCredentials): Promise<AuthResponse> {
@@ -123,7 +123,7 @@ export const authApi = {
       }
     }
 
-    return axiosClient.post('/auth/phone/register', credentials)
+    return axiosClient.post(API_ENDPOINTS.AUTH.PHONE_REGISTER, credentials)
   },
 
   async sendOtp(phone: string): Promise<{ otp: string; message: string }> {
@@ -134,7 +134,7 @@ export const authApi = {
         message: `Mã OTP đã được gửi đến số điện thoại ${phone}: 123456`,
       }
     }
-    return axiosClient.post('/auth/phone/send-otp', { phone })
+    return axiosClient.post(API_ENDPOINTS.AUTH.PHONE_SEND_OTP, { phone })
   },
 
   async getMe(): Promise<User> {
