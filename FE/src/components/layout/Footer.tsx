@@ -27,7 +27,7 @@ export function Footer() {
                   NHAXUONG<span className="text-teal-600 dark:text-teal-400">.VN</span>
                 </span>
                 <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                  Sàn Giao Dịch Bất Động Sản Công Nghiệp Toàn Quốc
+                  Sàn Giao Dịch Nhà Xưởng Toàn Quốc
                 </p>
               </div>
             </div>
@@ -60,10 +60,10 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Col 3: Danh Mục BĐS */}
+          {/* Col 3: Danh Mục Nhà Xưởng */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-              Bất Động Sản Công Nghiệp
+              Danh Mục Nhà Xưởng
             </h4>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li className="hover:text-teal-600 dark:hover:text-teal-400 cursor-pointer flex items-center gap-1.5">
@@ -108,10 +108,10 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Col 5: Dịch Vụ & Pháp Lý BĐS */}
+          {/* Col 5: Dịch Vụ & Pháp Lý Nhà Xưởng */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-              Dịch Vụ BĐS Doanh Nghiệp
+              Dịch Vụ Nhà Xưởng Doanh Nghiệp
             </h4>
             <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
@@ -130,7 +130,7 @@ export function Footer() {
       {/* Bottom Bar */}
       <div className="border-t border-slate-100 bg-slate-50 py-4 px-6 text-center text-xs text-slate-500 dark:border-slate-900 dark:bg-slate-900/60 dark:text-slate-400">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>© {new Date().getFullYear()} NHAXUONG.VN - Bản quyền thuộc Công Ty Cổ Phần BĐS Công Nghiệp Nhà Xưởng Việt Nam.</p>
+          <p>© {new Date().getFullYear()} NHAXUONG.VN - Bản quyền thuộc Công Ty Cổ Phần Nhà Xưởng Việt Nam.</p>
           <div className="flex items-center gap-4 text-[11px] font-medium">
             <span className="hover:text-teal-600 transition-colors cursor-pointer">Quy chế hoạt động sàn</span>
             <span>•</span>

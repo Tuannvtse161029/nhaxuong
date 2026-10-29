@@ -32,7 +32,7 @@ export const INITIAL_PROPERTIES: Property[] = [
     legalStatus: 'Sổ hồng SKC 50 năm (Đã hoàn công)',
     roadAccess: 'Container 40 feet không cấm giờ',
     verified: true,
-    brokerName: 'Trần Quang Dũng (GĐ BĐS KCN)',
+    brokerName: 'Trần Quang Dũng (GĐ Nhà Xưởng KCN)',
     brokerPhone: '0901 234 567',
   },
   {
@@ -123,7 +123,7 @@ export const INITIAL_PROPERTIES: Property[] = [
     legalStatus: 'Nghiệm thu PCCC 2026',
     roadAccess: 'Đường KCN 32m xe cont 2 chiều',
     verified: true,
-    brokerName: 'Vũ Mạnh Cường (BĐS Công Nghiệp Hải Phòng)',
+    brokerName: 'Vũ Mạnh Cường (Nhà Xưởng Hải Phòng)',
     brokerPhone: '0936 998 877',
   },
   {
@@ -152,7 +152,7 @@ export const INITIAL_PROPERTIES: Property[] = [
     legalStatus: 'Sổ hồng SKC (Bàn giao ngay)',
     roadAccess: 'Cách cao tốc Hà Nội - Thái Nguyên 2km',
     verified: true,
-    brokerName: 'Phạm Thu Trang (BĐS Vùng Thủ Đô)',
+    brokerName: 'Phạm Thu Trang (Nhà Xưởng Vùng Thủ Đô)',
     brokerPhone: '0977 554 433',
   },
 ]
@@ -190,13 +190,21 @@ export const INITIAL_NOTICES: Notice[] = [
     active: true,
     createdAt: '2026-10-26',
   },
+  {
+    id: 'not-4',
+    title: 'Hướng dẫn chuẩn bị hồ sơ pháp lý và thẩm định nhà xưởng FDI',
+    content: 'Cập nhật danh mục thủ tục cấp chứng nhận đầu tư IRC, ERC và tiêu chuẩn PCCC mới nhất cho nhà xưởng xây sẵn.',
+    badge: 'Pháp Lý Xưởng',
+    active: true,
+    createdAt: '2026-10-25',
+  },
 ]
 
 export const INITIAL_SUBSCRIBERS: Subscriber[] = [
   { id: 'sub-1', name: 'Công Ty CP Đầu Tư Nam Phát', email: 'namphat.invest@gmail.com', phone: '0903123456', time: '10:15 28/10/2026', status: 'Delivered (Inbox)', channel: 'email' },
   { id: 'sub-2', name: 'Đặng Minh Quân (CEO Logistics Tân Cảng)', email: 'quan.dang@logistics.vn', phone: '0918765432', time: '09:40 28/10/2026', status: 'Delivered (Hotline)', channel: 'hotline' },
   { id: 'sub-3', name: 'FDI Techtronics Industries Co.', email: 'techtronics.vn@gmail.com', time: '08:12 28/10/2026', status: 'Delivered (Inbox)', channel: 'email' },
-  { id: 'sub-4', name: 'Trần Bảo Long (Quỹ Đầu Tư BĐS Sài Gòn)', email: 'long.tran@saigonfund.com', phone: '0988112233', time: '16:20 27/10/2026', status: 'Delivered (Hotline)', channel: 'hotline' },
+  { id: 'sub-4', name: 'Trần Bảo Long (Quỹ Đầu Tư Nhà Xưởng Sài Gòn)', email: 'long.tran@saigonfund.com', phone: '0988112233', time: '16:20 27/10/2026', status: 'Delivered (Hotline)', channel: 'hotline' },
 ]
 
 export const PROVINCES_LIST = [

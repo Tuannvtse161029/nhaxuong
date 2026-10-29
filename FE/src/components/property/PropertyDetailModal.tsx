@@ -194,7 +194,7 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
               <b className="text-slate-800 dark:text-slate-200 mt-0.5 block">{property.floorLoad || '5 tấn/m²'}</b>
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Pháp Lý BĐS</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Pháp Lý Nhà Xưởng</span>
               <b className="text-emerald-600 dark:text-emerald-400 mt-0.5 block truncate">{property.legalStatus || 'Sổ hồng SKC'}</b>
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
@@ -224,7 +224,7 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
         {/* Modal Footer / Contact CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950/50">
           <div className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
-            <span>Chuyên viên: <b>{property.brokerName || 'Ban Quản Lý BĐS KCN'}</b> • Hotline: <b>{property.brokerPhone || '090 123 4567'}</b></span>
+            <span>Chuyên viên: <b>{property.brokerName || 'Ban Quản Lý Nhà Xưởng'}</b> • Hotline: <b>{property.brokerPhone || '090 123 4567'}</b></span>
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">

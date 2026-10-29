@@ -139,7 +139,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               {property ? 'Chỉnh Sửa Thông Tin Mặt Hàng' : 'Thêm Mới & Xuất Bản Nhà Xưởng'}
             </h3>
             <p className="text-[11px] text-slate-400">
-              Điền thông tin bất động sản và liên kết video drone
+              Điền thông tin nhà xưởng và liên kết video drone
             </p>
           </div>
           <button

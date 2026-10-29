@@ -129,7 +129,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
               ? 'bg-white text-red-500 dark:bg-slate-900'
               : 'bg-slate-950/60 text-white/80 hover:text-red-400 hover:bg-slate-950/90'
           )}
-          title="Lưu tin BĐS vào danh sách quan tâm"
+          title="Lưu tin Nhà Xưởng vào danh sách quan tâm"
         >
           <Heart className={cn('w-4 h-4', saved ? 'fill-red-500 text-red-500' : '')} />
         </button>
@@ -184,7 +184,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             {property.title}
           </h3>
 
-          {/* Price Header (BĐS Style: Prominent Big Price & Unit Price) */}
+          {/* Price Header (Nhà Xưởng Style: Prominent Big Price & Unit Price) */}
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-lg sm:text-xl font-black text-red-600 dark:text-red-400 tracking-tight">
               {property.priceDisplay}
@@ -202,7 +202,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </p>
         </div>
 
-        {/* 3. BĐS Technical Specifications Grid */}
+        {/* 3. Nhà Xưởng Specifications Grid */}
         <div className="grid grid-cols-3 gap-1.5 py-2.5 px-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-100 dark:border-slate-800 text-center text-[11px]">
           <div>
             <span className="text-slate-400 dark:text-slate-500 block text-[9.5px] uppercase font-bold tracking-wider">
@@ -260,11 +260,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
                   {property.brokerName}
                 </p>
-                <p className="text-[10px] text-slate-400">Chuyên viên BĐS KCN</p>
+                <p className="text-[10px] text-slate-400">Chuyên viên Nhà Xưởng</p>
               </div>
             </div>
           ) : (
-            <span className="text-[11px] text-slate-400 font-medium">BĐS Chính Chủ</span>
+            <span className="text-[11px] text-slate-400 font-medium">Nhà Xưởng Chính Chủ</span>
           )}
 
           <div className="flex items-center gap-1.5 shrink-0">

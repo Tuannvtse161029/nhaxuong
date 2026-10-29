@@ -71,7 +71,7 @@ export function HomePage() {
 
   return (
     <div className="space-y-12 pb-8">
-      {/* 1. HERO BANNER CHUẨN SÀN GIAO DỊCH BẤT ĐỘNG SẢN CÔNG NGHIỆP */}
+      {/* 1. HERO BANNER CHUẨN SÀN GIAO DỊCH NHÀ XƯỞNG */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 p-6 sm:p-10 lg:p-12 text-white shadow-2xl border border-slate-800">
         {/* Subtle Architectural Grid Lines */}
         <div className="pointer-events-none absolute -right-10 -bottom-10 opacity-5">
@@ -79,10 +79,10 @@ export function HomePage() {
         </div>
 
         <div className="relative z-10 max-w-4xl">
-          {/* Badge BĐS Sàn Giao Dịch */}
+          {/* Badge Sàn Giao Dịch Nhà Xưởng */}
           <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-bold text-teal-300 backdrop-blur-md mb-4 shadow-xs">
             <span className="h-2 w-2 rounded-full bg-teal-400 animate-ping" />
-            <span>SÀN GIAO DỊCH BẤT ĐỘNG SẢN CÔNG NGHIỆP VIỆT NAM (NHAXUONG.VN)</span>
+            <span>SÀN GIAO DỊCH NHÀ XƯỞNG VIỆT NAM (NHAXUONG.VN)</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight font-sans">
@@ -90,8 +90,7 @@ export function HomePage() {
           </h1>
 
           <p className="mt-3 text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Nền tảng tra cứu và giao dịch kho xưởng hàng đầu với công nghệ <b>Mô hình 3D Tour 360°</b>,{' '}
-            <b>Audio thuyết minh (.mp3)</b> và <b>Video Flycam 1080p</b>. Toàn bộ tin đăng đã được thẩm định
+            Nền tảng tra cứu và giao dịch kho xưởng hàng đầu với công nghệ <b>Mô hình 3D Tour 360°</b> và <b>Video Flycam 1080p</b>. Toàn bộ tin đăng đã được thẩm định
             pháp lý <b>Sổ hồng SKC</b> và <b>Nghiệm thu PCCC</b>.
           </p>
 
@@ -140,18 +139,18 @@ export function HomePage() {
               className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/90 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-200 hover:bg-slate-800 backdrop-blur-md transition"
             >
               <Mail className="w-4 h-4 text-teal-400" />
-              <span>Đăng Ký Nhận Báo Cáo Thị Trường BĐS</span>
+              <span>Đăng Ký Nhận Báo Cáo Thị Trường Nhà Xưởng</span>
             </button>
           </div>
         </div>
 
-        {/* 2. Bộ Lọc Tìm Kiếm BĐS Công Nghiệp (Search & Filter Bar) */}
+        {/* 2. Bộ Lọc Tìm Kiếm Nhà Xưởng (Search & Filter Bar) */}
         <div className="mt-8">
           <PropertyFilterBar />
         </div>
       </div>
 
-      {/* 2. DANH SÁCH BẤT ĐỘNG SẢN CÔNG NGHIỆP ĐANG MỞ BÁN & CHO THUÊ */}
+      {/* 2. DANH SÁCH NHÀ XƯỞNG ĐANG MỞ BÁN & CHO THUÊ */}
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-4 dark:border-slate-800">
           <div>
@@ -164,8 +163,7 @@ export function HomePage() {
               </h2>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Hiển thị <b className="text-slate-900 dark:text-white">{filteredProperties.length}</b> bất động sản
-              công nghiệp phù hợp với tiêu chí của bạn
+              Hiển thị <b className="text-slate-900 dark:text-white">{filteredProperties.length}</b> nhà xưởng phù hợp với tiêu chí của bạn
             </p>
           </div>
 
@@ -216,7 +214,7 @@ export function HomePage() {
         )}
       </div>
 
-      {/* 3. SECTION BĐS: TOP KHU CÔNG NGHIỆP TRỌNG ĐIỂM THU HÚT ĐẦU TƯ */}
+      {/* 3. SECTION NHÀ XƯỞNG: TOP KHU CÔNG NGHIỆP TRỌNG ĐIỂM THU HÚT ĐẦU TƯ */}
       <div className="space-y-5 pt-6 border-t border-slate-200/80 dark:border-slate-800">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -263,11 +261,11 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* 4. SECTION BĐS: QUY CHUẨN GIAO DỊCH & DỊCH VỤ PHÁP LÝ NHÀ XƯỞNG */}
+      {/* 4. SECTION NHÀ XƯỞNG: QUY CHUẨN GIAO DỊCH & DỊCH VỤ PHÁP LÝ NHÀ XƯỞNG */}
       <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-teal-50/40 p-6 sm:p-10 dark:border-slate-800 dark:bg-slate-900/60 dark:from-slate-900 dark:to-slate-950">
         <div className="max-w-3xl mb-8">
           <span className="text-xs font-black uppercase tracking-wider text-teal-700 dark:text-teal-400">
-            Quy Trình Chuẩn BĐS Công Nghiệp
+            Quy Trình Chuẩn Nhà Xưởng
           </span>
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
             4 Bước Đầu Tư & Thuê Nhà Xưởng An Toàn Tại NHAXUONG.VN

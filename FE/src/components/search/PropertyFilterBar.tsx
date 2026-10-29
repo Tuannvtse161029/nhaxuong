@@ -25,7 +25,7 @@ export function PropertyFilterBar() {
 
   return (
     <div className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
-      {/* Tier 1: Category Segmented Tabs (BĐS Tabs) */}
+      {/* Tier 1: Category Segmented Tabs (Nhà Xưởng Tabs) */}
       <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
         {tabs.map((tab) => {
           const Icon = tab.icon
@@ -64,7 +64,7 @@ export function PropertyFilterBar() {
         {/* 1. Keyword search */}
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-            Từ khóa tìm kiếm BĐS
+            Từ khóa tìm kiếm Nhà Xưởng
           </label>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -123,7 +123,7 @@ export function PropertyFilterBar() {
         {/* 4. Sort By */}
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-            Sắp xếp bài đăng BĐS
+            Sắp xếp bài đăng Nhà Xưởng
           </label>
           <div className="relative">
             <Filter className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-blue-500" />
@@ -154,7 +154,7 @@ export function PropertyFilterBar() {
         />
       </div>
 
-      {/* Tier 4: Quick Tag Pills (BĐS Shortcuts) */}
+      {/* Tier 4: Quick Tag Pills (Nhà Xưởng Shortcuts) */}
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-2">
         <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-wider">
           <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Tiêu chí nhanh:

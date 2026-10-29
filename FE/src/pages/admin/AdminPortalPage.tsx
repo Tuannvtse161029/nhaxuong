@@ -201,10 +201,10 @@ export function AdminPortalPage() {
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Boxes className="w-5 h-5 text-teal-600" />
-                Quản Lý Mặt Hàng BĐS Công Nghiệp (CRUD)
+                Quản Lý Mặt Hàng Nhà Xưởng (CRUD)
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Thêm mới, sửa chi tiết giá, diện tích, video flycam, tệp mp3 và mô hình 3D.
+                Thêm mới, sửa chi tiết giá, diện tích, video flycam và hình ảnh thực tế.
               </p>
             </div>
             <button
