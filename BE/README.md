@@ -63,4 +63,3 @@ Tệp [`Nhaxuong.API/appsettings.json`](file:///d:/Nh%C3%A0%20X%C6%B0%E1%BB%9Fng
 - **ConnectionStrings**: Chuỗi kết nối Database `DefaultConnection`.
 - **Jwt**: Khóa bảo mật `Key`, `Issuer: Nhaxuong`, `Audience: NhaxuongUsers`, `ExpireMinutes`.
 - **EmailSettings**: Cấu hình SMTP Gmail thông báo bản tin.
-- **AI Settings**: Gemini & OpenAI API Configuration (nếu cần xử lý tóm tắt hoặc sinh mô tả tự động).
