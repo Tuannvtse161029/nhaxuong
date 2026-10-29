@@ -12,13 +12,17 @@ import {
   MapPin,
   Building2,
   FileCheck2,
+  LogIn,
+  LogOut,
 } from 'lucide-react'
 import { useProperties } from '@/context/PropertyContext'
+import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 import { Link, useNavigate } from 'react-router-dom'
 import { cn } from '@/utils/cn'
 
 export function Header() {
+  const { user, openAuthModal, logout } = useAuth()
   const {
     role,
     setRole,
@@ -219,6 +223,45 @@ export function Header() {
                 <Plus className="w-4 h-4" />
                 <span>Đăng Xưởng Mới</span>
               </button>
+            )}
+
+            {/* User Account or Login Button */}
+            {!user ? (
+              <button
+                type="button"
+                onClick={() => openAuthModal('login')}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition shadow-xs"
+              >
+                <LogIn className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                <span className="hidden sm:inline">Đăng Nhập / Đăng Ký</span>
+                <span className="sm:hidden">Vào</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 p-1 pl-1.5">
+                <div className="h-6 w-6 rounded-full overflow-hidden bg-teal-600 flex items-center justify-center text-[10px] text-white font-bold shrink-0">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                  ) : (
+                    user.name.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div className="hidden lg:block text-left text-xs leading-none pr-1">
+                  <span className="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[90px] block">
+                    {user.name}
+                  </span>
+                  <span className="text-[9.5px] text-slate-400 font-mono">
+                    {user.phone || user.email.split('@')[0]}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  className="p-1 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                  title="Đăng xuất"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
 
             {/* Switch Mode Button */}

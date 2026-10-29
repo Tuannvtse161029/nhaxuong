@@ -7,6 +7,7 @@ export interface User {
   role: UserRole
   avatar?: string
   phone?: string
+  authProvider?: 'email' | 'google' | 'phone'
   createdAt?: string
 }
 
@@ -22,6 +23,13 @@ export interface RegisterCredentials {
   password: string
   confirmPassword?: string
   phone?: string
+}
+
+export interface PhoneAuthCredentials {
+  phone: string
+  otp?: string
+  name?: string
+  password?: string
 }
 
 export interface AuthResponse {

@@ -1,6 +1,7 @@
 import { NoticeTickerBar } from '@/components/notice/NoticeTickerBar'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { AuthModal } from '@/components/auth/AuthModal'
 import { useProperties } from '@/context/PropertyContext'
 import { HomePage } from '@/pages/HomePage'
 import { AdminPortalPage } from '@/pages/admin/AdminPortalPage'
@@ -60,6 +61,9 @@ export function MainLayout() {
           </div>
         ))}
       </div>
+
+      {/* 6. Global Authentication Modal (Google & Phone Auth) */}
+      <AuthModal />
     </div>
   )
 }

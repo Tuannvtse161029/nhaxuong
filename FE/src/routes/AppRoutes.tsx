@@ -15,6 +15,7 @@ export function AppRoutes() {
       {/* Auth Routes */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<LoginPage />} />
       </Route>
 
       {/* 404 Fallback */}
