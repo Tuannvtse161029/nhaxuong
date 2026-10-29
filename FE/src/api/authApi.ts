@@ -63,7 +63,7 @@ export const authApi = {
     return axiosClient.post(API_ENDPOINTS.AUTH.REGISTER, credentials)
   },
 
-  async loginWithGoogle(): Promise<AuthResponse> {
+  async loginWithGoogle(idToken?: string): Promise<AuthResponse> {
     if (ENV.USE_MOCK_API) {
       await new Promise((resolve) => setTimeout(resolve, 600))
       return {
@@ -81,7 +81,7 @@ export const authApi = {
       }
     }
 
-    return axiosClient.post(API_ENDPOINTS.AUTH.GOOGLE, {})
+    return axiosClient.post(API_ENDPOINTS.AUTH.GOOGLE, { idToken })
   },
 
   async loginWithPhone(credentials: PhoneAuthCredentials): Promise<AuthResponse> {

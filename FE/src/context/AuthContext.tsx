@@ -14,7 +14,7 @@ export interface AuthContextType {
   closeAuthModal: () => void
   login: (credentials: LoginCredentials) => Promise<void>
   register: (credentials: RegisterCredentials) => Promise<void>
-  loginWithGoogle: () => Promise<void>
+  loginWithGoogle: (idToken?: string) => Promise<void>
   loginWithPhone: (phone: string, otp?: string, name?: string) => Promise<void>
   registerWithPhone: (phone: string, name: string, otp?: string) => Promise<void>
   sendOtp: (phone: string) => Promise<string>
@@ -90,10 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (idToken?: string) => {
     setIsLoading(true)
     try {
-      const res = await authApi.loginWithGoogle()
+      const res = await authApi.loginWithGoogle(idToken)
       handleAuthSuccess(res)
     } finally {
       setIsLoading(false)

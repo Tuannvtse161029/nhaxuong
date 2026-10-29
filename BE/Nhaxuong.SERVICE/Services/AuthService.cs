@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Google.Apis.Auth;
 using Nhaxuong.MODEL.Configurations;
 using Nhaxuong.MODEL.Entities;
 using Nhaxuong.SERVICE.DTOs.Request;
@@ -20,11 +22,13 @@ namespace Nhaxuong.SERVICE.Services
     {
         private readonly AppDbContext _context;
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly IConfiguration _configuration;
 
-        public AuthService(AppDbContext context, IJwtTokenService jwtTokenService)
+        public AuthService(AppDbContext context, IJwtTokenService jwtTokenService, IConfiguration configuration)
         {
             _context = context;
             _jwtTokenService = jwtTokenService;
+            _configuration = configuration;
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequest request)
@@ -108,9 +112,42 @@ namespace Nhaxuong.SERVICE.Services
 
         public async Task<AuthResponseDto> GoogleAuthAsync(GoogleAuthRequest request)
         {
-            var email = !string.IsNullOrWhiteSpace(request.Email)
-                ? request.Email.ToLower()
-                : $"google.user.{DateTime.UtcNow.Ticks}@gmail.com";
+            string email = "";
+            string name = "";
+            string? avatar = null;
+
+            if (!string.IsNullOrWhiteSpace(request.IdToken))
+            {
+                try
+                {
+                    var settings = new GoogleJsonWebSignature.ValidationSettings();
+                    var clientId = _configuration["GoogleAuthSettings:ClientId"]
+                                   ?? _configuration["Authentication:Google:ClientId"];
+                    if (!string.IsNullOrWhiteSpace(clientId))
+                    {
+                        settings.Audience = new[] { clientId };
+                    }
+                    var payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
+                    if (payload != null)
+                    {
+                        email = payload.Email.ToLower();
+                        name = !string.IsNullOrWhiteSpace(payload.Name) ? payload.Name : payload.Email.Split('@')[0];
+                        avatar = payload.Picture;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Xác thực mã Google Token thất bại: " + ex.Message);
+                }
+            }
+            else
+            {
+                email = !string.IsNullOrWhiteSpace(request.Email)
+                    ? request.Email.ToLower()
+                    : $"google.user.{DateTime.UtcNow.Ticks}@gmail.com";
+                name = !string.IsNullOrWhiteSpace(request.Name) ? request.Name : "Khách Hàng Google";
+                avatar = request.Avatar ?? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=128&auto=format&fit=crop&q=80";
+            }
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
             if (user == null)
@@ -118,15 +155,23 @@ namespace Nhaxuong.SERVICE.Services
                 user = new User
                 {
                     Id = "usr_gg_" + Guid.NewGuid().ToString("N")[..10],
-                    Name = !string.IsNullOrWhiteSpace(request.Name) ? request.Name : "Khách Hàng Google",
+                    Name = name,
                     Email = email,
-                    Avatar = request.Avatar ?? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=128&auto=format&fit=crop&q=80",
+                    Avatar = avatar ?? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=128&auto=format&fit=crop&q=80",
                     Role = "user",
                     AuthProvider = "google",
                     CreatedAt = DateTime.UtcNow
                 };
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(avatar) && string.IsNullOrWhiteSpace(user.Avatar))
+                {
+                    user.Avatar = avatar;
+                    await _context.SaveChangesAsync();
+                }
             }
 
             var token = _jwtTokenService.GenerateToken(user);

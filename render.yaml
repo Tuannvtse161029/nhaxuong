@@ -15,4 +15,8 @@ services:
         value: http://+:8080
       - key: ConnectionStrings__DefaultConnection
         value: "Server=tcp:35.240.181.166,1433;Database=NhaxuongDb;User Id=sa;Password=baopro2147!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true"
+      - key: GoogleAuthSettings__ClientId
+        sync: false
+      - key: GoogleAuthSettings__ClientSecret
+        sync: false
     healthCheckPath: /healthz
