@@ -164,9 +164,14 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
                 Giá niêm yết
               </span>
-              <p className="text-sm font-bold text-teal-700 dark:text-teal-400">
+              <p className="text-sm font-bold text-red-600 dark:text-red-400">
                 {property.priceDisplay}
               </p>
+              {property.unitPrice && (
+                <span className="text-[11px] text-slate-500 font-medium block">
+                  {property.unitPrice}
+                </span>
+              )}
             </div>
 
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-800/50">
@@ -187,6 +192,26 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
                 <ShieldCheck className="w-3.5 h-3.5" />
                 {property.pccc}
               </p>
+            </div>
+          </div>
+
+          {/* Extra Industrial Specs Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Chiều Cao Trần</span>
+              <b className="text-slate-800 dark:text-slate-200 mt-0.5 block">{property.ceilingHeight || '11 mét'}</b>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Tải Trọng Sàn</span>
+              <b className="text-slate-800 dark:text-slate-200 mt-0.5 block">{property.floorLoad || '5 tấn/m²'}</b>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Pháp Lý BĐS</span>
+              <b className="text-emerald-600 dark:text-emerald-400 mt-0.5 block truncate">{property.legalStatus || 'Sổ hồng SKC'}</b>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Đường Xe Cont</span>
+              <b className="text-slate-800 dark:text-slate-200 mt-0.5 block truncate">{property.roadAccess || 'Container 40ft'}</b>
             </div>
           </div>
 
@@ -211,26 +236,26 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
         {/* Modal Footer / Contact CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950/50">
           <div className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
-            <span>Ngày đăng: <b>{property.created}</b> • Đã kiểm duyệt pháp lý</span>
+            <span>Chuyên viên: <b>{property.brokerName || 'Ban Quản Lý BĐS KCN'}</b> • Hotline: <b>{property.brokerPhone || '090 123 4567'}</b></span>
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
             {/* Contact Email CTA */}
             <a
-              href="mailto:contact@nhaxuong.com?subject=Tư vấn mặt bằng"
+              href={`mailto:contact@nhaxuong.vn?subject=Yêu cầu báo giá mặt bằng: ${encodeURIComponent(property.title)}`}
               className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 dark:bg-slate-700 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-900 transition"
             >
               <Mail className="w-4 h-4" />
-              <span>Gửi Email Báo Giá</span>
+              <span>Nhận Báo Giá & Hồ Sơ</span>
             </a>
 
             {/* Hotline Call CTA */}
             <a
-              href="tel:0901234567"
+              href={`tel:${(property.brokerPhone || '0901234567').replace(/\s+/g, '')}`}
               className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-teal-800 transition"
             >
               <Phone className="w-4 h-4" />
-              <span>Gọi 090 123 4567</span>
+              <span>Gọi {property.brokerPhone || '090 123 4567'}</span>
             </a>
           </div>
         </div>

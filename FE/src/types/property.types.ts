@@ -21,6 +21,14 @@ export interface Property {
   desc: string
   created: string
   emailNotified?: boolean
+  unitPrice?: string // e.g. "4.0 Triệu/m2" or "70.000 đ/m2/tháng"
+  ceilingHeight?: string // e.g. "11 mét"
+  floorLoad?: string // e.g. "5 tấn/m2"
+  legalStatus?: string // e.g. "Sổ hồng SKC (Sẵn sàng công chứng)"
+  roadAccess?: string // e.g. "Container 40ft không cấm giờ"
+  verified?: boolean
+  brokerName?: string
+  brokerPhone?: string
 }
 
 export interface Category {
