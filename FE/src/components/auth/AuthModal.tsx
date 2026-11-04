@@ -82,25 +82,23 @@ export function AuthModal() {
 
     try {
       if (isFirebaseConfigured && auth) {
-        if (window.recaptchaVerifier) {
-          try {
-            window.recaptchaVerifier.clear()
-          } catch {
-            // ignore
+        let verifier = window.recaptchaVerifier
+        if (!verifier) {
+          const container = document.getElementById('recaptcha-container')
+          if (container) {
+            container.innerHTML = ''
           }
-          window.recaptchaVerifier = undefined
+          verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'invisible',
+            callback: () => {
+              // reCAPTCHA solved
+            },
+            'expired-callback': () => {
+              setError('Mã xác thực bảo mật reCAPTCHA đã hết hạn, vui lòng bấm gửi lại mã.')
+            },
+          })
+          window.recaptchaVerifier = verifier
         }
-
-        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-          callback: () => {
-            // reCAPTCHA solved
-          },
-          'expired-callback': () => {
-            setError('Mã xác thực bảo mật reCAPTCHA đã hết hạn, vui lòng bấm gửi lại mã.')
-          },
-        })
-        window.recaptchaVerifier = verifier
 
         const confirmation = await signInWithPhoneNumber(auth, formattedPhone, verifier)
         setConfirmationResult(confirmation)
@@ -126,13 +124,29 @@ export function AuthModal() {
       }, 1000)
     } catch (err: any) {
       console.error('Send OTP error:', err)
+      // Reset reCAPTCHA on failure so next click is fresh
+      const container = document.getElementById('recaptcha-container')
+      if (container) {
+        container.innerHTML = ''
+      }
+      if (window.recaptchaVerifier) {
+        try {
+          window.recaptchaVerifier.clear()
+        } catch {
+          // ignore
+        }
+        window.recaptchaVerifier = undefined
+      }
+
       let msg = 'Không thể gửi mã OTP. Vui lòng thử lại sau.'
-      if (err?.code === 'auth/invalid-phone-number') {
-        msg = 'Số điện thoại không đúng định dạng. Ví dụ: 0901234567 hoặc +84901234567'
+      if (err?.code === 'auth/operation-not-allowed') {
+        msg = 'Khu vực Việt Nam (+84) chưa được bật trong Firebase. Bạn hãy vào Firebase Console > Authentication > Settings > SMS region policy và tích chọn Vietnam (+84).'
+      } else if (err?.code === 'auth/invalid-phone-number') {
+        msg = 'Số điện thoại không đúng định dạng. Ví dụ: 0978537446 hoặc +84978537446'
       } else if (err?.code === 'auth/too-many-requests') {
-        msg = 'Bạn đã gửi yêu cầu quá nhiều lần trong thời gian ngắn. Vui lòng chờ ít phút.'
+        msg = 'Bạn đã gửi yêu cầu quá nhiều lần trong thời gian ngắn. Vui lòng chờ ít phút rồi thử lại.'
       } else if (err?.code === 'auth/quota-exceeded') {
-        msg = 'Hạn mức gửi tin nhắn SMS của Firebase hôm nay đã đầy.'
+        msg = 'Hạn mức gửi tin nhắn SMS của Firebase hôm nay đã đầy (tối đa 10 SMS/ngày với dự án mới).'
       } else if (err?.message) {
         msg = err.message
       }
