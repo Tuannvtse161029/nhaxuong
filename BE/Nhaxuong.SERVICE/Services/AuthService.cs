@@ -348,13 +348,15 @@ namespace Nhaxuong.SERVICE.Services
                 try
                 {
                     using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                    var brandname = _configuration["EsmsSettings:Brandname"] ?? "Baotrixemay";
                     var payload = new
                     {
                         ApiKey = apiKey,
                         SecretKey = secretKey,
                         Phone = localPhone,
-                        Content = $"Ma OTP xac thuc Nha Xuong cua ban la {otp}. Ma co hieu luc trong 3 phut.",
-                        SmsType = "8",
+                        Brandname = brandname,
+                        Content = $"{otp} la ma xac minh dang ky {brandname} cua ban",
+                        SmsType = "2",
                         IsUnicode = "0"
                     };
 

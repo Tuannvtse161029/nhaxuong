@@ -94,11 +94,10 @@ namespace Nhaxuong.API.CONTROLLER
         {
             try
             {
-                var otp = await _authService.SendOtpAsync(request.Phone);
+                await _authService.SendOtpAsync(request.Phone);
                 return Ok(new
                 {
-                    otp,
-                    message = $"Mã OTP đã được gửi đến số điện thoại {request.Phone}: {otp}"
+                    message = $"Mã OTP đã được gửi qua tin nhắn SMS tới số điện thoại {request.Phone}. Vui lòng kiểm tra điện thoại của bạn!"
                 });
             }
             catch (Exception ex)
