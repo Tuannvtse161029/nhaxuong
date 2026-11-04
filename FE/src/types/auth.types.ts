@@ -14,6 +14,7 @@ export interface User {
 export interface LoginCredentials {
   email: string
   password: string
+  otp?: string
   rememberMe?: boolean
 }
 
@@ -21,6 +22,7 @@ export interface RegisterCredentials {
   name: string
   email: string
   password: string
+  otp?: string
   confirmPassword?: string
   phone?: string
 }

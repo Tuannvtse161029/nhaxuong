@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
     PHONE_LOGIN: '/auth/phone/login',
     PHONE_REGISTER: '/auth/phone/register',
     PHONE_SEND_OTP: '/auth/phone/send-otp',
+    EMAIL_SEND_OTP: '/auth/email/send-otp',
     LOGOUT: '/auth/logout',
     ME: '/auth/me',
     REFRESH: '/auth/refresh',

@@ -15,6 +15,7 @@ namespace Nhaxuong.SERVICE.Services
         Task<AuthResponseDto> GoogleAuthAsync(GoogleAuthRequest request);
         Task<AuthResponseDto> PhoneAuthAsync(PhoneAuthRequest request, bool isRegister);
         Task<string> SendOtpAsync(string phone, string? type = null);
+        Task<string> SendEmailOtpAsync(string email, string? type = null);
         Task<UserDto> GetMeAsync(string userId);
     }
 
@@ -23,13 +24,16 @@ namespace Nhaxuong.SERVICE.Services
         private readonly AppDbContext _context;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Code, DateTime ExpireAt)> _otpCache = new();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Code, DateTime ExpireAt)> _emailOtpCache = new();
 
-        public AuthService(AppDbContext context, IJwtTokenService jwtTokenService, IConfiguration configuration)
+        public AuthService(AppDbContext context, IJwtTokenService jwtTokenService, IConfiguration configuration, IEmailService emailService)
         {
             _context = context;
             _jwtTokenService = jwtTokenService;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequest request)
@@ -96,6 +100,27 @@ namespace Nhaxuong.SERVICE.Services
                 }
             }
 
+            // Email OTP verification
+            var cleanEmail = request.Email.Trim().ToLower();
+            if (cleanEmail == "admin@nhaxuong.vn" && string.IsNullOrEmpty(request.Otp))
+            {
+                // Demo admin rapid access
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(request.Otp))
+                {
+                    throw new Exception("Vui lòng nhập mã xác thực OTP đã gửi về email của bạn để xác thực tài khoản!");
+                }
+
+                if (!_emailOtpCache.TryGetValue(cleanEmail, out var cached) || cached.ExpireAt < DateTime.UtcNow || cached.Code != request.Otp.Trim())
+                {
+                    throw new Exception("Mã xác thực OTP qua email không chính xác hoặc đã hết hạn. Vui lòng kiểm tra email và nhập lại!");
+                }
+
+                _emailOtpCache.TryRemove(cleanEmail, out _);
+            }
+
             var token = _jwtTokenService.GenerateToken(user);
             return new AuthResponseDto
             {
@@ -106,24 +131,42 @@ namespace Nhaxuong.SERVICE.Services
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            var cleanEmail = request.Email.Trim().ToLower();
+            if (string.IsNullOrWhiteSpace(cleanEmail) || string.IsNullOrWhiteSpace(request.Password))
             {
                 throw new Exception("Email và mật khẩu không được để trống");
             }
 
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                throw new Exception("Vui lòng nhập Họ và Tên của bạn để đăng ký tài khoản.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Otp))
+            {
+                throw new Exception("Vui lòng nhập mã xác thực OTP đã gửi về email của bạn.");
+            }
+
+            if (!_emailOtpCache.TryGetValue(cleanEmail, out var cached) || cached.ExpireAt < DateTime.UtcNow || cached.Code != request.Otp.Trim())
+            {
+                throw new Exception("Mã xác thực OTP qua email không chính xác hoặc đã hết hạn. Vui lòng kiểm tra email và nhập lại!");
+            }
+
+            _emailOtpCache.TryRemove(cleanEmail, out _);
+
             try
             {
-                var exists = await _context.Users.AnyAsync(u => u.Email.ToLower() == request.Email.ToLower());
+                var exists = await _context.Users.AnyAsync(u => u.Email.ToLower() == cleanEmail);
                 if (exists)
                 {
-                    throw new Exception("Email đã tồn tại trên hệ thống");
+                    throw new Exception("Email này đã được đăng ký tài khoản trên hệ thống. Vui lòng chuyển sang tab 'Đăng Nhập'!");
                 }
 
                 var user = new User
                 {
                     Id = "usr_" + Guid.NewGuid().ToString("N")[..12],
-                    Name = request.Name,
-                    Email = request.Email,
+                    Name = request.Name.Trim(),
+                    Email = cleanEmail,
                     Phone = request.Phone,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                     Role = "user",
@@ -143,11 +186,11 @@ namespace Nhaxuong.SERVICE.Services
             }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("đã tồn tại") || ex.Message.Contains("không được để trống"))
+                if (ex.Message.Contains("đã được đăng ký") || ex.Message.Contains("không được để trống") || ex.Message.Contains("Họ và Tên"))
                 {
                     throw;
                 }
-                throw new Exception("Máy chủ cơ sở dữ liệu (35.240.181.166) hiện không phản hồi. Vui lòng kiểm tra lại dịch vụ SQL Server!");
+                throw new Exception($"Không thể kết nối cơ sở dữ liệu để đăng ký: {ex.Message}");
             }
         }
 
@@ -447,6 +490,44 @@ namespace Nhaxuong.SERVICE.Services
                     Console.WriteLine($"--> [eSMS Warning] Failed to send SMS via eSMS: {ex.Message}");
                 }
             }
+
+            return otp;
+        }
+
+        public async Task<string> SendEmailOtpAsync(string email, string? type = null)
+        {
+            var cleanEmail = email.Trim().ToLower();
+            if (string.IsNullOrWhiteSpace(cleanEmail) || !cleanEmail.Contains("@") || !cleanEmail.Contains("."))
+            {
+                throw new Exception("Vui lòng nhập địa chỉ email hợp lệ!");
+            }
+
+            // Validate based on type
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == cleanEmail);
+                if (type.Equals("login", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (existingUser == null && cleanEmail != "admin@nhaxuong.vn")
+                    {
+                        throw new Exception("Email này chưa được đăng ký tài khoản trên hệ thống. Vui lòng bấm sang tab 'Đăng Ký Tài Khoản' để đăng ký trước!");
+                    }
+                }
+                else if (type.Equals("register", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (existingUser != null)
+                    {
+                        throw new Exception("Email này đã được đăng ký tài khoản. Vui lòng chuyển sang tab 'Đăng Nhập'!");
+                    }
+                }
+            }
+
+            // Generate secure 6-digit random code
+            var otp = Random.Shared.Next(100000, 999999).ToString();
+            _emailOtpCache[cleanEmail] = (otp, DateTime.UtcNow.AddMinutes(5));
+
+            // Send via EmailService
+            await _emailService.SendOtpEmailAsync(cleanEmail, otp);
 
             return otp;
         }

@@ -18,6 +18,7 @@ export interface AuthContextType {
   loginWithPhone: (phone: string, otp?: string, name?: string) => Promise<void>
   registerWithPhone: (phone: string, name: string, otp?: string) => Promise<void>
   sendOtp: (phone: string, type?: 'login' | 'register') => Promise<string | undefined>
+  sendEmailOtp: (email: string, type?: 'login' | 'register') => Promise<string | undefined>
   logout: () => Promise<void>
   updateUser: (user: Partial<User>) => void
 }
@@ -125,6 +126,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return res.otp
   }
 
+  const sendEmailOtp = async (email: string, type?: 'login' | 'register'): Promise<string | undefined> => {
+    const res = await authApi.sendEmailOtp(email, type)
+    return res.otp
+  }
+
   const logout = async () => {
     try {
       await authApi.logout()
@@ -162,6 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginWithPhone,
         registerWithPhone,
         sendOtp,
+        sendEmailOtp,
         logout,
         updateUser,
       }}

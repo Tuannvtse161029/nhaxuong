@@ -126,6 +126,26 @@ namespace Nhaxuong.API.CONTROLLER
         }
 
         /// <summary>
+        /// Gửi mã OTP xác thực hòm thư Email
+        /// </summary>
+        [HttpPost("email/send-otp")]
+        public async Task<IActionResult> SendEmailOtp([FromBody] SendEmailOtpRequest request)
+        {
+            try
+            {
+                await _authService.SendEmailOtpAsync(request.Email, request.Type);
+                return Ok(new
+                {
+                    message = $"Mã OTP đã được gửi về hòm thư {request.Email}. Vui lòng kiểm tra hộp thư đến (hoặc hòm thư rác/spam) của bạn!"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Lấy thông tin tài khoản hiện tại từ Token
         /// </summary>
         [HttpGet("me")]

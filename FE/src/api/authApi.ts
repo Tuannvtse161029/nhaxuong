@@ -137,6 +137,17 @@ export const authApi = {
     return axiosClient.post(API_ENDPOINTS.AUTH.PHONE_SEND_OTP, { phone, type })
   },
 
+  async sendEmailOtp(email: string, type?: 'login' | 'register'): Promise<{ otp?: string; message: string }> {
+    if (ENV.USE_MOCK_API) {
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      return {
+        otp: '123456',
+        message: `Mã xác thực OTP đã được gửi về email ${email}: 123456`,
+      }
+    }
+    return axiosClient.post(API_ENDPOINTS.AUTH.EMAIL_SEND_OTP, { email, type })
+  },
+
   async getMe(): Promise<User> {
     if (ENV.USE_MOCK_API) {
       return MOCK_USER

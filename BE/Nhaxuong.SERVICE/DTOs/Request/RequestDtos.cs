@@ -4,6 +4,7 @@ namespace Nhaxuong.SERVICE.DTOs.Request
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string? Otp { get; set; }
     }
 
     public class RegisterRequest
@@ -12,6 +13,13 @@ namespace Nhaxuong.SERVICE.DTOs.Request
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string? Phone { get; set; }
+        public string? Otp { get; set; }
+    }
+
+    public class SendEmailOtpRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string? Type { get; set; } // "login" or "register"
     }
 
     public class PhoneAuthRequest

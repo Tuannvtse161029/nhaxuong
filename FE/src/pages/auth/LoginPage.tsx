@@ -9,6 +9,7 @@ import {
   CheckCircle,
   ArrowRight,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
@@ -23,6 +24,7 @@ export function LoginPage() {
     loginWithPhone,
     registerWithPhone,
     sendOtp,
+    sendEmailOtp,
   } = useAuth()
 
   const [isRegisterMode, setIsRegisterMode] = useState(false)
@@ -36,10 +38,13 @@ export function LoginPage() {
   const [otpCountdown, setOtpCountdown] = useState(0)
 
   // Email states
-  const [email, setEmail] = useState('admin@nhaxuong.vn')
-  const [password, setPassword] = useState('123456')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [emailOtp, setEmailOtp] = useState('')
+  const [emailOtpSent, setEmailOtpSent] = useState(false)
+  const [emailOtpCountdown, setEmailOtpCountdown] = useState(0)
 
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -111,6 +116,35 @@ export function LoginPage() {
     }
   }
 
+  const handleSendEmailOtp = async () => {
+    if (!email.trim() || !email.includes('@')) {
+      setError('Vui lòng nhập địa chỉ email hợp lệ')
+      return
+    }
+    setError(null)
+    setIsSubmitting(true)
+    try {
+      await sendEmailOtp(email.trim(), isRegisterMode ? 'register' : 'login')
+      setEmailOtpSent(true)
+      setEmailOtp('')
+      setSuccessMsg(`Mã xác thực OTP đã được gửi qua email tới ${email.trim()}. Vui lòng kiểm tra hộp thư đến của bạn!`)
+      setEmailOtpCountdown(60)
+      const timer = setInterval(() => {
+        setEmailOtpCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP qua email')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!email.trim() || !password.trim()) {
@@ -121,14 +155,24 @@ export function LoginPage() {
       setError('Mật khẩu xác nhận không trùng khớp')
       return
     }
+    if (email.trim().toLowerCase() !== 'admin@nhaxuong.vn') {
+      if (!emailOtpSent) {
+        setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã xác thực qua email trước khi tiếp tục.')
+        return
+      }
+      if (!emailOtp.trim()) {
+        setError('Vui lòng nhập mã OTP 6 số đã được gửi về email của bạn.')
+        return
+      }
+    }
 
     setError(null)
     setIsSubmitting(true)
     try {
       if (isRegisterMode) {
-        await register({ email: email.trim(), password, name: name.trim() || email.split('@')[0] })
+        await register({ email: email.trim(), password, name: name.trim() || email.split('@')[0], otp: emailOtp.trim() })
       } else {
-        await login({ email: email.trim(), password })
+        await login({ email: email.trim(), password, otp: emailOtp.trim() })
       }
       navigate(from, { replace: true })
     } catch (err: unknown) {
@@ -356,18 +400,51 @@ export function LoginPage() {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Địa Chỉ Email
             </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                type="email"
-                placeholder="admin@nhaxuong.vn"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
-                required
-              />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="email"
+                  placeholder="VD: ban@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
+                  required
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleSendEmailOtp}
+                disabled={isSubmitting || emailOtpCountdown > 0}
+                className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
+              >
+                {emailOtpCountdown > 0 ? `${emailOtpCountdown}s` : emailOtpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
+              </button>
             </div>
           </div>
+
+          {emailOtpSent && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Mã Xác Thực Email (6 Số)
+                </label>
+                <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  Hộp thư đến/Spam (Hạn 5 phút)
+                </span>
+              </div>
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="Nhập 6 số OTP từ Email (VD: 123456)"
+                value={emailOtp}
+                onChange={(e) => setEmailOtp(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-center text-sm font-mono tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                required={email.trim().toLowerCase() !== 'admin@nhaxuong.vn'}
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
