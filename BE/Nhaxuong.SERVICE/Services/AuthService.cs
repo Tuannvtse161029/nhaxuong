@@ -249,6 +249,9 @@ namespace Nhaxuong.SERVICE.Services
             }
 
             var phone = request.Phone.Trim();
+            var localPhone = phone;
+            if (localPhone.StartsWith("+84")) localPhone = "0" + localPhone[3..];
+            else if (localPhone.StartsWith("84") && localPhone.Length > 9) localPhone = "0" + localPhone[2..];
 
             // Verify OTP if provided
             if (!string.IsNullOrWhiteSpace(request.Otp))
@@ -256,18 +259,21 @@ namespace Nhaxuong.SERVICE.Services
                 var inputOtp = request.Otp.Trim();
                 if (inputOtp != "VERIFIED_BY_FIREBASE" && inputOtp != "123456")
                 {
-                    if (_otpCache.TryGetValue(phone, out var cached))
+                    bool found = _otpCache.TryGetValue(phone, out var cached) || _otpCache.TryGetValue(localPhone, out cached);
+                    if (found)
                     {
                         if (DateTime.UtcNow > cached.ExpireAt)
                         {
                             _otpCache.TryRemove(phone, out _);
-                            throw new Exception("Mã OTP đã hết hạn (sau 3 phút). Vui lòng yêu cầu mã mới.");
+                            _otpCache.TryRemove(localPhone, out _);
+                            throw new Exception("Mã OTP đã hết hạn (sau 3 phút). Vui lòng bấm 'Gửi Mã OTP' để nhận mã mới.");
                         }
                         if (cached.Code != inputOtp)
                         {
-                            throw new Exception("Mã OTP không chính xác. Vui lòng kiểm tra lại.");
+                            throw new Exception("Mã OTP không chính xác. Vui lòng kiểm tra lại tin nhắn SMS trên điện thoại.");
                         }
                         _otpCache.TryRemove(phone, out _);
+                        _otpCache.TryRemove(localPhone, out _);
                     }
                     else
                     {
@@ -279,15 +285,15 @@ namespace Nhaxuong.SERVICE.Services
             User? user = null;
             try
             {
-                user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == phone);
+                user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == phone || u.Phone == localPhone);
                 if (user == null)
                 {
                     user = new User
                     {
                         Id = "usr_ph_" + Guid.NewGuid().ToString("N")[..10],
-                        Name = !string.IsNullOrWhiteSpace(request.Name) ? request.Name : $"Khách Hàng ({phone[^4..]})",
-                        Email = $"{phone}@nhaxuong.vn",
-                        Phone = phone,
+                        Name = !string.IsNullOrWhiteSpace(request.Name) ? request.Name : $"Khách Hàng ({localPhone[^4..]})",
+                        Email = $"{localPhone}@nhaxuong.vn",
+                        Phone = localPhone,
                         Avatar = "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=128&auto=format&fit=crop&q=80",
                         Role = "user",
                         AuthProvider = "phone",
@@ -303,9 +309,9 @@ namespace Nhaxuong.SERVICE.Services
                 user = new User
                 {
                     Id = "usr_ph_" + Guid.NewGuid().ToString("N")[..10],
-                    Name = !string.IsNullOrWhiteSpace(request.Name) ? request.Name : $"Khách Hàng ({phone[^4..]})",
-                    Email = $"{phone}@nhaxuong.vn",
-                    Phone = phone,
+                    Name = !string.IsNullOrWhiteSpace(request.Name) ? request.Name : $"Khách Hàng ({localPhone[^4..]})",
+                    Email = $"{localPhone}@nhaxuong.vn",
+                    Phone = localPhone,
                     Avatar = "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=128&auto=format&fit=crop&q=80",
                     Role = "user",
                     AuthProvider = "phone",
@@ -321,13 +327,53 @@ namespace Nhaxuong.SERVICE.Services
             };
         }
 
-        public Task<string> SendOtpAsync(string phone)
+        public async Task<string> SendOtpAsync(string phone)
         {
             var cleanPhone = phone.Trim();
-            // Generate a secure 6-digit random code
+            var localPhone = cleanPhone;
+            if (localPhone.StartsWith("+84")) localPhone = "0" + localPhone[3..];
+            else if (localPhone.StartsWith("84") && localPhone.Length > 9) localPhone = "0" + localPhone[2..];
+
+            // Generate secure 6-digit random code
             var otp = Random.Shared.Next(100000, 999999).ToString();
             _otpCache[cleanPhone] = (otp, DateTime.UtcNow.AddMinutes(3));
-            return Task.FromResult(otp);
+            _otpCache[localPhone] = (otp, DateTime.UtcNow.AddMinutes(3));
+
+            // Send real carrier SMS via eSMS
+            var apiKey = _configuration["EsmsSettings:ApiKey"] ?? "72233705024C305FC536D47355A1C9";
+            var secretKey = _configuration["EsmsSettings:SecretKey"] ?? "C4B69334FD00A99FED2CEC218B8BAA";
+
+            if (!string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(secretKey))
+            {
+                try
+                {
+                    using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                    var payload = new
+                    {
+                        ApiKey = apiKey,
+                        SecretKey = secretKey,
+                        Phone = localPhone,
+                        Content = $"Ma OTP xac thuc Nha Xuong cua ban la {otp}. Ma co hieu luc trong 3 phut.",
+                        SmsType = "8",
+                        IsUnicode = "0"
+                    };
+
+                    var content = new StringContent(
+                        System.Text.Json.JsonSerializer.Serialize(payload),
+                        System.Text.Encoding.UTF8,
+                        "application/json");
+
+                    var response = await client.PostAsync("http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/", content);
+                    var respString = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"--> [eSMS] Sent OTP to {localPhone}: {respString}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"--> [eSMS Warning] Failed to send SMS via eSMS: {ex.Message}");
+                }
+            }
+
+            return otp;
         }
 
         public async Task<UserDto> GetMeAsync(string userId)

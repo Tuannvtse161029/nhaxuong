@@ -13,14 +13,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { GoogleLoginButton } from './GoogleLoginButton'
-import { auth, isFirebaseConfigured } from '@/config/firebase.config'
-import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth'
-
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier
-  }
-}
 
 export function AuthModal() {
   const {
@@ -45,7 +37,6 @@ export function AuthModal() {
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [otpCountdown, setOtpCountdown] = useState(0)
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
 
   // Email Form States
   const [email, setEmail] = useState('admin@nhaxuong.vn')
@@ -78,39 +69,11 @@ export function AuthModal() {
     setSuccessMsg(null)
     setIsLoading(true)
 
-    const formattedPhone = formatPhoneE164(phone.trim())
-
     try {
-      if (isFirebaseConfigured && auth) {
-        let verifier = window.recaptchaVerifier
-        if (!verifier) {
-          const container = document.getElementById('recaptcha-container')
-          if (container) {
-            container.innerHTML = ''
-          }
-          verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible',
-            callback: () => {
-              // reCAPTCHA solved
-            },
-            'expired-callback': () => {
-              setError('Mã xác thực bảo mật reCAPTCHA đã hết hạn, vui lòng bấm gửi lại mã.')
-            },
-          })
-          window.recaptchaVerifier = verifier
-        }
-
-        const confirmation = await signInWithPhoneNumber(auth, formattedPhone, verifier)
-        setConfirmationResult(confirmation)
-        setOtpSent(true)
-        setOtp('')
-        setSuccessMsg(`Mã OTP đã được Firebase gửi qua tin nhắn SMS tới ${formattedPhone}. Vui lòng kiểm tra điện thoại của bạn!`)
-      } else {
-        const code = await sendOtp(phone.trim())
-        setOtpSent(true)
-        setOtp(code)
-        setSuccessMsg(`Mã OTP đã được gửi đến số ${phone}: ${code} (hiệu lực trong 3 phút)`)
-      }
+      await sendOtp(phone.trim())
+      setOtpSent(true)
+      setOtp('')
+      setSuccessMsg(`Mã OTP đã được gửi qua tin nhắn SMS tới số ${phone.trim()}. Vui lòng kiểm tra điện thoại của bạn!`)
 
       setOtpCountdown(60)
       const timer = setInterval(() => {
@@ -124,48 +87,7 @@ export function AuthModal() {
       }, 1000)
     } catch (err: any) {
       console.error('Send OTP error:', err)
-      // Reset reCAPTCHA on failure so next click is fresh
-      const container = document.getElementById('recaptcha-container')
-      if (container) {
-        container.innerHTML = ''
-      }
-      if (window.recaptchaVerifier) {
-        try {
-          window.recaptchaVerifier.clear()
-        } catch {
-          // ignore
-        }
-        window.recaptchaVerifier = undefined
-      }
-
-      // If Firebase requires billing account for real carrier SMS, seamlessly fallback to backend OTP
-      if (err?.code === 'auth/billing-not-enabled') {
-        try {
-          const code = await sendOtp(phone.trim())
-          setOtpSent(true)
-          setOtp(code)
-          setConfirmationResult(null)
-          setSuccessMsg(`Mã xác thực OTP đã được tạo cho số ${phone}: ${code} (hiệu lực trong 3 phút).`)
-          setError(null)
-          return
-        } catch (backendErr) {
-          console.error('Backend OTP fallback error:', backendErr)
-        }
-      }
-
-      let msg = 'Không thể gửi mã OTP. Vui lòng thử lại sau.'
-      if (err?.code === 'auth/operation-not-allowed') {
-        msg = 'Khu vực Việt Nam (+84) chưa được bật trong Firebase. Bạn hãy vào Firebase Console > Authentication > Settings > SMS region policy và tích chọn Vietnam (+84).'
-      } else if (err?.code === 'auth/invalid-phone-number') {
-        msg = 'Số điện thoại không đúng định dạng. Ví dụ: 0978537446 hoặc +84978537446'
-      } else if (err?.code === 'auth/too-many-requests') {
-        msg = 'Bạn đã gửi yêu cầu quá nhiều lần trong thời gian ngắn. Vui lòng chờ ít phút rồi thử lại.'
-      } else if (err?.code === 'auth/quota-exceeded') {
-        msg = 'Hạn mức gửi tin nhắn SMS của Firebase hôm nay đã đầy (tối đa 10 SMS/ngày với dự án mới).'
-      } else if (err?.message) {
-        msg = err.message
-      }
-      setError(msg)
+      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP. Vui lòng thử lại sau.')
     } finally {
       setIsLoading(false)
     }
@@ -190,38 +112,22 @@ export function AuthModal() {
       return
     }
     if (otpSent && !otp.trim()) {
-      setError('Vui lòng nhập mã OTP 6 số')
+      setError('Vui lòng nhập mã OTP 6 số từ tin nhắn SMS')
       return
     }
 
     setError(null)
     setIsLoading(true)
 
-    const formattedPhone = formatPhoneE164(phone.trim())
-
     try {
-      let otpToken = otp.trim()
-      if (confirmationResult) {
-        await confirmationResult.confirm(otp.trim())
-        otpToken = 'VERIFIED_BY_FIREBASE'
-      }
-
       if (isLogin) {
-        await loginWithPhone(formattedPhone, otpToken)
+        await loginWithPhone(phone.trim(), otp.trim())
       } else {
-        await registerWithPhone(formattedPhone, phoneName.trim() || `Khách Hàng (${phone.slice(-4)})`, otpToken)
+        await registerWithPhone(phone.trim(), phoneName.trim() || `Khách Hàng (${phone.slice(-4)})`, otp.trim())
       }
     } catch (err: any) {
       console.error('Phone auth error:', err)
-      let msg = 'Xác thực không thành công. Vui lòng kiểm tra lại.'
-      if (err?.code === 'auth/invalid-verification-code') {
-        msg = 'Mã OTP không chính xác. Vui lòng kiểm tra lại tin nhắn SMS trên máy điện thoại.'
-      } else if (err?.code === 'auth/code-expired') {
-        msg = 'Mã OTP đã hết hạn. Vui lòng bấm "Gửi Lại OTP" để nhận mã mới.'
-      } else if (err instanceof Error) {
-        msg = err.message
-      }
-      setError(msg)
+      setError(err instanceof Error ? err.message : 'Xác thực không thành công. Vui lòng kiểm tra lại.')
     } finally {
       setIsLoading(false)
     }
@@ -425,25 +331,16 @@ export function AuthModal() {
                 </div>
               </div>
 
-              {/* Invisible Recaptcha Container for Firebase Phone Auth */}
-              <div id="recaptcha-container"></div>
-
               {otpSent && (
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       Mã Xác Thực OTP (6 Số)
                     </label>
-                    {isFirebaseConfigured ? (
-                      <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" />
-                        SMS Firebase (+84)
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold">
-                        Mã hiệu lực 3 phút
-                      </span>
-                    )}
+                    <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" />
+                      Tin nhắn SMS Viễn Thông (Hạn 3 phút)
+                    </span>
                   </div>
                   <input
                     type="text"

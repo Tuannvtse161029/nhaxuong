@@ -19,4 +19,8 @@ services:
         sync: false
       - key: GoogleAuthSettings__ClientSecret
         sync: false
+      - key: EsmsSettings__ApiKey
+        value: "72233705024C305FC536D47355A1C9"
+      - key: EsmsSettings__SecretKey
+        value: "C4B69334FD00A99FED2CEC218B8BAA"
     healthCheckPath: /healthz
