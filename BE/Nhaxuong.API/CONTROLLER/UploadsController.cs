@@ -4,6 +4,7 @@ namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
     [Route("api/uploads")]
+    [Route("uploads")]
     public class UploadsController : ControllerBase
     {
         private readonly IWebHostEnvironment _env;

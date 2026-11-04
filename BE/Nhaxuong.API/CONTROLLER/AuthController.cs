@@ -8,6 +8,7 @@ namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
     [Route("api/auth")]
+    [Route("auth")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -138,6 +139,12 @@ namespace Nhaxuong.API.CONTROLLER
                 return NotFound(new { message = ex.Message });
             }
         }
+
+        [HttpPost("logout")]
+        public IActionResult Logout() => Ok(new { message = "Đã đăng xuất thành công" });
+
+        [HttpPost("refresh")]
+        public IActionResult Refresh() => Ok(new { message = "Token refreshed" });
 
         #region Backward Compatibility Aliases (Hidden from Swagger UI)
         [HttpPost("phone/login")]

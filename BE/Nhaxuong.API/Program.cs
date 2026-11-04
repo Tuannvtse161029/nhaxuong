@@ -13,17 +13,18 @@ builder.Services.AddControllers();
 
 // 2. Configure SQL Server Database Context (NhaxuongDb on 35.240.181.166)
 var connString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=tcp:35.240.181.166,1433;Database=NhaxuongDb;User Id=sa;Password=baopro2147!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true";
+    ?? "Server=tcp:35.240.181.166,1433;Database=NhaxuongDb;User Id=sa;Password=baopro2147!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true;Connect Timeout=5;";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connString, sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(5),
+            maxRetryCount: 1,
+            maxRetryDelay: TimeSpan.FromSeconds(2),
             errorNumbersToAdd: null);
+        sqlOptions.CommandTimeout(5);
     }));
-Console.WriteLine("--> [Database] Connected to SQL Server (NhaxuongDb)");
+Console.WriteLine("--> [Database] Configured SQL Server (NhaxuongDb)");
 
 // 3. Register Application Services (DI)
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -107,6 +108,13 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
+    c.DocInclusionPredicate((docName, apiDesc) =>
+    {
+        var path = apiDesc.RelativePath ?? "";
+        return path.StartsWith("api/", StringComparison.OrdinalIgnoreCase)
+               || path == "healthz"
+               || path == "";
+    });
 });
 
 var app = builder.Build();
@@ -139,22 +147,6 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Nhaxuong API v1");
     c.RoutePrefix = "swagger";
-});
-
-// Normalize routes: Auto-prefix requests missing /api (e.g. /properties, /categories, /notices, /auth)
-app.Use(async (context, next) =>
-{
-    var path = context.Request.Path.Value ?? "";
-    if (!string.IsNullOrEmpty(path) 
-        && path != "/"
-        && !path.StartsWith("/api", StringComparison.OrdinalIgnoreCase)
-        && !path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase)
-        && !path.StartsWith("/healthz", StringComparison.OrdinalIgnoreCase)
-        && !path.StartsWith("/uploads", StringComparison.OrdinalIgnoreCase))
-    {
-        context.Request.Path = "/api" + path;
-    }
-    await next();
 });
 
 app.UseAuthentication();

@@ -6,6 +6,7 @@ namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
     [Route("api/subscribers")]
+    [Route("subscribers")]
     public class SubscribersController : ControllerBase
     {
         private readonly ISubscriberService _subscriberService;

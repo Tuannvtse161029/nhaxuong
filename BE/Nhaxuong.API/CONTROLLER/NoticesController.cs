@@ -6,6 +6,7 @@ namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
     [Route("api/notices")]
+    [Route("notices")]
     public class NoticesController : ControllerBase
     {
         private readonly INoticeService _noticeService;

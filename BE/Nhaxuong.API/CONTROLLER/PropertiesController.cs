@@ -6,6 +6,7 @@ namespace Nhaxuong.API.CONTROLLER
 {
     [ApiController]
     [Route("api/properties")]
+    [Route("properties")]
     public class PropertiesController : ControllerBase
     {
         private readonly IPropertyService _propertyService;
