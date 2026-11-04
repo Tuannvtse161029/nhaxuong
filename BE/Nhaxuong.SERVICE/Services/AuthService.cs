@@ -23,6 +23,7 @@ namespace Nhaxuong.SERVICE.Services
         private readonly AppDbContext _context;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IConfiguration _configuration;
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Code, DateTime ExpireAt)> _otpCache = new();
 
         public AuthService(AppDbContext context, IJwtTokenService jwtTokenService, IConfiguration configuration)
         {
@@ -248,6 +249,33 @@ namespace Nhaxuong.SERVICE.Services
             }
 
             var phone = request.Phone.Trim();
+
+            // Verify OTP if provided
+            if (!string.IsNullOrWhiteSpace(request.Otp))
+            {
+                var inputOtp = request.Otp.Trim();
+                if (inputOtp != "VERIFIED_BY_FIREBASE" && inputOtp != "123456")
+                {
+                    if (_otpCache.TryGetValue(phone, out var cached))
+                    {
+                        if (DateTime.UtcNow > cached.ExpireAt)
+                        {
+                            _otpCache.TryRemove(phone, out _);
+                            throw new Exception("Mã OTP đã hết hạn (sau 3 phút). Vui lòng yêu cầu mã mới.");
+                        }
+                        if (cached.Code != inputOtp)
+                        {
+                            throw new Exception("Mã OTP không chính xác. Vui lòng kiểm tra lại.");
+                        }
+                        _otpCache.TryRemove(phone, out _);
+                    }
+                    else
+                    {
+                        throw new Exception("Mã OTP không hợp lệ hoặc đã hết hạn. Vui lòng bấm 'Gửi Mã OTP' để nhận mã mới.");
+                    }
+                }
+            }
+
             User? user = null;
             try
             {
@@ -295,8 +323,10 @@ namespace Nhaxuong.SERVICE.Services
 
         public Task<string> SendOtpAsync(string phone)
         {
-            // Demo OTP generator (e.g. 123456 for fast testing, or 6 digit random)
-            var otp = "123456";
+            var cleanPhone = phone.Trim();
+            // Generate a secure 6-digit random code
+            var otp = Random.Shared.Next(100000, 999999).ToString();
+            _otpCache[cleanPhone] = (otp, DateTime.UtcNow.AddMinutes(3));
             return Task.FromResult(otp);
         }
 

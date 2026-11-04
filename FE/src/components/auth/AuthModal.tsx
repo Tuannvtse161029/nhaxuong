@@ -13,6 +13,14 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { GoogleLoginButton } from './GoogleLoginButton'
+import { auth, isFirebaseConfigured } from '@/config/firebase.config'
+import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth'
+
+declare global {
+  interface Window {
+    recaptchaVerifier?: RecaptchaVerifier
+  }
+}
 
 export function AuthModal() {
   const {
@@ -37,6 +45,7 @@ export function AuthModal() {
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [otpCountdown, setOtpCountdown] = useState(0)
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
 
   // Email Form States
   const [email, setEmail] = useState('admin@nhaxuong.vn')
@@ -53,18 +62,58 @@ export function AuthModal() {
 
   const isLogin = authModalTab === 'login'
 
+  const formatPhoneE164 = (rawPhone: string) => {
+    const cleaned = rawPhone.replace(/\D/g, '')
+    if (cleaned.startsWith('84')) return `+${cleaned}`
+    if (cleaned.startsWith('0')) return `+84${cleaned.slice(1)}`
+    return `+84${cleaned}`
+  }
+
   const handleSendOtp = async () => {
     if (!phone.trim()) {
       setError('Vui lòng nhập số điện thoại')
       return
     }
     setError(null)
+    setSuccessMsg(null)
     setIsLoading(true)
+
+    const formattedPhone = formatPhoneE164(phone.trim())
+
     try {
-      const code = await sendOtp(phone.trim())
-      setOtpSent(true)
-      setOtp(code)
-      setSuccessMsg(`Mã OTP đã được gửi đến số ${phone}: ${code}`)
+      if (isFirebaseConfigured && auth) {
+        if (window.recaptchaVerifier) {
+          try {
+            window.recaptchaVerifier.clear()
+          } catch {
+            // ignore
+          }
+          window.recaptchaVerifier = undefined
+        }
+
+        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: () => {
+            // reCAPTCHA solved
+          },
+          'expired-callback': () => {
+            setError('Mã xác thực bảo mật reCAPTCHA đã hết hạn, vui lòng bấm gửi lại mã.')
+          },
+        })
+        window.recaptchaVerifier = verifier
+
+        const confirmation = await signInWithPhoneNumber(auth, formattedPhone, verifier)
+        setConfirmationResult(confirmation)
+        setOtpSent(true)
+        setOtp('')
+        setSuccessMsg(`Mã OTP đã được Firebase gửi qua tin nhắn SMS tới ${formattedPhone}. Vui lòng kiểm tra điện thoại của bạn!`)
+      } else {
+        const code = await sendOtp(phone.trim())
+        setOtpSent(true)
+        setOtp(code)
+        setSuccessMsg(`Mã OTP đã được gửi đến số ${phone}: ${code} (hiệu lực trong 3 phút)`)
+      }
+
       setOtpCountdown(60)
       const timer = setInterval(() => {
         setOtpCountdown((prev) => {
@@ -75,8 +124,19 @@ export function AuthModal() {
           return prev - 1
         })
       }, 1000)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP')
+    } catch (err: any) {
+      console.error('Send OTP error:', err)
+      let msg = 'Không thể gửi mã OTP. Vui lòng thử lại sau.'
+      if (err?.code === 'auth/invalid-phone-number') {
+        msg = 'Số điện thoại không đúng định dạng. Ví dụ: 0901234567 hoặc +84901234567'
+      } else if (err?.code === 'auth/too-many-requests') {
+        msg = 'Bạn đã gửi yêu cầu quá nhiều lần trong thời gian ngắn. Vui lòng chờ ít phút.'
+      } else if (err?.code === 'auth/quota-exceeded') {
+        msg = 'Hạn mức gửi tin nhắn SMS của Firebase hôm nay đã đầy.'
+      } else if (err?.message) {
+        msg = err.message
+      }
+      setError(msg)
     } finally {
       setIsLoading(false)
     }
@@ -101,20 +161,38 @@ export function AuthModal() {
       return
     }
     if (otpSent && !otp.trim()) {
-      setError('Vui lòng nhập mã OTP')
+      setError('Vui lòng nhập mã OTP 6 số')
       return
     }
 
     setError(null)
     setIsLoading(true)
+
+    const formattedPhone = formatPhoneE164(phone.trim())
+
     try {
-      if (isLogin) {
-        await loginWithPhone(phone.trim(), otp.trim())
-      } else {
-        await registerWithPhone(phone.trim(), phoneName.trim() || `Khách Hàng (${phone.slice(-4)})`, otp.trim())
+      let otpToken = otp.trim()
+      if (confirmationResult) {
+        await confirmationResult.confirm(otp.trim())
+        otpToken = 'VERIFIED_BY_FIREBASE'
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Xác thực số điện thoại không thành công')
+
+      if (isLogin) {
+        await loginWithPhone(formattedPhone, otpToken)
+      } else {
+        await registerWithPhone(formattedPhone, phoneName.trim() || `Khách Hàng (${phone.slice(-4)})`, otpToken)
+      }
+    } catch (err: any) {
+      console.error('Phone auth error:', err)
+      let msg = 'Xác thực không thành công. Vui lòng kiểm tra lại.'
+      if (err?.code === 'auth/invalid-verification-code') {
+        msg = 'Mã OTP không chính xác. Vui lòng kiểm tra lại tin nhắn SMS trên máy điện thoại.'
+      } else if (err?.code === 'auth/code-expired') {
+        msg = 'Mã OTP đã hết hạn. Vui lòng bấm "Gửi Lại OTP" để nhận mã mới.'
+      } else if (err instanceof Error) {
+        msg = err.message
+      }
+      setError(msg)
     } finally {
       setIsLoading(false)
     }
@@ -318,15 +396,25 @@ export function AuthModal() {
                 </div>
               </div>
 
+              {/* Invisible Recaptcha Container for Firebase Phone Auth */}
+              <div id="recaptcha-container"></div>
+
               {otpSent && (
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       Mã Xác Thực OTP (6 Số)
                     </label>
-                    <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold">
-                      Mã thử nghiệm: 123456
-                    </span>
+                    {isFirebaseConfigured ? (
+                      <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3" />
+                        SMS Firebase (+84)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold">
+                        Mã hiệu lực 3 phút
+                      </span>
+                    )}
                   </div>
                   <input
                     type="text"
