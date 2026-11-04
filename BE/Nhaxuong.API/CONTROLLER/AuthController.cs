@@ -70,10 +70,11 @@ namespace Nhaxuong.API.CONTROLLER
         }
 
         /// <summary>
-        /// Đăng nhập / Đăng ký 1 chạm bằng Số điện thoại + OTP
+        /// Đăng nhập bằng Số điện thoại + OTP (Bắt buộc tài khoản đã đăng ký)
         /// </summary>
         [HttpPost("phone")]
-        public async Task<IActionResult> PhoneAuth([FromBody] PhoneAuthRequest request)
+        [HttpPost("phone/login")]
+        public async Task<IActionResult> PhoneLogin([FromBody] PhoneAuthRequest request)
         {
             try
             {
@@ -87,14 +88,32 @@ namespace Nhaxuong.API.CONTROLLER
         }
 
         /// <summary>
+        /// Đăng ký tài khoản mới bằng Số điện thoại + OTP
+        /// </summary>
+        [HttpPost("phone/register")]
+        public async Task<IActionResult> PhoneRegister([FromBody] PhoneAuthRequest request)
+        {
+            try
+            {
+                var result = await _authService.PhoneAuthAsync(request, isRegister: true);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Gửi mã OTP xác thực số điện thoại
         /// </summary>
         [HttpPost("send-otp")]
+        [HttpPost("phone/send-otp")]
         public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request)
         {
             try
             {
-                await _authService.SendOtpAsync(request.Phone);
+                await _authService.SendOtpAsync(request.Phone, request.Type);
                 return Ok(new
                 {
                     message = $"Mã OTP đã được gửi qua tin nhắn SMS tới số điện thoại {request.Phone}. Vui lòng kiểm tra điện thoại của bạn!"
@@ -144,19 +163,5 @@ namespace Nhaxuong.API.CONTROLLER
 
         [HttpPost("refresh")]
         public IActionResult Refresh() => Ok(new { message = "Token refreshed" });
-
-        #region Backward Compatibility Aliases (Hidden from Swagger UI)
-        [HttpPost("phone/login")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public Task<IActionResult> PhoneLoginAlias([FromBody] PhoneAuthRequest request) => PhoneAuth(request);
-
-        [HttpPost("phone/register")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public Task<IActionResult> PhoneRegisterAlias([FromBody] PhoneAuthRequest request) => PhoneAuth(request);
-
-        [HttpPost("phone/send-otp")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public Task<IActionResult> PhoneSendOtpAlias([FromBody] SendOtpRequest request) => SendOtp(request);
-        #endregion
     }
 }

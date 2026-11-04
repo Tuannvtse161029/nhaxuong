@@ -24,6 +24,7 @@ namespace Nhaxuong.SERVICE.DTOs.Request
     public class SendOtpRequest
     {
         public string Phone { get; set; } = string.Empty;
+        public string? Type { get; set; } // "login" or "register"
     }
 
     public class GoogleAuthRequest

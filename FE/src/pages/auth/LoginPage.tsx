@@ -55,10 +55,10 @@ export function LoginPage() {
     setError(null)
     setIsSubmitting(true)
     try {
-      const code = await sendOtp(phone.trim())
+      await sendOtp(phone.trim(), isRegisterMode ? 'register' : 'login')
       setOtpSent(true)
-      setOtp(code)
-      setSuccessMsg(`Mã OTP đã gửi tới ${phone}: ${code}`)
+      setOtp('')
+      setSuccessMsg(`Mã OTP đã được gửi qua tin nhắn SMS tới số ${phone.trim()}. Vui lòng kiểm tra điện thoại của bạn!`)
       setOtpCountdown(60)
       const timer = setInterval(() => {
         setOtpCountdown((prev) => {

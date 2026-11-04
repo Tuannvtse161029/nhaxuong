@@ -14,7 +14,7 @@ namespace Nhaxuong.SERVICE.Services
         Task<AuthResponseDto> RegisterAsync(RegisterRequest request);
         Task<AuthResponseDto> GoogleAuthAsync(GoogleAuthRequest request);
         Task<AuthResponseDto> PhoneAuthAsync(PhoneAuthRequest request, bool isRegister);
-        Task<string> SendOtpAsync(string phone);
+        Task<string> SendOtpAsync(string phone, string? type = null);
         Task<UserDto> GetMeAsync(string userId);
     }
 
@@ -286,7 +286,51 @@ namespace Nhaxuong.SERVICE.Services
             try
             {
                 user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == phone || u.Phone == localPhone);
-                if (user == null)
+                if (isRegister)
+                {
+                    // Case Đăng Ký: User cannot already exist
+                    if (user != null)
+                    {
+                        throw new Exception("Số điện thoại này đã được đăng ký tài khoản. Vui lòng chuyển sang tab 'Đăng Nhập'!");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(request.Name))
+                    {
+                        throw new Exception("Vui lòng nhập Họ và Tên của bạn để đăng ký tài khoản.");
+                    }
+
+                    user = new User
+                    {
+                        Id = "usr_ph_" + Guid.NewGuid().ToString("N")[..10],
+                        Name = request.Name.Trim(),
+                        Email = $"{localPhone}@nhaxuong.vn",
+                        Phone = localPhone,
+                        Avatar = "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=128&auto=format&fit=crop&q=80",
+                        Role = "user",
+                        AuthProvider = "phone",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Users.Add(user);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    // Case Đăng Nhập: User MUST already exist
+                    if (user == null)
+                    {
+                        throw new Exception("Số điện thoại này chưa được đăng ký tài khoản trên hệ thống. Vui lòng bấm sang tab 'Đăng Ký Tài Khoản' để đăng ký trước!");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("chưa được đăng ký") || ex.Message.Contains("đã được đăng ký") || ex.Message.Contains("Họ và Tên"))
+                {
+                    throw;
+                }
+
+                // Fallback user when DB is offline
+                if (isRegister)
                 {
                     user = new User
                     {
@@ -299,24 +343,11 @@ namespace Nhaxuong.SERVICE.Services
                         AuthProvider = "phone",
                         CreatedAt = DateTime.UtcNow
                     };
-                    _context.Users.Add(user);
-                    await _context.SaveChangesAsync();
                 }
-            }
-            catch (Exception)
-            {
-                // Fallback user when DB is offline
-                user = new User
+                else
                 {
-                    Id = "usr_ph_" + Guid.NewGuid().ToString("N")[..10],
-                    Name = !string.IsNullOrWhiteSpace(request.Name) ? request.Name : $"Khách Hàng ({localPhone[^4..]})",
-                    Email = $"{localPhone}@nhaxuong.vn",
-                    Phone = localPhone,
-                    Avatar = "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=128&auto=format&fit=crop&q=80",
-                    Role = "user",
-                    AuthProvider = "phone",
-                    CreatedAt = DateTime.UtcNow
-                };
+                    throw new Exception("Không thể kết nối đến cơ sở dữ liệu để kiểm tra tài khoản. Vui lòng thử lại!");
+                }
             }
 
             var token = _jwtTokenService.GenerateToken(user);
@@ -327,12 +358,32 @@ namespace Nhaxuong.SERVICE.Services
             };
         }
 
-        public async Task<string> SendOtpAsync(string phone)
+        public async Task<string> SendOtpAsync(string phone, string? type = null)
         {
             var cleanPhone = phone.Trim();
             var localPhone = cleanPhone;
             if (localPhone.StartsWith("+84")) localPhone = "0" + localPhone[3..];
             else if (localPhone.StartsWith("84") && localPhone.Length > 9) localPhone = "0" + localPhone[2..];
+
+            // Validate account existence based on action type
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Phone == cleanPhone || u.Phone == localPhone);
+                if (type.Equals("login", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (existingUser == null)
+                    {
+                        throw new Exception("Số điện thoại này chưa được đăng ký tài khoản trên hệ thống. Vui lòng bấm sang tab 'Đăng Ký Tài Khoản' để đăng ký trước!");
+                    }
+                }
+                else if (type.Equals("register", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (existingUser != null)
+                    {
+                        throw new Exception("Số điện thoại này đã được đăng ký tài khoản. Vui lòng chuyển sang tab 'Đăng Nhập'!");
+                    }
+                }
+            }
 
             // Generate secure 6-digit random code
             var otp = Random.Shared.Next(100000, 999999).ToString();

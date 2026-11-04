@@ -70,7 +70,7 @@ export function AuthModal() {
     setIsLoading(true)
 
     try {
-      await sendOtp(phone.trim())
+      await sendOtp(phone.trim(), isLogin ? 'login' : 'register')
       setOtpSent(true)
       setOtp('')
       setSuccessMsg(`Mã OTP đã được gửi qua tin nhắn SMS tới số ${phone.trim()}. Vui lòng kiểm tra điện thoại của bạn!`)

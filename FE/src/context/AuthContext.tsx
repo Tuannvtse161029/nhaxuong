@@ -17,7 +17,7 @@ export interface AuthContextType {
   loginWithGoogle: (idToken?: string) => Promise<void>
   loginWithPhone: (phone: string, otp?: string, name?: string) => Promise<void>
   registerWithPhone: (phone: string, name: string, otp?: string) => Promise<void>
-  sendOtp: (phone: string) => Promise<string>
+  sendOtp: (phone: string, type?: 'login' | 'register') => Promise<string | undefined>
   logout: () => Promise<void>
   updateUser: (user: Partial<User>) => void
 }
@@ -120,8 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const sendOtp = async (phone: string): Promise<string> => {
-    const res = await authApi.sendOtp(phone)
+  const sendOtp = async (phone: string, type?: 'login' | 'register'): Promise<string | undefined> => {
+    const res = await authApi.sendOtp(phone, type)
     return res.otp
   }
 

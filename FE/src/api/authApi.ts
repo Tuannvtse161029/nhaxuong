@@ -126,7 +126,7 @@ export const authApi = {
     return axiosClient.post(API_ENDPOINTS.AUTH.PHONE_REGISTER, credentials)
   },
 
-  async sendOtp(phone: string): Promise<{ otp: string; message: string }> {
+  async sendOtp(phone: string, type?: 'login' | 'register'): Promise<{ otp?: string; message: string }> {
     if (ENV.USE_MOCK_API) {
       await new Promise((resolve) => setTimeout(resolve, 300))
       return {
@@ -134,7 +134,7 @@ export const authApi = {
         message: `Mã OTP đã được gửi đến số điện thoại ${phone}: 123456`,
       }
     }
-    return axiosClient.post(API_ENDPOINTS.AUTH.PHONE_SEND_OTP, { phone })
+    return axiosClient.post(API_ENDPOINTS.AUTH.PHONE_SEND_OTP, { phone, type })
   },
 
   async getMe(): Promise<User> {
