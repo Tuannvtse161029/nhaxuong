@@ -25,4 +25,16 @@ services:
         value: "C4B69334FD00A99FED2CEC218B8BAA"
       - key: EsmsSettings__Brandname
         value: "NxThienBao"
+      - key: EmailSettings__SmtpServer
+        value: "smtp.gmail.com"
+      - key: EmailSettings__SmtpPort
+        value: "587"
+      - key: EmailSettings__SenderEmail
+        value: "academicresearchplatform@gmail.com"
+      - key: EmailSettings__SenderName
+        value: "Hệ Thống Nhà Xưởng"
+      - key: EmailSettings__SenderPassword
+        value: "tthgbhszgqjqprlh"
+      - key: EmailSettings__EnableSsl
+        value: "true"
     healthCheckPath: /healthz
