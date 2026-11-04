@@ -80,6 +80,43 @@ namespace Nhaxuong.SERVICE.Services
 
             email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
 
+            // 1. If Brevo API Key is configured, use HTTP REST API (port 443) which never gets blocked on Render Free
+            var brevoApiKey = _configuration["EmailSettings:BrevoApiKey"] 
+                ?? _configuration["BrevoApiKey"] 
+                ?? Environment.GetEnvironmentVariable("BREVO_API_KEY");
+
+            if (!string.IsNullOrWhiteSpace(brevoApiKey))
+            {
+                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+                client.DefaultRequestHeaders.Add("api-key", brevoApiKey);
+                client.DefaultRequestHeaders.Add("accept", "application/json");
+
+                var payload = new
+                {
+                    sender = new { name = senderName, email = senderEmail },
+                    to = new[] { new { email = toEmail, name = toEmail } },
+                    subject = $"[{otp}] Mã xác thực tài khoản - Nhà Xưởng",
+                    htmlContent = htmlBody
+                };
+
+                var content = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(payload),
+                    System.Text.Encoding.UTF8,
+                    "application/json");
+
+                var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+                var respString = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"--> [Brevo Error] {respString}");
+                    throw new Exception($"Không thể gửi email xác thực qua Brevo: {respString}");
+                }
+
+                Console.WriteLine($"--> [Brevo] Sent OTP email successfully to {toEmail}: {respString}");
+                return;
+            }
+
+            // 2. Fallback to standard SMTP (Requires paid host or non-blocked SMTP network)
             if (!string.IsNullOrWhiteSpace(senderPassword) && senderPassword != "your-app-password")
             {
                 using var smtp = new SmtpClient();
