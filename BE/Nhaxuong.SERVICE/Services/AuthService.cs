@@ -348,7 +348,7 @@ namespace Nhaxuong.SERVICE.Services
                 try
                 {
                     using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-                    var brandname = _configuration["EsmsSettings:Brandname"] ?? "Baotrixemay";
+                    var brandname = _configuration["EsmsSettings:Brandname"] ?? "NxThienBao";
                     var payload = new
                     {
                         ApiKey = apiKey,
@@ -367,7 +367,29 @@ namespace Nhaxuong.SERVICE.Services
 
                     var response = await client.PostAsync("http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/", content);
                     var respString = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"--> [eSMS] Sent OTP to {localPhone}: {respString}");
+                    Console.WriteLine($"--> [eSMS] Sent OTP with {brandname} to {localPhone}: {respString}");
+
+                    // If custom brandname is not yet approved by telco (Code 104), fallback to verified test brandname Baotrixemay
+                    if (respString.Contains("\"CodeResult\":\"104\"") || respString.Contains("\"CodeResult\":104"))
+                    {
+                        var fallbackPayload = new
+                        {
+                            ApiKey = apiKey,
+                            SecretKey = secretKey,
+                            Phone = localPhone,
+                            Brandname = "Baotrixemay",
+                            Content = $"{otp} la ma xac minh dang ky Baotrixemay cua ban",
+                            SmsType = "2",
+                            IsUnicode = "0"
+                        };
+                        var fallbackContent = new StringContent(
+                            System.Text.Json.JsonSerializer.Serialize(fallbackPayload),
+                            System.Text.Encoding.UTF8,
+                            "application/json");
+                        var fallbackResp = await client.PostAsync("http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/", fallbackContent);
+                        var fallbackStr = await fallbackResp.Content.ReadAsStringAsync();
+                        Console.WriteLine($"--> [eSMS Fallback Baotrixemay] Sent to {localPhone}: {fallbackStr}");
+                    }
                 }
                 catch (Exception ex)
                 {
