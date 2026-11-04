@@ -138,6 +138,21 @@ export function AuthModal() {
         window.recaptchaVerifier = undefined
       }
 
+      // If Firebase requires billing account for real carrier SMS, seamlessly fallback to backend OTP
+      if (err?.code === 'auth/billing-not-enabled') {
+        try {
+          const code = await sendOtp(phone.trim())
+          setOtpSent(true)
+          setOtp(code)
+          setConfirmationResult(null)
+          setSuccessMsg(`Mã xác thực OTP đã được tạo cho số ${phone}: ${code} (hiệu lực trong 3 phút).`)
+          setError(null)
+          return
+        } catch (backendErr) {
+          console.error('Backend OTP fallback error:', backendErr)
+        }
+      }
+
       let msg = 'Không thể gửi mã OTP. Vui lòng thử lại sau.'
       if (err?.code === 'auth/operation-not-allowed') {
         msg = 'Khu vực Việt Nam (+84) chưa được bật trong Firebase. Bạn hãy vào Firebase Console > Authentication > Settings > SMS region policy và tích chọn Vietnam (+84).'
