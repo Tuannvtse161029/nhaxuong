@@ -11,20 +11,20 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Add Controllers
 builder.Services.AddControllers();
 
-// 2. Configure SQL Server Database Context (NhaxuongDb on 35.240.181.166)
+// 2. Configure PostgreSQL Database Context (Supabase)
 var connString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=tcp:35.240.181.166,1433;Database=NhaxuongDb;User Id=sa;Password=baopro2147!;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=true;Connect Timeout=5;";
+    ?? "Host=aws-0-ap-south-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.bhsttwawrdxkssfufioy;Password=Baopro2147@;SSL Mode=Require;Trust Server Certificate=true;Timeout=15;Command Timeout=30;";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connString, sqlOptions =>
+    options.UseNpgsql(connString, npgsqlOptions =>
     {
-        sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 1,
-            maxRetryDelay: TimeSpan.FromSeconds(2),
-            errorNumbersToAdd: null);
-        sqlOptions.CommandTimeout(5);
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorCodesToAdd: null);
+        npgsqlOptions.CommandTimeout(30);
     }));
-Console.WriteLine("--> [Database] Configured SQL Server (NhaxuongDb)");
+Console.WriteLine("--> [Database] Configured Supabase PostgreSQL");
 
 // 3. Register Application Services (DI)
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -127,7 +127,7 @@ using (var scope = app.Services.CreateScope())
     {
         var db = services.GetRequiredService<AppDbContext>();
         db.Database.Migrate();
-        Console.WriteLine("--> [Database] Migrations verified and applied to NhaxuongDb.");
+        Console.WriteLine("--> [Database] Supabase PostgreSQL migrations verified and applied.");
     }
     catch (Exception ex)
     {

@@ -2,9 +2,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nhaxuong.MODEL.Configurations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -18,35 +18,35 @@ namespace Nhaxuong.MODELS.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.11")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Nhaxuong.MODEL.Entities.Category", b =>
                 {
                     b.Property<string>("Code")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("Active")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Desc")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Icon")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("character varying(150)");
 
                     b.HasKey("Code");
 
@@ -57,7 +57,7 @@ namespace Nhaxuong.MODELS.Migrations
                         {
                             Code = "SALE",
                             Active = true,
-                            CreatedAt = new DateTime(2026, 10, 29, 9, 2, 48, 261, DateTimeKind.Utc).AddTicks(9913),
+                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9210),
                             Desc = "Xưởng sản xuất tiêu chuẩn, hoàn công đầy đủ, trạm điện riêng",
                             Icon = "Warehouse",
                             Name = "Bán Nhà Xưởng"
@@ -66,7 +66,7 @@ namespace Nhaxuong.MODELS.Migrations
                         {
                             Code = "RENT",
                             Active = true,
-                            CreatedAt = new DateTime(2026, 10, 29, 9, 2, 48, 261, DateTimeKind.Utc).AddTicks(9921),
+                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9213),
                             Desc = "Kho logistics, dock leveler, bãi trung chuyển tiêu chuẩn",
                             Icon = "Boxes",
                             Name = "Cho Thuê Kho Bãi"
@@ -75,7 +75,7 @@ namespace Nhaxuong.MODELS.Migrations
                         {
                             Code = "RECYCLED_STEEL",
                             Active = true,
-                            CreatedAt = new DateTime(2026, 10, 29, 9, 2, 48, 261, DateTimeKind.Utc).AddTicks(9923),
+                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9214),
                             Desc = "Khung nhà xưởng tiền chế, dầm thép H, I, U và tôn tái sử dụng",
                             Icon = "Layers",
                             Name = "Sắt Thép Tái Sử Dụng"
@@ -86,29 +86,29 @@ namespace Nhaxuong.MODELS.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("Active")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Badge")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("CreatedAt")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
 
@@ -139,38 +139,38 @@ namespace Nhaxuong.MODELS.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Area")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("AudioUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("BrokerPhone")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Desc")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("EmailNotified")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Image")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Kcn")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<long>("Price")
                         .HasColumnType("bigint");
@@ -178,34 +178,34 @@ namespace Nhaxuong.MODELS.Migrations
                     b.Property<string>("PriceDisplay")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Province")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("TypeDisplay")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("UnitPrice")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("VideoUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -218,7 +218,7 @@ namespace Nhaxuong.MODELS.Migrations
                             Area = "12.000 m2",
                             AudioUrl = "https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3",
                             BrokerPhone = "0901 234 567",
-                            CreatedAt = new DateTime(2026, 10, 29, 9, 2, 48, 262, DateTimeKind.Utc).AddTicks(307),
+                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9382),
                             Desc = "Khuôn viên đất 12.000m2, diện tích xưởng xây dựng 8.000m2, trần cao 11m, sàn bê tông cốt thép chịu tải 5 tấn/m2, trạm biến áp riêng 1.500kVA. Hồ sơ nghiệm thu PCCC đầy đủ, sẵn sàng bàn giao cho doanh nghiệp FDI.",
                             EmailNotified = true,
                             Image = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
@@ -238,7 +238,7 @@ namespace Nhaxuong.MODELS.Migrations
                             Area = "5.000 m2",
                             AudioUrl = "https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3",
                             BrokerPhone = "0918 765 432",
-                            CreatedAt = new DateTime(2026, 10, 29, 9, 2, 48, 262, DateTimeKind.Utc).AddTicks(327),
+                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9393),
                             Desc = "Vị trí giáp ranh TP.HCM, đường xe container ra vào 24/7 không cấm tải, có sẵn 6 dock leveler xuất nhập hàng tiêu chuẩn châu Âu, văn phòng bảo vệ và camera giám sát 24/24.",
                             EmailNotified = true,
                             Image = "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80",
@@ -257,7 +257,7 @@ namespace Nhaxuong.MODELS.Migrations
                             Id = "prop-steel-1",
                             Area = "3.200 m2",
                             BrokerPhone = "0912 888 999",
-                            CreatedAt = new DateTime(2026, 10, 29, 9, 2, 48, 262, DateTimeKind.Utc).AddTicks(344),
+                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9401),
                             Desc = "Khung kèo thép Zamil khẩu độ 30m vượt nhịp không cột giữa, tháo dỡ nguyên vẹn đầy đủ dầm cột H350, giằng xà gồ mạ kẽm C200, bản mã và bulong neo móng. Thích hợp tái lắp dựng nhà xưởng hoặc kho bãi.",
                             EmailNotified = true,
                             Image = "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
@@ -276,7 +276,7 @@ namespace Nhaxuong.MODELS.Migrations
                             Id = "prop-steel-2",
                             Area = "85 Tấn",
                             BrokerPhone = "0983 777 666",
-                            CreatedAt = new DateTime(2026, 10, 29, 9, 2, 48, 262, DateTimeKind.Utc).AddTicks(357),
+                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9408),
                             Desc = "Lô thép dầm chính H400x200, H300x150, I300 tháo dỡ từ nhà máy công nghiệp nhẹ, cây dài tiêu chuẩn 6m - 12m, bề mặt còn sơn lót chống rỉ tốt, không cong vênh.",
                             EmailNotified = true,
                             Image = "https://images.unsplash.com/photo-1535813547-99c456a41d4a?w=800&q=80",
@@ -296,33 +296,33 @@ namespace Nhaxuong.MODELS.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Channel")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("character varying(30)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("character varying(150)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("character varying(150)");
 
                     b.Property<string>("Phone")
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("character varying(30)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -333,42 +333,42 @@ namespace Nhaxuong.MODELS.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("AuthProvider")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("character varying(30)");
 
                     b.Property<string>("Avatar")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("character varying(150)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("character varying(150)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Phone")
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("character varying(30)");
 
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("character varying(30)");
 
                     b.HasKey("Id");
 
@@ -379,7 +379,7 @@ namespace Nhaxuong.MODELS.Migrations
                         {
                             Id = "usr_admin_01",
                             AuthProvider = "email",
-                            CreatedAt = new DateTime(2026, 10, 29, 9, 2, 48, 262, DateTimeKind.Utc).AddTicks(256),
+                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9360),
                             Email = "admin@nhaxuong.vn",
                             Name = "Quản Trị Viên (Admin)",
                             PasswordHash = "$2a$11$N.vE9Q2d9m0W2sP4S6O0cOKxQe7C1I.8eJ2K4M6P8Q0S2U4W6Y8a.",
