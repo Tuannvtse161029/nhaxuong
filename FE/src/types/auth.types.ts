@@ -14,7 +14,8 @@ export interface User {
 
 export interface LoginCredentials {
   email: string
-  password: string
+  password?: string
+  pin?: string
   otp?: string
   rememberMe?: boolean
 }
@@ -22,9 +23,11 @@ export interface LoginCredentials {
 export interface RegisterCredentials {
   name: string
   email: string
-  password: string
+  password?: string
+  pin?: string
   otp?: string
   confirmPassword?: string
+  confirmPin?: string
   phone?: string
 }
 
@@ -33,6 +36,20 @@ export interface PhoneAuthCredentials {
   otp?: string
   name?: string
   password?: string
+  pin?: string
+}
+
+export interface ForgotPinSendOtpParams {
+  method: 'email' | 'phone'
+  target: string
+}
+
+export interface ForgotPinResetParams {
+  method: 'email' | 'phone'
+  target: string
+  otp: string
+  newPin: string
+  confirmPin: string
 }
 
 export interface AuthResponse {

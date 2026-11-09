@@ -17,6 +17,8 @@ namespace Nhaxuong.SERVICE.Services
         Task<AuthResponseDto> PhoneAuthAsync(PhoneAuthRequest request, bool isRegister);
         Task<string> SendOtpAsync(string phone, string? type = null);
         Task<string> SendEmailOtpAsync(string email, string? type = null);
+        Task<object> ForgotPinSendOtpAsync(ForgotPinSendOtpRequest request);
+        Task<object> ResetPinAsync(ForgotPinResetRequest request);
         Task<UserDto> GetMeAsync(string userId);
     }
 
@@ -39,6 +41,12 @@ namespace Nhaxuong.SERVICE.Services
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequest request)
         {
+            var pin = !string.IsNullOrWhiteSpace(request.Pin) ? request.Pin.Trim() : request.Password?.Trim();
+            if (string.IsNullOrWhiteSpace(pin))
+            {
+                throw new Exception("Vui lòng nhập mã PIN bảo mật 6 số của bạn.");
+            }
+
             User? user = null;
             try
             {
@@ -47,7 +55,7 @@ namespace Nhaxuong.SERVICE.Services
             catch (Exception)
             {
                 // Fallback for demo admin when DB is temporarily unreachable
-                if (request.Email.ToLower() == "admin@nhaxuong.vn" && request.Password == "123456")
+                if (request.Email.ToLower() == "admin@nhaxuong.vn" && pin == "123456")
                 {
                     user = new User
                     {
@@ -67,8 +75,7 @@ namespace Nhaxuong.SERVICE.Services
 
             if (user == null)
             {
-                // Fallback for demo admin
-                if (request.Email.ToLower() == "admin@nhaxuong.vn" && request.Password == "123456")
+                if (request.Email.ToLower() == "admin@nhaxuong.vn" && pin == "123456")
                 {
                     user = new User
                     {
@@ -82,24 +89,24 @@ namespace Nhaxuong.SERVICE.Services
                 }
                 else
                 {
-                    throw new Exception("Email hoặc mật khẩu không chính xác");
+                    throw new Exception("Email hoặc mã PIN không chính xác");
                 }
             }
             else
             {
-                bool isPasswordValid = false;
+                bool isPinValid = false;
                 try
                 {
-                    isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+                    isPinValid = BCrypt.Net.BCrypt.Verify(pin, user.PasswordHash);
                 }
                 catch
                 {
-                    isPasswordValid = request.Password == "123456";
+                    isPinValid = pin == "123456";
                 }
 
-                if (!isPasswordValid && request.Password != "123456")
+                if (!isPinValid && pin != "123456")
                 {
-                    throw new Exception("Mật khẩu không chính xác");
+                    throw new Exception("Mã PIN không chính xác. Nếu quên mã PIN, vui lòng chọn 'Quên mã PIN'!");
                 }
             }
 
@@ -140,9 +147,15 @@ namespace Nhaxuong.SERVICE.Services
                 throw new Exception("Địa chỉ email không đúng định dạng. Email bắt buộc phải có ký tự '@'!");
             }
 
-            if (string.IsNullOrWhiteSpace(request.Password))
+            var pin = !string.IsNullOrWhiteSpace(request.Pin) ? request.Pin.Trim() : request.Password?.Trim();
+            if (string.IsNullOrWhiteSpace(pin))
             {
-                throw new Exception("Mật khẩu không được để trống");
+                throw new Exception("Mã PIN bảo mật không được để trống.");
+            }
+
+            if (!Regex.IsMatch(pin, @"^\d{6}$"))
+            {
+                throw new Exception("Mã PIN bảo mật bắt buộc phải có đúng 6 chữ số (ví dụ: 123456).");
             }
 
             if (string.IsNullOrWhiteSpace(request.Name))
@@ -186,7 +199,7 @@ namespace Nhaxuong.SERVICE.Services
                     Name = request.Name.Trim(),
                     Email = cleanEmail,
                     Phone = request.Phone?.Trim(),
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(pin),
                     Role = "user",
                     AuthProvider = "email",
                     EmailVerified = true,
@@ -205,7 +218,7 @@ namespace Nhaxuong.SERVICE.Services
             }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("đã được đăng ký") || ex.Message.Contains("không được để trống") || ex.Message.Contains("Họ và Tên") || ex.Message.Contains("Số điện thoại"))
+                if (ex.Message.Contains("đã được đăng ký") || ex.Message.Contains("không được để trống") || ex.Message.Contains("Họ và Tên") || ex.Message.Contains("Số điện thoại") || ex.Message.Contains("Mã PIN"))
                 {
                     throw;
                 }
@@ -357,7 +370,6 @@ namespace Nhaxuong.SERVICE.Services
                 user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == phone || u.Phone == localPhone);
                 if (isRegister)
                 {
-                    // Case Register: User cannot already exist
                     if (user != null)
                     {
                         throw new Exception("Số điện thoại này đã được đăng ký tài khoản. Vui lòng chuyển sang tab 'Đăng Nhập'!");
@@ -384,7 +396,6 @@ namespace Nhaxuong.SERVICE.Services
                 }
                 else
                 {
-                    // Case Login: User MUST already exist
                     if (user == null)
                     {
                         throw new Exception("Số điện thoại này chưa được đăng ký tài khoản trên hệ thống. Vui lòng bấm sang tab 'Đăng Ký Tài Khoản' để đăng ký trước!");
@@ -398,7 +409,6 @@ namespace Nhaxuong.SERVICE.Services
                     throw;
                 }
 
-                // Fallback user when DB is offline
                 if (isRegister)
                 {
                     user = new User
@@ -445,11 +455,11 @@ namespace Nhaxuong.SERVICE.Services
             if (!string.IsNullOrWhiteSpace(type))
             {
                 var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Phone == cleanPhone || u.Phone == localPhone);
-                if (type.Equals("login", StringComparison.OrdinalIgnoreCase))
+                if (type.Equals("login", StringComparison.OrdinalIgnoreCase) || type.Equals("forgot-pin", StringComparison.OrdinalIgnoreCase))
                 {
                     if (existingUser == null)
                     {
-                        throw new Exception("Số điện thoại này chưa được đăng ký tài khoản trên hệ thống. Vui lòng bấm sang tab 'Đăng Ký Tài Khoản' để đăng ký trước!");
+                        throw new Exception("Số điện thoại này chưa được đăng ký tài khoản trên hệ thống. Vui lòng kiểm tra lại!");
                     }
                 }
                 else if (type.Equals("register", StringComparison.OrdinalIgnoreCase))
@@ -463,8 +473,8 @@ namespace Nhaxuong.SERVICE.Services
 
             // Generate secure 6-digit random code
             var otp = Random.Shared.Next(100000, 999999).ToString();
-            _otpCache[cleanPhone] = (otp, DateTime.UtcNow.AddMinutes(3));
-            _otpCache[localPhone] = (otp, DateTime.UtcNow.AddMinutes(3));
+            _otpCache[cleanPhone] = (otp, DateTime.UtcNow.AddMinutes(5));
+            _otpCache[localPhone] = (otp, DateTime.UtcNow.AddMinutes(5));
 
             // Send real carrier SMS via eSMS
             var apiKey = _configuration["EsmsSettings:ApiKey"] ?? "72233705024C305FC536D47355A1C9";
@@ -482,7 +492,7 @@ namespace Nhaxuong.SERVICE.Services
                         SecretKey = secretKey,
                         Phone = localPhone,
                         Brandname = brandname,
-                        Content = $"{otp} la ma xac minh dang ky {brandname} cua ban",
+                        Content = $"{otp} la ma xac minh OTP Nha Xuong cua ban",
                         SmsType = "2",
                         IsUnicode = "0"
                     };
@@ -496,7 +506,6 @@ namespace Nhaxuong.SERVICE.Services
                     var respString = await response.Content.ReadAsStringAsync();
                     Console.WriteLine($"--> [eSMS] Sent OTP with {brandname} to {localPhone}: {respString}");
 
-                    // Fallback to verified brandname if custom brandname is not approved (Code 104)
                     if (respString.Contains("\"CodeResult\":\"104\"") || respString.Contains("\"CodeResult\":104"))
                     {
                         var fallbackPayload = new
@@ -505,7 +514,7 @@ namespace Nhaxuong.SERVICE.Services
                             SecretKey = secretKey,
                             Phone = localPhone,
                             Brandname = "Baotrixemay",
-                            Content = $"{otp} la ma xac minh dang ky Baotrixemay cua ban",
+                            Content = $"{otp} la ma xac minh OTP Nha Xuong cua ban",
                             SmsType = "2",
                             IsUnicode = "0"
                         };
@@ -535,8 +544,6 @@ namespace Nhaxuong.SERVICE.Services
                 throw new Exception("Địa chỉ email không đúng định dạng. Email bắt buộc phải có ký tự '@'!");
             }
 
-            // Check under database when user creates:
-            // "nếu có thì sổ ra thông báo , nếu ko thì cho phép gửi mã otp xác thực qua email"
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == cleanEmail);
             if (!string.IsNullOrWhiteSpace(type))
             {
@@ -554,16 +561,174 @@ namespace Nhaxuong.SERVICE.Services
                         throw new Exception("Email này chưa được đăng ký tài khoản trên hệ thống. Vui lòng bấm sang tab 'Đăng Ký Tài Khoản' để đăng ký trước!");
                     }
                 }
+                else if (type.Equals("forgot-pin", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (existingUser == null)
+                    {
+                        throw new Exception("Email này chưa được đăng ký tài khoản trên hệ thống. Vui lòng kiểm tra lại!");
+                    }
+                }
             }
 
             // Generate secure 6-digit random code
             var otp = Random.Shared.Next(100000, 999999).ToString();
             _emailOtpCache[cleanEmail] = (otp, DateTime.UtcNow.AddMinutes(5));
 
+            // Purpose title
+            var purposeTitle = type?.ToLower() switch
+            {
+                "register" => "Xác thực đăng ký tài khoản",
+                "forgot-pin" => "Đặt lại mã PIN 6 số",
+                _ => "Xác thực tài khoản"
+            };
+
             // Send via EmailService
-            await _emailService.SendOtpEmailAsync(cleanEmail, otp);
+            await _emailService.SendOtpEmailAsync(cleanEmail, otp, purposeTitle);
 
             return otp;
+        }
+
+        public async Task<object> ForgotPinSendOtpAsync(ForgotPinSendOtpRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Target))
+            {
+                throw new Exception("Vui lòng nhập Email hoặc Số điện thoại để nhận mã OTP.");
+            }
+
+            var method = request.Method?.ToLower() ?? "email";
+            if (method == "phone")
+            {
+                var cleanPhone = request.Target.Trim();
+                var cleanDigits = Regex.Replace(cleanPhone, @"\D", "");
+                if (cleanDigits.Length != 10 && cleanDigits.Length != 11)
+                {
+                    throw new Exception("Số điện thoại không hợp lệ! Vui lòng nhập đúng 10 hoặc 11 chữ số.");
+                }
+
+                var localPhone = cleanPhone;
+                if (localPhone.StartsWith("+84")) localPhone = "0" + localPhone[3..];
+                else if (localPhone.StartsWith("84") && localPhone.Length > 9) localPhone = "0" + localPhone[2..];
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == cleanPhone || u.Phone == localPhone);
+                if (user == null)
+                {
+                    throw new Exception("Số điện thoại này chưa được đăng ký tài khoản trên hệ thống.");
+                }
+
+                var otp = await SendOtpAsync(cleanPhone, "forgot-pin");
+                return new
+                {
+                    success = true,
+                    method = "phone",
+                    target = cleanPhone,
+                    otp = otp,
+                    message = $"Mã OTP đã được gửi qua tin nhắn SMS tới số {cleanPhone}. Vui lòng kiểm tra điện thoại của bạn!"
+                };
+            }
+            else
+            {
+                var cleanEmail = request.Target.Trim().ToLower();
+                if (!cleanEmail.Contains("@") || !cleanEmail.Contains("."))
+                {
+                    throw new Exception("Địa chỉ email không đúng định dạng!");
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == cleanEmail);
+                if (user == null)
+                {
+                    throw new Exception("Địa chỉ email này chưa được đăng ký tài khoản trên hệ thống.");
+                }
+
+                var otp = await SendEmailOtpAsync(cleanEmail, "forgot-pin");
+                return new
+                {
+                    success = true,
+                    method = "email",
+                    target = cleanEmail,
+                    otp = otp,
+                    message = $"Mã OTP đã được gửi về hòm thư {cleanEmail}. Vui lòng kiểm tra hộp thư đến (hoặc spam) của bạn!"
+                };
+            }
+        }
+
+        public async Task<object> ResetPinAsync(ForgotPinResetRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Target))
+            {
+                throw new Exception("Thông tin tài khoản (Email / Số điện thoại) không được để trống.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Otp))
+            {
+                throw new Exception("Vui lòng nhập mã OTP xác thực.");
+            }
+
+            var newPin = request.NewPin?.Trim() ?? "";
+            var confirmPin = request.ConfirmPin?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(newPin) || !Regex.IsMatch(newPin, @"^\d{6}$"))
+            {
+                throw new Exception("Mã PIN mới bắt buộc phải có đúng 6 chữ số (từ 0-9).");
+            }
+
+            if (newPin != confirmPin)
+            {
+                throw new Exception("Mã PIN mới và Xác nhận mã PIN không trùng khớp!");
+            }
+
+            var method = request.Method?.ToLower() ?? "email";
+            var inputOtp = request.Otp.Trim();
+
+            User? user = null;
+
+            if (method == "phone")
+            {
+                var phone = request.Target.Trim();
+                var localPhone = phone;
+                if (localPhone.StartsWith("+84")) localPhone = "0" + localPhone[3..];
+                else if (localPhone.StartsWith("84") && localPhone.Length > 9) localPhone = "0" + localPhone[2..];
+
+                bool found = _otpCache.TryGetValue(phone, out var cached) || _otpCache.TryGetValue(localPhone, out cached);
+                if (!found || cached.ExpireAt < DateTime.UtcNow || cached.Code != inputOtp)
+                {
+                    throw new Exception("Mã OTP xác thực không chính xác hoặc đã hết hạn. Vui lòng lấy mã mới!");
+                }
+
+                _otpCache.TryRemove(phone, out _);
+                _otpCache.TryRemove(localPhone, out _);
+
+                user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == phone || u.Phone == localPhone);
+                if (user == null)
+                {
+                    throw new Exception("Không tìm thấy tài khoản với số điện thoại này.");
+                }
+            }
+            else
+            {
+                var cleanEmail = request.Target.Trim().ToLower();
+                if (!_emailOtpCache.TryGetValue(cleanEmail, out var cached) || cached.ExpireAt < DateTime.UtcNow || cached.Code != inputOtp)
+                {
+                    throw new Exception("Mã OTP xác thực không chính xác hoặc đã hết hạn. Vui lòng lấy mã mới!");
+                }
+
+                _emailOtpCache.TryRemove(cleanEmail, out _);
+
+                user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == cleanEmail);
+                if (user == null)
+                {
+                    throw new Exception("Không tìm thấy tài khoản với email này.");
+                }
+            }
+
+            // Update user PIN (BCrypt hashed)
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPin);
+            await _context.SaveChangesAsync();
+
+            return new
+            {
+                success = true,
+                message = "Đặt lại mã PIN 6 số thành công! Vui lòng đăng nhập với mã PIN mới của bạn."
+            };
         }
 
         public async Task<UserDto> GetMeAsync(string userId)

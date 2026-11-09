@@ -4,6 +4,7 @@ namespace Nhaxuong.SERVICE.DTOs.Request
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string? Pin { get; set; }
         public string? Otp { get; set; }
     }
 
@@ -12,14 +13,30 @@ namespace Nhaxuong.SERVICE.DTOs.Request
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string? Pin { get; set; }
         public string? Phone { get; set; }
         public string? Otp { get; set; }
+    }
+
+    public class ForgotPinSendOtpRequest
+    {
+        public string Method { get; set; } = "email"; // "email" or "phone"
+        public string Target { get; set; } = string.Empty; // Email or Phone number
+    }
+
+    public class ForgotPinResetRequest
+    {
+        public string Method { get; set; } = "email"; // "email" or "phone"
+        public string Target { get; set; } = string.Empty; // Email or Phone number
+        public string Otp { get; set; } = string.Empty;
+        public string NewPin { get; set; } = string.Empty; // 6-digit PIN
+        public string ConfirmPin { get; set; } = string.Empty;
     }
 
     public class SendEmailOtpRequest
     {
         public string Email { get; set; } = string.Empty;
-        public string? Type { get; set; } // "login" or "register"
+        public string? Type { get; set; } // "login", "register", or "forgot-pin"
     }
 
     public class PhoneAuthRequest
@@ -32,7 +49,7 @@ namespace Nhaxuong.SERVICE.DTOs.Request
     public class SendOtpRequest
     {
         public string Phone { get; set; } = string.Empty;
-        public string? Type { get; set; } // "login" or "register"
+        public string? Type { get; set; } // "login" or "register" or "forgot-pin"
     }
 
     public class GoogleAuthRequest

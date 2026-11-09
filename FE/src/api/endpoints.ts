@@ -7,6 +7,8 @@ export const API_ENDPOINTS = {
     PHONE_REGISTER: '/auth/phone/register',
     PHONE_SEND_OTP: '/auth/phone/send-otp',
     EMAIL_SEND_OTP: '/auth/email/send-otp',
+    FORGOT_PIN_SEND_OTP: '/auth/forgot-pin/send-otp',
+    FORGOT_PIN_RESET: '/auth/forgot-pin/reset',
     LOGOUT: '/auth/logout',
     ME: '/auth/me',
     REFRESH: '/auth/refresh',

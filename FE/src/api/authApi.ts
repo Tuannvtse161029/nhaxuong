@@ -6,6 +6,8 @@ import type {
   LoginCredentials,
   RegisterCredentials,
   PhoneAuthCredentials,
+  ForgotPinSendOtpParams,
+  ForgotPinResetParams,
   User,
 } from '@/types/auth.types'
 
@@ -25,7 +27,7 @@ export const authApi = {
     if (ENV.USE_MOCK_API) {
       await new Promise((resolve) => setTimeout(resolve, 500))
 
-      if (credentials.email && credentials.password) {
+      if (credentials.email && (credentials.password || credentials.pin)) {
         return {
           token: 'mock-jwt-token-abcdef123456',
           refreshToken: 'mock-refresh-token-987654',
@@ -37,10 +39,14 @@ export const authApi = {
           },
         }
       }
-      throw new Error('Email hoặc mật khẩu không hợp lệ')
+      throw new Error('Email hoặc mã PIN không hợp lệ')
     }
 
-    return axiosClient.post(API_ENDPOINTS.AUTH.LOGIN, credentials)
+    return axiosClient.post(API_ENDPOINTS.AUTH.LOGIN, {
+      ...credentials,
+      password: credentials.pin || credentials.password,
+      pin: credentials.pin || credentials.password,
+    })
   },
 
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
@@ -60,7 +66,11 @@ export const authApi = {
       }
     }
 
-    return axiosClient.post(API_ENDPOINTS.AUTH.REGISTER, credentials)
+    return axiosClient.post(API_ENDPOINTS.AUTH.REGISTER, {
+      ...credentials,
+      password: credentials.pin || credentials.password,
+      pin: credentials.pin || credentials.password,
+    })
   },
 
   async loginWithGoogle(idToken?: string): Promise<AuthResponse> {
@@ -137,7 +147,7 @@ export const authApi = {
     return axiosClient.post(API_ENDPOINTS.AUTH.PHONE_SEND_OTP, { phone, type })
   },
 
-  async sendEmailOtp(email: string, type?: 'login' | 'register'): Promise<{ otp?: string; message: string }> {
+  async sendEmailOtp(email: string, type?: 'login' | 'register' | 'forgot-pin'): Promise<{ otp?: string; message: string }> {
     if (ENV.USE_MOCK_API) {
       await new Promise((resolve) => setTimeout(resolve, 300))
       return {
@@ -146,6 +156,31 @@ export const authApi = {
       }
     }
     return axiosClient.post(API_ENDPOINTS.AUTH.EMAIL_SEND_OTP, { email, type })
+  },
+
+  async forgotPinSendOtp(params: ForgotPinSendOtpParams): Promise<{ success: boolean; method: string; target: string; otp?: string; message: string }> {
+    if (ENV.USE_MOCK_API) {
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      return {
+        success: true,
+        method: params.method,
+        target: params.target,
+        otp: '123456',
+        message: `Mã OTP đặt lại mã PIN đã được gửi đến ${params.target}`,
+      }
+    }
+    return axiosClient.post(API_ENDPOINTS.AUTH.FORGOT_PIN_SEND_OTP, params)
+  },
+
+  async forgotPinReset(params: ForgotPinResetParams): Promise<{ success: boolean; message: string }> {
+    if (ENV.USE_MOCK_API) {
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      return {
+        success: true,
+        message: 'Đặt lại mã PIN 6 số thành công! Vui lòng đăng nhập với mã PIN mới.',
+      }
+    }
+    return axiosClient.post(API_ENDPOINTS.AUTH.FORGOT_PIN_RESET, params)
   },
 
   async getMe(): Promise<User> {

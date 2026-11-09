@@ -19,7 +19,7 @@ namespace Nhaxuong.API.CONTROLLER
         }
 
         /// <summary>
-        /// Đăng nhập bằng Email và Mật khẩu (Admin &amp; User)
+        /// Đăng nhập bằng Email và Mã PIN 6 số (Admin &amp; User)
         /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -36,7 +36,7 @@ namespace Nhaxuong.API.CONTROLLER
         }
 
         /// <summary>
-        /// Đăng ký tài khoản Email mới (Role: User)
+        /// Đăng ký tài khoản Email mới với Mã PIN 6 số (Role: User)
         /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -113,10 +113,11 @@ namespace Nhaxuong.API.CONTROLLER
         {
             try
             {
-                await _authService.SendOtpAsync(request.Phone, request.Type);
+                var otp = await _authService.SendOtpAsync(request.Phone, request.Type);
                 return Ok(new
                 {
-                    message = $"Mã OTP đã được gửi qua tin nhắn SMS tới số điện thoại {request.Phone}. Vui lòng kiểm tra điện thoại của bạn!"
+                    message = $"Mã OTP đã được gửi qua tin nhắn SMS tới số điện thoại {request.Phone}. Vui lòng kiểm tra điện thoại của bạn!",
+                    otp = otp
                 });
             }
             catch (Exception ex)
@@ -140,6 +141,40 @@ namespace Nhaxuong.API.CONTROLLER
                     message = $"Mã OTP đã được gửi về hòm thư {request.Email}. Vui lòng kiểm tra hộp thư đến (hoặc hòm thư rác/spam) của bạn!",
                     otp = otp
                 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Yêu cầu gửi OTP để Quên / Đặt lại mã PIN (Qua Email hoặc Số điện thoại)
+        /// </summary>
+        [HttpPost("forgot-pin/send-otp")]
+        public async Task<IActionResult> ForgotPinSendOtp([FromBody] ForgotPinSendOtpRequest request)
+        {
+            try
+            {
+                var result = await _authService.ForgotPinSendOtpAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Xác thực OTP và Đặt lại mã PIN 6 số mới
+        /// </summary>
+        [HttpPost("forgot-pin/reset")]
+        public async Task<IActionResult> ForgotPinReset([FromBody] ForgotPinResetRequest request)
+        {
+            try
+            {
+                var result = await _authService.ResetPinAsync(request);
+                return Ok(result);
             }
             catch (Exception ex)
             {

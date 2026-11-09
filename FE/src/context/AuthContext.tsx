@@ -1,5 +1,11 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react'
-import type { User, LoginCredentials, RegisterCredentials } from '@/types/auth.types'
+import type {
+  User,
+  LoginCredentials,
+  RegisterCredentials,
+  ForgotPinSendOtpParams,
+  ForgotPinResetParams,
+} from '@/types/auth.types'
 import { authApi } from '@/api/authApi'
 import { storage } from '@/utils/storage'
 
@@ -18,7 +24,9 @@ export interface AuthContextType {
   loginWithPhone: (phone: string, otp?: string, name?: string) => Promise<void>
   registerWithPhone: (phone: string, name: string, otp?: string) => Promise<void>
   sendOtp: (phone: string, type?: 'login' | 'register') => Promise<string | undefined>
-  sendEmailOtp: (email: string, type?: 'login' | 'register') => Promise<string | undefined>
+  sendEmailOtp: (email: string, type?: 'login' | 'register' | 'forgot-pin') => Promise<string | undefined>
+  forgotPinSendOtp: (params: ForgotPinSendOtpParams) => Promise<{ success: boolean; message: string; otp?: string }>
+  forgotPinReset: (params: ForgotPinResetParams) => Promise<{ success: boolean; message: string }>
   logout: () => Promise<void>
   updateUser: (user: Partial<User>) => void
 }
@@ -126,9 +134,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return res.otp
   }
 
-  const sendEmailOtp = async (email: string, type?: 'login' | 'register'): Promise<string | undefined> => {
+  const sendEmailOtp = async (email: string, type?: 'login' | 'register' | 'forgot-pin'): Promise<string | undefined> => {
     const res = await authApi.sendEmailOtp(email, type)
     return res.otp
+  }
+
+  const forgotPinSendOtp = async (params: ForgotPinSendOtpParams) => {
+    return authApi.forgotPinSendOtp(params)
+  }
+
+  const forgotPinReset = async (params: ForgotPinResetParams) => {
+    return authApi.forgotPinReset(params)
   }
 
   const logout = async () => {
@@ -169,6 +185,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         registerWithPhone,
         sendOtp,
         sendEmailOtp,
+        forgotPinSendOtp,
+        forgotPinReset,
         logout,
         updateUser,
       }}
