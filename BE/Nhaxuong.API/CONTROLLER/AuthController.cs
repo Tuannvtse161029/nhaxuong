@@ -113,11 +113,10 @@ namespace Nhaxuong.API.CONTROLLER
         {
             try
             {
-                var otp = await _authService.SendOtpAsync(request.Phone, request.Type);
+                await _authService.SendOtpAsync(request.Phone, request.Type);
                 return Ok(new
                 {
-                    message = $"Mã OTP đã được gửi qua tin nhắn SMS tới số điện thoại {request.Phone}. Vui lòng kiểm tra điện thoại của bạn!",
-                    otp = otp
+                    message = $"Mã OTP đã được gửi qua tin nhắn SMS tới số điện thoại {request.Phone}. Vui lòng kiểm tra điện thoại của bạn!"
                 });
             }
             catch (Exception ex)
@@ -135,11 +134,10 @@ namespace Nhaxuong.API.CONTROLLER
         {
             try
             {
-                var otp = await _authService.SendEmailOtpAsync(request.Email, request.Type);
+                await _authService.SendEmailOtpAsync(request.Email, request.Type);
                 return Ok(new
                 {
-                    message = $"Mã OTP đã được gửi về hòm thư {request.Email}. Vui lòng kiểm tra hộp thư đến (hoặc hòm thư rác/spam) của bạn!",
-                    otp = otp
+                    message = $"Mã OTP đã được gửi về hòm thư {request.Email}. Vui lòng kiểm tra hộp thư đến (hoặc hòm thư rác/spam) của bạn!"
                 });
             }
             catch (Exception ex)

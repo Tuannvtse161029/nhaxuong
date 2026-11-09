@@ -622,13 +622,12 @@ namespace Nhaxuong.SERVICE.Services
                     throw new Exception("Số điện thoại này chưa được đăng ký tài khoản trên hệ thống.");
                 }
 
-                var otp = await SendOtpAsync(cleanPhone, "forgot-pin");
+                await SendOtpAsync(cleanPhone, "forgot-pin");
                 return new
                 {
                     success = true,
                     method = "phone",
                     target = cleanPhone,
-                    otp = otp,
                     message = $"Mã OTP đã được gửi qua tin nhắn SMS tới số {cleanPhone}. Vui lòng kiểm tra điện thoại của bạn!"
                 };
             }
@@ -646,13 +645,12 @@ namespace Nhaxuong.SERVICE.Services
                     throw new Exception("Địa chỉ email này chưa được đăng ký tài khoản trên hệ thống.");
                 }
 
-                var otp = await SendEmailOtpAsync(cleanEmail, "forgot-pin");
+                await SendEmailOtpAsync(cleanEmail, "forgot-pin");
                 return new
                 {
                     success = true,
                     method = "email",
                     target = cleanEmail,
-                    otp = otp,
                     message = $"Mã OTP đã được gửi về hòm thư {cleanEmail}. Vui lòng kiểm tra hộp thư đến (hoặc spam) của bạn!"
                 };
             }

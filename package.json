@@ -1,0 +1,8 @@
+{
+  "name": "nhaxuong-root",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "nodemailer": "^6.10.0"
+  }
+}
