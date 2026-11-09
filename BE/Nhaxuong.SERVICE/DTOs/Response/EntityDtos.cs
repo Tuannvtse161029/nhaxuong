@@ -2,10 +2,13 @@ namespace Nhaxuong.SERVICE.DTOs.Response
 {
     public class PropertyDto
     {
-        public string Id { get; set; } = string.Empty;
+        public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
         public string TypeDisplay { get; set; } = string.Empty;
+        public string Status { get; set; } = "Còn hàng";
+        public int? CategoryId { get; set; }
+        public string? CategoryName { get; set; }
         public string Province { get; set; } = string.Empty;
         public string Kcn { get; set; } = string.Empty; // Vị trí kho bãi / KCN
         public long Price { get; set; }
@@ -16,6 +19,7 @@ namespace Nhaxuong.SERVICE.DTOs.Response
         public string Image { get; set; } = string.Empty;
         public string? VideoUrl { get; set; }
         public string? AudioUrl { get; set; }
+        public string? Model3DUrl { get; set; }
         public string Desc { get; set; } = string.Empty;
         public bool EmailNotified { get; set; } = false;
         public string Created { get; set; } = string.Empty;
@@ -23,6 +27,7 @@ namespace Nhaxuong.SERVICE.DTOs.Response
 
     public class CategoryDto
     {
+        public int Id { get; set; }
         public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Icon { get; set; } = "Warehouse";
@@ -43,7 +48,7 @@ namespace Nhaxuong.SERVICE.DTOs.Response
 
     public class NoticeDto
     {
-        public string Id { get; set; } = string.Empty;
+        public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string Badge { get; set; } = "Thông Báo";

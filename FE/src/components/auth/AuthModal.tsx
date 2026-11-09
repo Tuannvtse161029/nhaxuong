@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import {
   X,
   Smartphone,
@@ -65,8 +65,13 @@ export function AuthModal() {
   }
 
   const handleSendOtp = async () => {
-    if (!phone.trim()) {
+    const cleanedPhone = phone.replace(/\D/g, '')
+    if (!cleanedPhone) {
       setError('Vui lòng nhập số điện thoại')
+      return
+    }
+    if (cleanedPhone.length !== 10 && cleanedPhone.length !== 11) {
+      setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
       return
     }
     setError(null)
@@ -111,8 +116,13 @@ export function AuthModal() {
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!phone.trim()) {
+    const cleanedPhone = phone.replace(/\D/g, '')
+    if (!cleanedPhone) {
       setError('Vui lòng nhập số điện thoại')
+      return
+    }
+    if (cleanedPhone.length !== 10 && cleanedPhone.length !== 11) {
+      setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
       return
     }
     if (!otpSent) {
@@ -143,7 +153,7 @@ export function AuthModal() {
 
   const handleSendEmailOtp = async () => {
     if (!email.trim() || !email.includes('@')) {
-      setError('Vui lòng nhập địa chỉ email hợp lệ')
+      setError('Email không hợp lệ! Địa chỉ email bắt buộc phải chứa ký tự @')
       return
     }
     setError(null)
@@ -176,8 +186,12 @@ export function AuthModal() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || !password.trim()) {
-      setError('Vui lòng điền đầy đủ email và mật khẩu')
+    if (!email.trim() || !email.includes('@')) {
+      setError('Email không hợp lệ! Địa chỉ email bắt buộc phải chứa ký tự @')
+      return
+    }
+    if (!password.trim()) {
+      setError('Vui lòng điền đầy đủ mật khẩu')
       return
     }
     if (!isLogin && password !== confirmPassword) {

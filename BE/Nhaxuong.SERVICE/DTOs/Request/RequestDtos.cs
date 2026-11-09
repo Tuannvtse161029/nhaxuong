@@ -48,6 +48,8 @@ namespace Nhaxuong.SERVICE.DTOs.Request
         public string Title { get; set; } = string.Empty;
         public string Type { get; set; } = "SALE"; // SALE, RENT, RECYCLED_STEEL
         public string? TypeDisplay { get; set; }
+        public string? Status { get; set; } = "Còn hàng"; // Còn hàng, Đã bán, Hết hàng, Đang giao dịch
+        public int? CategoryId { get; set; }
         public string Province { get; set; } = string.Empty;
         public string Kcn { get; set; } = string.Empty; // Vị trí kho bãi / KCN
         public long Price { get; set; }
@@ -56,6 +58,7 @@ namespace Nhaxuong.SERVICE.DTOs.Request
         public string? BrokerPhone { get; set; }
         public string? VideoUrl { get; set; }
         public string? AudioUrl { get; set; }
+        public string? Model3DUrl { get; set; } // File HTML 3D hoặc URL
         public string? Image { get; set; }
         public string? Desc { get; set; }
         public bool TriggerEmail { get; set; } = true;
@@ -68,6 +71,8 @@ namespace Nhaxuong.SERVICE.DTOs.Request
     public class PropertyFilterQuery
     {
         public string? Type { get; set; } // ALL, SALE, RENT, RECYCLED_STEEL
+        public string? Status { get; set; }
+        public int? CategoryId { get; set; }
         public string? Keyword { get; set; }
         public string? Province { get; set; }
         public string? Kcn { get; set; }

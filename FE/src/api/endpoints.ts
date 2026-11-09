@@ -21,7 +21,7 @@ export const API_ENDPOINTS = {
   CATEGORIES: {
     LIST: '/categories',
     CREATE: '/categories',
-    DELETE: (code: string) => `/categories/${code}`,
+    DELETE: (code: string | number) => `/categories/${code}`,
   },
   SUBSCRIBERS: {
     LIST: '/subscribers',
@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
   },
   UPLOADS: {
     IMAGE: '/uploads/image',
+    MODEL_3D: '/uploads/model3d',
   },
   USERS: {
     LIST: '/users',

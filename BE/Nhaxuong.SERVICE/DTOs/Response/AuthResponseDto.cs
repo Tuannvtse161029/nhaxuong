@@ -2,13 +2,14 @@ namespace Nhaxuong.SERVICE.DTOs.Response
 {
     public class UserDto
     {
-        public string Id { get; set; } = string.Empty;
+        public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Role { get; set; } = "user";
         public string? Phone { get; set; }
         public string? Avatar { get; set; }
         public string AuthProvider { get; set; } = "email";
+        public bool EmailVerified { get; set; } = false;
         public string CreatedAt { get; set; } = string.Empty;
     }
 

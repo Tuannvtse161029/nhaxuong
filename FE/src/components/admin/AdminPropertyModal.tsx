@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { X, Mail, Layers, Warehouse } from 'lucide-react'
+import { X, Mail, Layers, Warehouse, Box, Upload } from 'lucide-react'
 import type { Property, PropertyType } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
 import { Button } from '@/components/common/Button'
 import { Input } from '@/components/common/Input'
 import { PROVINCES_LIST } from '@/data/mockData'
 import { formatCurrency } from '@/utils/formatters'
+import { propertyApi } from '@/api/propertyApi'
 
 interface AdminPropertyModalProps {
   isOpen: boolean
@@ -18,6 +19,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
   const [title, setTitle] = useState('')
   const [type, setType] = useState<PropertyType>('SALE')
+  const [status, setStatus] = useState('Còn hàng')
+  const [categoryId, setCategoryId] = useState<number | null>(null)
   const [province, setProvince] = useState('Bình Dương')
   const [kcn, setKcn] = useState('')
   const [price, setPrice] = useState(0)
@@ -26,14 +29,18 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   const [brokerPhone, setBrokerPhone] = useState('090 123 4567')
   const [videoUrl, setVideoUrl] = useState('')
   const [audioUrl, setAudioUrl] = useState('')
+  const [model3dUrl, setModel3dUrl] = useState('')
   const [image, setImage] = useState('')
   const [desc, setDesc] = useState('')
   const [triggerEmail, setTriggerEmail] = useState(true)
+  const [isUploading3D, setIsUploading3D] = useState(false)
 
   useEffect(() => {
     if (property) {
       setTitle(property.title)
       setType(property.type)
+      setStatus(property.status || 'Còn hàng')
+      setCategoryId(property.categoryId ?? null)
       setProvince(property.province)
       setKcn(property.kcn || '')
       setPrice(property.price || 0)
@@ -42,11 +49,15 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setBrokerPhone(property.brokerPhone || '090 123 4567')
       setVideoUrl(property.videoUrl || '')
       setAudioUrl(property.audioUrl || '')
+      setModel3dUrl(property.model3dUrl || '')
       setImage(property.image || '')
       setDesc(property.desc || '')
     } else {
       setTitle('')
       setType('SALE')
+      setStatus('Còn hàng')
+      const defaultCat = categories.find((c) => c.code === 'SALE')
+      setCategoryId(defaultCat?.id ?? null)
       setProvince('Bình Dương')
       setKcn('')
       setPrice(0)
@@ -55,20 +66,40 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setBrokerPhone('090 123 4567')
       setVideoUrl('')
       setAudioUrl('')
+      setModel3dUrl('')
       setImage('')
       setDesc('')
     }
-  }, [property, isOpen])
+  }, [property, isOpen, categories])
 
   if (!isOpen) return null
 
   const isRecycledSteel = type === 'RECYCLED_STEEL'
 
+  const handleModel3DUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const lowerName = file.name.toLowerCase()
+    if (!lowerName.endsWith('.html') && !lowerName.endsWith('.htm')) {
+      alert('Mô hình 3D bắt buộc phải là file HTML (.html hoặc .htm)!')
+      return
+    }
+    setIsUploading3D(true)
+    try {
+      const res = await propertyApi.uploadModel3D(file)
+      setModel3dUrl(res.url)
+    } catch (err: any) {
+      alert('Lỗi tải file 3D: ' + (err.message || 'Không thể tải file'))
+    } finally {
+      setIsUploading3D(false)
+    }
+  }
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
 
-    const catObj = categories.find((c) => c.code === type)
+    const catObj = categories.find((c) => c.code === type || (categoryId && c.id === categoryId))
     const typeDisplay = catObj
       ? catObj.name
       : type === 'SALE'
@@ -89,6 +120,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       title: title.trim(),
       type,
       typeDisplay,
+      status: status.trim() || 'Còn hàng',
+      categoryId: categoryId ?? catObj?.id ?? null,
       province,
       kcn: kcn.trim() || 'Vị trí bãi kho',
       price,
@@ -98,6 +131,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       brokerPhone: brokerPhone.trim() || '090 123 4567',
       videoUrl: videoUrl.trim(),
       audioUrl: audioUrl.trim(),
+      model3dUrl: model3dUrl.trim() || null,
       image: image.trim() || defaultImage,
       desc: desc.trim(),
     }
@@ -131,8 +165,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
             </h3>
             <p className="text-[11px] text-slate-400">
               {isRecycledSteel
-                ? 'Điền thông tin vị trí bãi kho, khối lượng thép, giá bán và video hình ảnh'
-                : 'Điền thông tin vị trí kho xưởng, diện tích, giá bán/thuê và video hình ảnh'}
+                ? 'Điền thông tin vị trí bãi kho, khối lượng thép, trạng thái, giá bán và mô hình 3D HTML'
+                : 'Điền thông tin vị trí kho xưởng, diện tích, trạng thái, giá bán/thuê và mô hình 3D HTML'}
             </p>
           </div>
           <button
@@ -157,14 +191,19 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
             required
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Loại hình danh mục
               </label>
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as PropertyType)}
+                onChange={(e) => {
+                  const newType = e.target.value as PropertyType
+                  setType(newType)
+                  const matchCat = categories.find((c) => c.code === newType)
+                  if (matchCat?.id) setCategoryId(matchCat.id)
+                }}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-semibold"
               >
                 {categories.map((c) => (
@@ -172,6 +211,22 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                     {c.name}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Trạng thái bài đăng
+              </label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-semibold"
+              >
+                <option value="Còn hàng">🟢 Còn hàng (Đang mở)</option>
+                <option value="Đã bán">🔴 Đã bán</option>
+                <option value="Hết hàng">⚪ Hết hàng / Tạm ngưng</option>
+                <option value="Đang giao dịch">🟡 Đang giao dịch / Đặt cọc</option>
               </select>
             </div>
 
@@ -195,7 +250,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Vị trí"
+              label="Vị trí kho bãi / KCN"
               value={kcn}
               onChange={(e) => setKcn(e.target.value)}
               placeholder={isRecycledSteel ? 'VD: Kho Bãi ICD Tân Cảng, Đường ĐT 743...' : 'VD: KCN VSIP 1, KCN Sóng Thần 2...'}
@@ -234,6 +289,34 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
             onChange={(e) => setBrokerPhone(e.target.value)}
             placeholder="VD: 090 123 4567"
           />
+
+          {/* Mô Hình 3D HTML Section */}
+          <div className="p-4 rounded-2xl border border-teal-500/25 bg-teal-50/60 dark:bg-teal-950/20 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-teal-900 dark:text-teal-300 flex items-center gap-1.5">
+                <Box className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                Mô hình 3D tương tác (File HTML xoay 360°)
+              </label>
+
+              <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-teal-600 text-white hover:bg-teal-700 transition shadow-xs">
+                <Upload className="w-3.5 h-3.5" />
+                <span>{isUploading3D ? 'Đang tải lên...' : 'Tải File .html 3D'}</span>
+                <input
+                  type="file"
+                  accept=".html,.htm"
+                  className="hidden"
+                  disabled={isUploading3D}
+                  onChange={handleModel3DUpload}
+                />
+              </label>
+            </div>
+            <Input
+              value={model3dUrl}
+              onChange={(e) => setModel3dUrl(e.target.value)}
+              placeholder="Nhập link file HTML mô hình 3D hoặc bấm nút 'Tải File .html 3D' ở trên"
+              helperText="File HTML 3D sẽ được nhúng trực tiếp vào modal để khách hàng xoay tương tác 360 độ"
+            />
+          </div>
 
           <Input
             label="URL Video Drone MP4 (Hover Autoplay)"

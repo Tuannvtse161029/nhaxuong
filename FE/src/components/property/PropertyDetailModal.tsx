@@ -5,8 +5,6 @@ import {
   MapPin,
   Film,
   Image,
-  Zap,
-  ShieldCheck,
   Maximize2,
   Box,
   Phone,
@@ -29,15 +27,52 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
 
   const saved = isSaved(property.id)
 
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'Đã bán':
+        return 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border-red-200'
+      case 'Hết hàng':
+        return 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200'
+      case 'Đang giao dịch':
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200'
+      case 'Còn hàng':
+      default:
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200'
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative flex flex-col w-full max-w-4xl max-h-[92vh] rounded-3xl bg-white shadow-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/70 dark:bg-slate-950/60">
-          <div className="flex items-center gap-2.5 min-w-0 pr-4">
+          <div className="flex items-center gap-2.5 min-w-0 pr-4 flex-wrap">
             <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase text-teal-800 dark:bg-teal-950 dark:text-teal-300">
               {property.typeDisplay}
             </span>
+
+            {/* Trạng thái bài đăng (Status) */}
+            <span
+              className={cn(
+                'rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border',
+                getStatusColor(property.status)
+              )}
+            >
+              {property.status || 'Còn hàng'}
+            </span>
+
+            {property.categoryName && (
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                {property.categoryName}
+              </span>
+            )}
+
+            {property.model3dUrl && (
+              <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                3D HTML
+              </span>
+            )}
+
             <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
               {property.title}
             </span>
@@ -218,10 +253,15 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
                 onClose()
                 open3DModal(property)
               }}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 dark:bg-slate-700 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-900 transition cursor-pointer"
+              className={cn(
+                'flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer',
+                property.model3dUrl
+                  ? 'bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700'
+                  : 'bg-slate-800 dark:bg-slate-700 hover:bg-slate-900'
+              )}
             >
               <Box className="w-4 h-4 text-amber-400" />
-              <span>Xem demo mô hình 3D</span>
+              <span>{property.model3dUrl ? 'Xem mô hình 3D HTML' : 'Xem demo mô hình 3D'}</span>
             </button>
 
             {/* Hotline Call CTA */}

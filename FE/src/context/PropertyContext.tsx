@@ -20,8 +20,8 @@ interface PropertyContextType {
   // Properties
   properties: Property[]
   addProperty: (property: Omit<Property, 'id' | 'created'>, triggerEmail?: boolean) => void
-  updateProperty: (id: string, updated: Partial<Property>, triggerBroadcast?: boolean) => void
-  deleteProperty: (id: string) => void
+  updateProperty: (id: string | number, updated: Partial<Property>, triggerBroadcast?: boolean) => void
+  deleteProperty: (id: string | number) => void
 
   // Categories
   categories: Category[]
@@ -33,16 +33,16 @@ interface PropertyContextType {
   activeNoticeText: string
   setActiveNoticeText: (text: string) => void
   addNotice: (notice: Omit<Notice, 'id' | 'createdAt'>) => void
-  deleteNotice: (id: string) => void
+  deleteNotice: (id: string | number) => void
 
   // Subscribers
   subscribers: Subscriber[]
   addSubscriber: (sub: Omit<Subscriber, 'id' | 'time'>) => void
 
   // Wishlist
-  savedPropertyIds: string[]
-  toggleSaveProperty: (id: string) => void
-  isSaved: (id: string) => boolean
+  savedPropertyIds: (string | number)[]
+  toggleSaveProperty: (id: string | number) => void
+  isSaved: (id: string | number) => boolean
 
   // Filters
   filterState: PropertyFilterState
@@ -111,7 +111,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   const [subscribers, setSubscribers] = useState<Subscriber[]>(() =>
     storage.getItem('kcn_subscribers', INITIAL_SUBSCRIBERS)
   )
-  const [savedPropertyIds, setSavedPropertyIds] = useState<string[]>(() =>
+  const [savedPropertyIds, setSavedPropertyIds] = useState<(string | number)[]>(() =>
     storage.getItem('kcn_saved_ids', ['prop-1'])
   )
   const [role, setRoleState] = useState<'user' | 'admin'>('user')
@@ -211,12 +211,12 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const toggleSaveProperty = (id: string) => {
+  const toggleSaveProperty = (id: string | number) => {
     setSavedPropertyIds((prev) => {
-      const exists = prev.includes(id)
+      const exists = prev.some((item) => String(item) === String(id))
       if (exists) {
         showToast('Đã bỏ lưu nhà xưởng khỏi danh sách yêu thích')
-        return prev.filter((item) => item !== id)
+        return prev.filter((item) => String(item) !== String(id))
       } else {
         showToast('❤️ Đã lưu nhà xưởng vào danh sách yêu thích!')
         return [...prev, id]
@@ -224,7 +224,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const isSaved = (id: string) => savedPropertyIds.includes(id)
+  const isSaved = (id: string | number) => savedPropertyIds.some((item) => String(item) === String(id))
 
   const setFilterState = (
     updater: Partial<PropertyFilterState> | ((prev: PropertyFilterState) => PropertyFilterState)
@@ -305,9 +305,9 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const updateProperty = (id: string, updated: Partial<Property>, triggerBroadcast = false) => {
+  const updateProperty = (id: string | number, updated: Partial<Property>, triggerBroadcast = false) => {
     setProperties((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
+      prev.map((item) => (String(item.id) === String(id) ? { ...item, ...updated } : item))
     )
 
     if (!ENV.USE_MOCK_API) {
@@ -326,8 +326,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const deleteProperty = (id: string) => {
-    setProperties((prev) => prev.filter((p) => p.id !== id))
+  const deleteProperty = (id: string | number) => {
+    setProperties((prev) => prev.filter((p) => String(p.id) !== String(id)))
     if (!ENV.USE_MOCK_API) {
       propertyApi.deleteProperty(id).catch((err) => {
         console.warn('API sync warning:', err.message)
@@ -378,8 +378,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     showToast('Đã đăng thông báo mới lên trang chủ')
   }
 
-  const deleteNotice = (id: string) => {
-    setNotices((prev) => prev.filter((n) => n.id !== id))
+  const deleteNotice = (id: string | number) => {
+    setNotices((prev) => prev.filter((n) => String(n.id) !== String(id)))
     if (!ENV.USE_MOCK_API) {
       propertyApi.deleteNotice(id).catch((err) => {
         console.warn('API sync warning:', err.message)

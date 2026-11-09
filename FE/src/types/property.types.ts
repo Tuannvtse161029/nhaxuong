@@ -1,10 +1,13 @@
 export type PropertyType = 'ALL' | 'SALE' | 'RENT' | 'RECYCLED_STEEL'
 
 export interface Property {
-  id: string
+  id: number | string
   title: string
   type: PropertyType
   typeDisplay: string
+  status?: string // 'Còn hàng', 'Đã bán', 'Hết hàng', 'Đang giao dịch'
+  categoryId?: number | null
+  categoryName?: string | null
   province: string
   district?: string
   kcn: string
@@ -18,6 +21,7 @@ export interface Property {
   videoUrl?: string
   audioUrl?: string
   audioDuration?: string
+  model3dUrl?: string | null // File HTML mô hình 3D tương tác
   desc: string
   created: string
   emailNotified?: boolean
@@ -32,6 +36,7 @@ export interface Property {
 }
 
 export interface Category {
+  id?: number
   code: string
   name: string
   icon: string
@@ -40,7 +45,7 @@ export interface Category {
 }
 
 export interface Notice {
-  id: string
+  id: number | string
   title: string
   content: string
   badge: string
@@ -67,4 +72,6 @@ export interface PropertyFilterState {
   minPrice: number
   maxPrice: number
   sortBy: 'newest' | 'price-asc' | 'price-desc'
+  status?: string
+  categoryId?: number
 }

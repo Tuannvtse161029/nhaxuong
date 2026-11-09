@@ -1,13 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Nhaxuong.MODEL.Entities
 {
     public class PropertyItem
     {
         [Key]
-        [MaxLength(50)]
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
 
         [Required]
         [MaxLength(255)]
@@ -19,6 +20,14 @@ namespace Nhaxuong.MODEL.Entities
 
         [MaxLength(100)]
         public string TypeDisplay { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string Status { get; set; } = "Còn hàng"; // Còn hàng, Đã bán, Hết hàng, Đang giao dịch
+
+        public int? CategoryId { get; set; }
+
+        [ForeignKey(nameof(CategoryId))]
+        public virtual Category? Category { get; set; }
 
         [Required]
         [MaxLength(100)]
@@ -48,6 +57,8 @@ namespace Nhaxuong.MODEL.Entities
         public string? VideoUrl { get; set; }
 
         public string? AudioUrl { get; set; }
+
+        public string? Model3DUrl { get; set; } // Link file HTML mô hình 3D tương tác
 
         public string Desc { get; set; } = string.Empty;
 

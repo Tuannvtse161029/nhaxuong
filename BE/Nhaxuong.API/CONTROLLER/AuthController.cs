@@ -156,7 +156,7 @@ namespace Nhaxuong.API.CONTROLLER
             {
                 return Ok(new UserDto
                 {
-                    Id = "usr_admin_01",
+                    Id = 1,
                     Name = "Quản Trị Viên (Admin)",
                     Email = "admin@nhaxuong.vn",
                     Role = "admin",

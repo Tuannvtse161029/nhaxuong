@@ -1,13 +1,14 @@
 export type UserRole = 'admin' | 'manager' | 'user' | 'operator'
 
 export interface User {
-  id: string
+  id: number | string
   name: string
   email: string
   role: UserRole
   avatar?: string
   phone?: string
   authProvider?: 'email' | 'google' | 'phone'
+  emailVerified?: boolean
   createdAt?: string
 }
 

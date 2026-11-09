@@ -1,13 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Nhaxuong.MODEL.Entities
 {
     public class NoticeItem
     {
         [Key]
-        [MaxLength(50)]
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
 
         [Required]
         [MaxLength(255)]

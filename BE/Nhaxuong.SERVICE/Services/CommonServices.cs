@@ -10,7 +10,8 @@ namespace Nhaxuong.SERVICE.Services
     {
         Task<List<CategoryDto>> GetAllAsync();
         Task<CategoryDto> CreateAsync(CreateCategoryRequest request);
-        Task<bool> DeleteAsync(string code);
+        Task<bool> DeleteAsync(string codeOrId);
+        Task<bool> DeleteAsync(int id);
     }
 
     public class CategoryService : ICategoryService
@@ -27,11 +28,12 @@ namespace Nhaxuong.SERVICE.Services
             try
             {
                 var categories = await _context.Categories
-                    .OrderBy(c => c.CreatedAt)
+                    .OrderBy(c => c.Id)
                     .ToListAsync();
 
                 return categories.Select(c => new CategoryDto
                 {
+                    Id = c.Id,
                     Code = c.Code,
                     Name = c.Name,
                     Icon = c.Icon,
@@ -43,9 +45,9 @@ namespace Nhaxuong.SERVICE.Services
             {
                 return new List<CategoryDto>
                 {
-                    new() { Code = "SALE", Name = "Bán Nhà Xưởng", Icon = "Warehouse", Desc = "Xưởng sản xuất tiêu chuẩn, hoàn công đầy đủ, trạm điện riêng", Active = true },
-                    new() { Code = "RENT", Name = "Cho Thuê Kho Bãi", Icon = "Boxes", Desc = "Kho logistics, dock leveler, bãi trung chuyển tiêu chuẩn", Active = true },
-                    new() { Code = "RECYCLED_STEEL", Name = "Sắt Thép Tái Sử Dụng", Icon = "Layers", Desc = "Khung nhà xưởng tiền chế, dầm thép H, I, U và tôn tái sử dụng", Active = true }
+                    new() { Id = 1, Code = "RECYCLED_STEEL", Name = "Sắt Thép Tái Sử Dụng", Icon = "Layers", Desc = "Khung nhà xưởng tiền chế, dầm thép H, I, U và tôn tái sử dụng", Active = true },
+                    new() { Id = 2, Code = "RENT", Name = "Cho Thuê Kho Bãi", Icon = "Boxes", Desc = "Kho logistics, dock leveler, bãi trung chuyển tiêu chuẩn", Active = true },
+                    new() { Id = 3, Code = "SALE", Name = "Bán Nhà Xưởng", Icon = "Warehouse", Desc = "Xưởng sản xuất tiêu chuẩn, hoàn công đầy đủ, trạm điện riêng", Active = true }
                 };
             }
         }
@@ -77,6 +79,7 @@ namespace Nhaxuong.SERVICE.Services
 
             return new CategoryDto
             {
+                Id = entity.Id,
                 Code = entity.Code,
                 Name = entity.Name,
                 Icon = entity.Icon,
@@ -85,10 +88,30 @@ namespace Nhaxuong.SERVICE.Services
             };
         }
 
-        public async Task<bool> DeleteAsync(string code)
+        public async Task<bool> DeleteAsync(int id)
         {
-            // Core categories protection
-            var normalizedCode = code.Trim().ToUpper();
+            var entity = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
+            if (entity == null) return false;
+
+            var normalizedCode = entity.Code.Trim().ToUpper();
+            if (normalizedCode == "SALE" || normalizedCode == "RENT" || normalizedCode == "RECYCLED_STEEL")
+            {
+                throw new InvalidOperationException("Không thể xóa các danh mục hệ thống cốt lõi!");
+            }
+
+            _context.Categories.Remove(entity);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(string codeOrId)
+        {
+            if (int.TryParse(codeOrId, out var id))
+            {
+                return await DeleteAsync(id);
+            }
+
+            var normalizedCode = codeOrId.Trim().ToUpper();
             if (normalizedCode == "SALE" || normalizedCode == "RENT" || normalizedCode == "RECYCLED_STEEL")
             {
                 throw new InvalidOperationException("Không thể xóa các danh mục hệ thống cốt lõi!");
@@ -171,6 +194,7 @@ namespace Nhaxuong.SERVICE.Services
     {
         Task<List<NoticeDto>> GetAllAsync();
         Task<NoticeDto> CreateAsync(CreateNoticeRequest request);
+        Task<bool> DeleteAsync(int id);
         Task<bool> DeleteAsync(string id);
         Task<string> GetActiveTickerAsync();
         Task<string> UpdateActiveTickerAsync(string text);
@@ -191,7 +215,7 @@ namespace Nhaxuong.SERVICE.Services
             try
             {
                 var notices = await _context.Notices
-                    .OrderByDescending(n => n.CreatedAt)
+                    .OrderByDescending(n => n.Id)
                     .ToListAsync();
 
                 return notices.Select(n => new NoticeDto
@@ -210,7 +234,7 @@ namespace Nhaxuong.SERVICE.Services
                 {
                     new()
                     {
-                        Id = "not-1",
+                        Id = 1,
                         Title = "Ưu đãi thuế quan mở rộng KCN VSIP 1, Long Đức.",
                         Content = "Hỗ trợ mô hình 3D HTML xoay tương tác 360° và Audio thuyết minh trực quan!",
                         Badge = "Thông Báo",
@@ -225,7 +249,6 @@ namespace Nhaxuong.SERVICE.Services
         {
             var entity = new NoticeItem
             {
-                Id = "not-" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 Title = request.Title,
                 Content = request.Content,
                 Badge = string.IsNullOrWhiteSpace(request.Badge) ? "Thông Báo" : request.Badge,
@@ -250,7 +273,7 @@ namespace Nhaxuong.SERVICE.Services
             };
         }
 
-        public async Task<bool> DeleteAsync(string id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _context.Notices.FirstOrDefaultAsync(n => n.Id == id);
             if (entity == null) return false;
@@ -258,6 +281,15 @@ namespace Nhaxuong.SERVICE.Services
             _context.Notices.Remove(entity);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<bool> DeleteAsync(string id)
+        {
+            if (int.TryParse(id, out var intId))
+            {
+                return await DeleteAsync(intId);
+            }
+            return false;
         }
 
         public Task<string> GetActiveTickerAsync()

@@ -17,6 +17,8 @@ export const propertyApi = {
   async getProperties(filter?: Partial<PropertyFilterState>): Promise<Property[]> {
     const params = new URLSearchParams()
     if (filter?.type && filter.type !== 'ALL') params.append('type', filter.type)
+    if (filter?.status && filter.status !== 'ALL') params.append('status', filter.status)
+    if (filter?.categoryId) params.append('categoryId', filter.categoryId.toString())
     if (filter?.keyword) params.append('keyword', filter.keyword)
     if (filter?.province && filter.province !== 'Toàn Quốc') params.append('province', filter.province)
     if (filter?.kcn && filter.kcn !== 'Tất cả bãi kho' && filter.kcn !== 'Tất cả KCN') params.append('kcn', filter.kcn)
@@ -31,7 +33,7 @@ export const propertyApi = {
     return []
   },
 
-  async getPropertyById(id: string): Promise<Property> {
+  async getPropertyById(id: string | number): Promise<Property> {
     return axiosClient.get<any, Property>(API_ENDPOINTS.PROPERTIES.DETAIL(id))
   },
 
@@ -39,11 +41,11 @@ export const propertyApi = {
     return axiosClient.post<any, Property>(API_ENDPOINTS.PROPERTIES.CREATE, property)
   },
 
-  async updateProperty(id: string, property: Partial<Property>): Promise<Property> {
+  async updateProperty(id: string | number, property: Partial<Property>): Promise<Property> {
     return axiosClient.put<any, Property>(API_ENDPOINTS.PROPERTIES.UPDATE(id), property)
   },
 
-  async deleteProperty(id: string): Promise<{ message: string }> {
+  async deleteProperty(id: string | number): Promise<{ message: string }> {
     return axiosClient.delete<any, { message: string }>(API_ENDPOINTS.PROPERTIES.DELETE(id))
   },
 
@@ -56,8 +58,8 @@ export const propertyApi = {
     return axiosClient.post<any, Category>(API_ENDPOINTS.CATEGORIES.CREATE, cat)
   },
 
-  async deleteCategory(code: string): Promise<{ message: string }> {
-    return axiosClient.delete<any, { message: string }>(API_ENDPOINTS.CATEGORIES.DELETE(code))
+  async deleteCategory(codeOrId: string | number): Promise<{ message: string }> {
+    return axiosClient.delete<any, { message: string }>(API_ENDPOINTS.CATEGORIES.DELETE(codeOrId))
   },
 
   // Subscribers
@@ -78,7 +80,7 @@ export const propertyApi = {
     return axiosClient.post<any, Notice>(API_ENDPOINTS.NOTICES.CREATE, notice)
   },
 
-  async deleteNotice(id: string): Promise<{ message: string }> {
+  async deleteNotice(id: string | number): Promise<{ message: string }> {
     return axiosClient.delete<any, { message: string }>(API_ENDPOINTS.NOTICES.DELETE(id))
   },
 
@@ -95,6 +97,16 @@ export const propertyApi = {
     const formData = new FormData()
     formData.append('file', file)
     return axiosClient.post(API_ENDPOINTS.UPLOADS.IMAGE, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
+  async uploadModel3D(file: File): Promise<{ url: string; fileName: string; size: number }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    return axiosClient.post(API_ENDPOINTS.UPLOADS.MODEL_3D, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

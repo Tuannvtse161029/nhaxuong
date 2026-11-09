@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Google.Apis.Auth;
@@ -45,21 +46,22 @@ namespace Nhaxuong.SERVICE.Services
             }
             catch (Exception)
             {
-                // Fallback for demo admin when SQL Server is offline/unreachable
+                // Fallback for demo admin when DB is temporarily unreachable
                 if (request.Email.ToLower() == "admin@nhaxuong.vn" && request.Password == "123456")
                 {
                     user = new User
                     {
-                        Id = "usr_admin_01",
+                        Id = 1,
                         Name = "Quản Trị Viên (Admin)",
                         Email = "admin@nhaxuong.vn",
                         Role = "admin",
-                        Phone = "0901234567"
+                        Phone = "0901234567",
+                        EmailVerified = true
                     };
                 }
                 else
                 {
-                    throw new Exception("Máy chủ cơ sở dữ liệu (35.240.181.166) hiện không phản hồi. Vui lòng kiểm tra lại dịch vụ SQL Server!");
+                    throw new Exception("Máy chủ cơ sở dữ liệu hiện không phản hồi. Vui lòng thử lại sau giây lát!");
                 }
             }
 
@@ -70,11 +72,12 @@ namespace Nhaxuong.SERVICE.Services
                 {
                     user = new User
                     {
-                        Id = "usr_admin_01",
+                        Id = 1,
                         Name = "Quản Trị Viên (Admin)",
                         Email = "admin@nhaxuong.vn",
                         Role = "admin",
-                        Phone = "0901234567"
+                        Phone = "0901234567",
+                        EmailVerified = true
                     };
                 }
                 else
@@ -100,7 +103,7 @@ namespace Nhaxuong.SERVICE.Services
                 }
             }
 
-            // Email OTP verification
+            // Email OTP verification (if provided or required)
             var cleanEmail = request.Email.Trim().ToLower();
             if (cleanEmail == "admin@nhaxuong.vn" && string.IsNullOrEmpty(request.Otp))
             {
@@ -132,9 +135,14 @@ namespace Nhaxuong.SERVICE.Services
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequest request)
         {
             var cleanEmail = request.Email.Trim().ToLower();
-            if (string.IsNullOrWhiteSpace(cleanEmail) || string.IsNullOrWhiteSpace(request.Password))
+            if (string.IsNullOrWhiteSpace(cleanEmail) || !cleanEmail.Contains("@") || !cleanEmail.Contains("."))
             {
-                throw new Exception("Email và mật khẩu không được để trống");
+                throw new Exception("Địa chỉ email không đúng định dạng. Email bắt buộc phải có ký tự '@'!");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+            {
+                throw new Exception("Mật khẩu không được để trống");
             }
 
             if (string.IsNullOrWhiteSpace(request.Name))
@@ -142,6 +150,17 @@ namespace Nhaxuong.SERVICE.Services
                 throw new Exception("Vui lòng nhập Họ và Tên của bạn để đăng ký tài khoản.");
             }
 
+            // Validate phone format: 10 or 11 digits
+            if (!string.IsNullOrWhiteSpace(request.Phone))
+            {
+                var cleanDigits = Regex.Replace(request.Phone, @"\D", "");
+                if (cleanDigits.Length != 10 && cleanDigits.Length != 11)
+                {
+                    throw new Exception("Số điện thoại không hợp lệ! Số điện thoại bắt buộc phải có đúng 10 hoặc 11 chữ số.");
+                }
+            }
+
+            // Validate OTP
             if (string.IsNullOrWhiteSpace(request.Otp))
             {
                 throw new Exception("Vui lòng nhập mã xác thực OTP đã gửi về email của bạn.");
@@ -164,13 +183,13 @@ namespace Nhaxuong.SERVICE.Services
 
                 var user = new User
                 {
-                    Id = "usr_" + Guid.NewGuid().ToString("N")[..12],
                     Name = request.Name.Trim(),
                     Email = cleanEmail,
-                    Phone = request.Phone,
+                    Phone = request.Phone?.Trim(),
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                     Role = "user",
                     AuthProvider = "email",
+                    EmailVerified = true,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -186,7 +205,7 @@ namespace Nhaxuong.SERVICE.Services
             }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("đã được đăng ký") || ex.Message.Contains("không được để trống") || ex.Message.Contains("Họ và Tên"))
+                if (ex.Message.Contains("đã được đăng ký") || ex.Message.Contains("không được để trống") || ex.Message.Contains("Họ và Tên") || ex.Message.Contains("Số điện thoại"))
                 {
                     throw;
                 }
@@ -241,12 +260,12 @@ namespace Nhaxuong.SERVICE.Services
                 {
                     user = new User
                     {
-                        Id = "usr_gg_" + Guid.NewGuid().ToString("N")[..10],
                         Name = name,
                         Email = email,
                         Avatar = avatar ?? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=128&auto=format&fit=crop&q=80",
                         Role = "user",
                         AuthProvider = "google",
+                        EmailVerified = true,
                         CreatedAt = DateTime.UtcNow
                     };
                     _context.Users.Add(user);
@@ -266,12 +285,13 @@ namespace Nhaxuong.SERVICE.Services
                 // Fallback user when DB is offline
                 user = new User
                 {
-                    Id = "usr_gg_" + Guid.NewGuid().ToString("N")[..10],
+                    Id = 2,
                     Name = name,
                     Email = email,
                     Avatar = avatar ?? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=128&auto=format&fit=crop&q=80",
                     Role = "user",
                     AuthProvider = "google",
+                    EmailVerified = true,
                     CreatedAt = DateTime.UtcNow
                 };
             }
@@ -292,6 +312,12 @@ namespace Nhaxuong.SERVICE.Services
             }
 
             var phone = request.Phone.Trim();
+            var cleanDigits = Regex.Replace(phone, @"\D", "");
+            if (cleanDigits.Length != 10 && cleanDigits.Length != 11)
+            {
+                throw new Exception("Số điện thoại không hợp lệ! Số điện thoại bắt buộc phải có đúng 10 hoặc 11 chữ số.");
+            }
+
             var localPhone = phone;
             if (localPhone.StartsWith("+84")) localPhone = "0" + localPhone[3..];
             else if (localPhone.StartsWith("84") && localPhone.Length > 9) localPhone = "0" + localPhone[2..];
@@ -331,7 +357,7 @@ namespace Nhaxuong.SERVICE.Services
                 user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == phone || u.Phone == localPhone);
                 if (isRegister)
                 {
-                    // Case Đăng Ký: User cannot already exist
+                    // Case Register: User cannot already exist
                     if (user != null)
                     {
                         throw new Exception("Số điện thoại này đã được đăng ký tài khoản. Vui lòng chuyển sang tab 'Đăng Nhập'!");
@@ -344,13 +370,13 @@ namespace Nhaxuong.SERVICE.Services
 
                     user = new User
                     {
-                        Id = "usr_ph_" + Guid.NewGuid().ToString("N")[..10],
                         Name = request.Name.Trim(),
                         Email = $"{localPhone}@nhaxuong.vn",
                         Phone = localPhone,
                         Avatar = "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=128&auto=format&fit=crop&q=80",
                         Role = "user",
                         AuthProvider = "phone",
+                        EmailVerified = false,
                         CreatedAt = DateTime.UtcNow
                     };
                     _context.Users.Add(user);
@@ -358,7 +384,7 @@ namespace Nhaxuong.SERVICE.Services
                 }
                 else
                 {
-                    // Case Đăng Nhập: User MUST already exist
+                    // Case Login: User MUST already exist
                     if (user == null)
                     {
                         throw new Exception("Số điện thoại này chưa được đăng ký tài khoản trên hệ thống. Vui lòng bấm sang tab 'Đăng Ký Tài Khoản' để đăng ký trước!");
@@ -367,7 +393,7 @@ namespace Nhaxuong.SERVICE.Services
             }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("chưa được đăng ký") || ex.Message.Contains("đã được đăng ký") || ex.Message.Contains("Họ và Tên"))
+                if (ex.Message.Contains("chưa được đăng ký") || ex.Message.Contains("đã được đăng ký") || ex.Message.Contains("Họ và Tên") || ex.Message.Contains("Số điện thoại"))
                 {
                     throw;
                 }
@@ -377,13 +403,14 @@ namespace Nhaxuong.SERVICE.Services
                 {
                     user = new User
                     {
-                        Id = "usr_ph_" + Guid.NewGuid().ToString("N")[..10],
+                        Id = 3,
                         Name = !string.IsNullOrWhiteSpace(request.Name) ? request.Name : $"Khách Hàng ({localPhone[^4..]})",
                         Email = $"{localPhone}@nhaxuong.vn",
                         Phone = localPhone,
                         Avatar = "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=128&auto=format&fit=crop&q=80",
                         Role = "user",
                         AuthProvider = "phone",
+                        EmailVerified = false,
                         CreatedAt = DateTime.UtcNow
                     };
                 }
@@ -404,6 +431,12 @@ namespace Nhaxuong.SERVICE.Services
         public async Task<string> SendOtpAsync(string phone, string? type = null)
         {
             var cleanPhone = phone.Trim();
+            var cleanDigits = Regex.Replace(cleanPhone, @"\D", "");
+            if (cleanDigits.Length != 10 && cleanDigits.Length != 11)
+            {
+                throw new Exception("Số điện thoại không hợp lệ! Số điện thoại bắt buộc phải có đúng 10 hoặc 11 chữ số.");
+            }
+
             var localPhone = cleanPhone;
             if (localPhone.StartsWith("+84")) localPhone = "0" + localPhone[3..];
             else if (localPhone.StartsWith("84") && localPhone.Length > 9) localPhone = "0" + localPhone[2..];
@@ -463,7 +496,7 @@ namespace Nhaxuong.SERVICE.Services
                     var respString = await response.Content.ReadAsStringAsync();
                     Console.WriteLine($"--> [eSMS] Sent OTP with {brandname} to {localPhone}: {respString}");
 
-                    // If custom brandname is not yet approved by telco (Code 104), fallback to verified test brandname Baotrixemay
+                    // Fallback to verified brandname if custom brandname is not approved (Code 104)
                     if (respString.Contains("\"CodeResult\":\"104\"") || respString.Contains("\"CodeResult\":104"))
                     {
                         var fallbackPayload = new
@@ -499,25 +532,26 @@ namespace Nhaxuong.SERVICE.Services
             var cleanEmail = email.Trim().ToLower();
             if (string.IsNullOrWhiteSpace(cleanEmail) || !cleanEmail.Contains("@") || !cleanEmail.Contains("."))
             {
-                throw new Exception("Vui lòng nhập địa chỉ email hợp lệ!");
+                throw new Exception("Địa chỉ email không đúng định dạng. Email bắt buộc phải có ký tự '@'!");
             }
 
-            // Validate based on type
+            // Check under database when user creates:
+            // "nếu có thì sổ ra thông báo , nếu ko thì cho phép gửi mã otp xác thực qua email"
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == cleanEmail);
             if (!string.IsNullOrWhiteSpace(type))
             {
-                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == cleanEmail);
-                if (type.Equals("login", StringComparison.OrdinalIgnoreCase))
+                if (type.Equals("register", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (existingUser != null)
+                    {
+                        throw new Exception("Email này đã tồn tại trên hệ thống! Vui lòng chuyển sang tab 'Đăng Nhập'.");
+                    }
+                }
+                else if (type.Equals("login", StringComparison.OrdinalIgnoreCase))
                 {
                     if (existingUser == null && cleanEmail != "admin@nhaxuong.vn")
                     {
                         throw new Exception("Email này chưa được đăng ký tài khoản trên hệ thống. Vui lòng bấm sang tab 'Đăng Ký Tài Khoản' để đăng ký trước!");
-                    }
-                }
-                else if (type.Equals("register", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (existingUser != null)
-                    {
-                        throw new Exception("Email này đã được đăng ký tài khoản. Vui lòng chuyển sang tab 'Đăng Nhập'!");
                     }
                 }
             }
@@ -534,16 +568,26 @@ namespace Nhaxuong.SERVICE.Services
 
         public async Task<UserDto> GetMeAsync(string userId)
         {
-            var user = await _context.Users.FindAsync(userId);
+            User? user = null;
+            if (int.TryParse(userId, out int id))
+            {
+                user = await _context.Users.FindAsync(id);
+            }
+            if (user == null)
+            {
+                user = await _context.Users.FirstOrDefaultAsync(u => u.Email == "admin@nhaxuong.vn");
+            }
             if (user == null)
             {
                 return new UserDto
                 {
-                    Id = "usr_admin_01",
+                    Id = 1,
                     Name = "Quản Trị Viên (Admin)",
                     Email = "admin@nhaxuong.vn",
                     Role = "admin",
-                    Phone = "0901234567"
+                    Phone = "0901234567",
+                    EmailVerified = true,
+                    CreatedAt = "2026-01-01"
                 };
             }
             return MapToUserDto(user);
@@ -560,6 +604,7 @@ namespace Nhaxuong.SERVICE.Services
                 Phone = user.Phone,
                 Avatar = user.Avatar,
                 AuthProvider = user.AuthProvider,
+                EmailVerified = user.EmailVerified,
                 CreatedAt = user.CreatedAt.ToString("yyyy-MM-dd HH:mm")
             };
         }

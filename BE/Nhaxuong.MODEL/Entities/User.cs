@@ -1,13 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Nhaxuong.MODEL.Entities
 {
     public class User
     {
         [Key]
-        [MaxLength(50)]
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
 
         [Required]
         [MaxLength(150)]
@@ -15,6 +16,7 @@ namespace Nhaxuong.MODEL.Entities
 
         [Required]
         [MaxLength(150)]
+        [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
         [MaxLength(255)]
@@ -30,6 +32,8 @@ namespace Nhaxuong.MODEL.Entities
 
         [MaxLength(30)]
         public string AuthProvider { get; set; } = "email";
+
+        public bool EmailVerified { get; set; } = false;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

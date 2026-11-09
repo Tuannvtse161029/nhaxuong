@@ -24,12 +24,19 @@ namespace Nhaxuong.MODELS.Migrations
 
             modelBuilder.Entity("Nhaxuong.MODEL.Entities.Category", b =>
                 {
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -48,45 +55,53 @@ namespace Nhaxuong.MODELS.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
-                    b.HasKey("Code");
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
 
                     b.ToTable("Categories");
 
                     b.HasData(
                         new
                         {
-                            Code = "SALE",
+                            Id = 1,
                             Active = true,
-                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9210),
-                            Desc = "Xưởng sản xuất tiêu chuẩn, hoàn công đầy đủ, trạm điện riêng",
-                            Icon = "Warehouse",
-                            Name = "Bán Nhà Xưởng"
+                            Code = "RECYCLED_STEEL",
+                            CreatedAt = new DateTime(2026, 11, 9, 5, 22, 53, 245, DateTimeKind.Utc).AddTicks(34),
+                            Desc = "Khung nhà xưởng tiền chế, dầm thép H, I, U và tôn tái sử dụng",
+                            Icon = "Layers",
+                            Name = "Sắt Thép Tái Sử Dụng"
                         },
                         new
                         {
-                            Code = "RENT",
+                            Id = 2,
                             Active = true,
-                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9213),
+                            Code = "RENT",
+                            CreatedAt = new DateTime(2026, 11, 9, 5, 22, 53, 245, DateTimeKind.Utc).AddTicks(36),
                             Desc = "Kho logistics, dock leveler, bãi trung chuyển tiêu chuẩn",
                             Icon = "Boxes",
                             Name = "Cho Thuê Kho Bãi"
                         },
                         new
                         {
-                            Code = "RECYCLED_STEEL",
+                            Id = 3,
                             Active = true,
-                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9214),
-                            Desc = "Khung nhà xưởng tiền chế, dầm thép H, I, U và tôn tái sử dụng",
-                            Icon = "Layers",
-                            Name = "Sắt Thép Tái Sử Dụng"
+                            Code = "SALE",
+                            CreatedAt = new DateTime(2026, 11, 9, 5, 22, 53, 245, DateTimeKind.Utc).AddTicks(78),
+                            Desc = "Xưởng sản xuất tiêu chuẩn, hoàn công đầy đủ, trạm điện riêng",
+                            Icon = "Warehouse",
+                            Name = "Bán Nhà Xưởng"
                         });
                 });
 
             modelBuilder.Entity("Nhaxuong.MODEL.Entities.NoticeItem", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
@@ -117,7 +132,7 @@ namespace Nhaxuong.MODELS.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "not-1",
+                            Id = 1,
                             Active = true,
                             Badge = "Quy Hoạch KCN",
                             Content = "Chính sách ưu đãi miễn thuế 2 năm đầu, giảm 50% trong 4 năm tiếp theo cho các ngành công nghệ sạch, kho vận logistics thông minh.",
@@ -126,7 +141,7 @@ namespace Nhaxuong.MODELS.Migrations
                         },
                         new
                         {
-                            Id = "not-2",
+                            Id = 2,
                             Active = true,
                             Badge = "Công Nghệ 3D",
                             Content = "Giờ đây các nhà đầu tư có thể xem trước mặt bằng 3D nhà xưởng, mở mái xem bên trong kho và nghe audio thuyết minh tự động.",
@@ -137,9 +152,11 @@ namespace Nhaxuong.MODELS.Migrations
 
             modelBuilder.Entity("Nhaxuong.MODEL.Entities.PropertyItem", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Area")
                         .IsRequired()
@@ -152,6 +169,9 @@ namespace Nhaxuong.MODELS.Migrations
                     b.Property<string>("BrokerPhone")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -172,6 +192,9 @@ namespace Nhaxuong.MODELS.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("Model3DUrl")
+                        .HasColumnType("text");
+
                     b.Property<long>("Price")
                         .HasColumnType("bigint");
 
@@ -184,6 +207,11 @@ namespace Nhaxuong.MODELS.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -209,16 +237,19 @@ namespace Nhaxuong.MODELS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.ToTable("Properties");
 
                     b.HasData(
                         new
                         {
-                            Id = "prop-1",
+                            Id = 1,
                             Area = "12.000 m2",
                             AudioUrl = "https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3",
                             BrokerPhone = "0901 234 567",
-                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9382),
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2026, 11, 9, 5, 22, 53, 245, DateTimeKind.Utc).AddTicks(229),
                             Desc = "Khuôn viên đất 12.000m2, diện tích xưởng xây dựng 8.000m2, trần cao 11m, sàn bê tông cốt thép chịu tải 5 tấn/m2, trạm biến áp riêng 1.500kVA. Hồ sơ nghiệm thu PCCC đầy đủ, sẵn sàng bàn giao cho doanh nghiệp FDI.",
                             EmailNotified = true,
                             Image = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
@@ -226,6 +257,7 @@ namespace Nhaxuong.MODELS.Migrations
                             Price = 48000000000L,
                             PriceDisplay = "48 Tỷ VNĐ",
                             Province = "Bình Dương",
+                            Status = "Còn hàng",
                             Title = "Bán 12.000m2 Nhà Xưởng Tiêu Chuẩn KCN VSIP 1, Trạm Điện 1.500kVA",
                             Type = "SALE",
                             TypeDisplay = "Bán Nhà Xưởng",
@@ -234,11 +266,12 @@ namespace Nhaxuong.MODELS.Migrations
                         },
                         new
                         {
-                            Id = "prop-2",
+                            Id = 2,
                             Area = "5.000 m2",
                             AudioUrl = "https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3",
                             BrokerPhone = "0918 765 432",
-                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9393),
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2026, 11, 9, 5, 22, 53, 245, DateTimeKind.Utc).AddTicks(234),
                             Desc = "Vị trí giáp ranh TP.HCM, đường xe container ra vào 24/7 không cấm tải, có sẵn 6 dock leveler xuất nhập hàng tiêu chuẩn châu Âu, văn phòng bảo vệ và camera giám sát 24/24.",
                             EmailNotified = true,
                             Image = "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80",
@@ -246,6 +279,7 @@ namespace Nhaxuong.MODELS.Migrations
                             Price = 350000000L,
                             PriceDisplay = "350 Triệu / Tháng",
                             Province = "Bình Dương",
+                            Status = "Còn hàng",
                             Title = "Cho Thuê Kho Xưởng Logistics 5.000m2 KCN Sóng Thần 2 Dĩ An",
                             Type = "RENT",
                             TypeDisplay = "Cho Thuê Kho Bãi",
@@ -254,10 +288,11 @@ namespace Nhaxuong.MODELS.Migrations
                         },
                         new
                         {
-                            Id = "prop-steel-1",
+                            Id = 3,
                             Area = "3.200 m2",
                             BrokerPhone = "0912 888 999",
-                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9401),
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2026, 11, 9, 5, 22, 53, 245, DateTimeKind.Utc).AddTicks(237),
                             Desc = "Khung kèo thép Zamil khẩu độ 30m vượt nhịp không cột giữa, tháo dỡ nguyên vẹn đầy đủ dầm cột H350, giằng xà gồ mạ kẽm C200, bản mã và bulong neo móng. Thích hợp tái lắp dựng nhà xưởng hoặc kho bãi.",
                             EmailNotified = true,
                             Image = "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
@@ -265,6 +300,7 @@ namespace Nhaxuong.MODELS.Migrations
                             Price = 980000000L,
                             PriceDisplay = "980 Triệu VNĐ",
                             Province = "Bình Dương",
+                            Status = "Còn hàng",
                             Title = "Thanh Lý Khung Nhà Xưởng Thép Tiền Chế Tái Sử Dụng 3.200m2",
                             Type = "RECYCLED_STEEL",
                             TypeDisplay = "Sắt Thép Tái Sử Dụng",
@@ -273,10 +309,11 @@ namespace Nhaxuong.MODELS.Migrations
                         },
                         new
                         {
-                            Id = "prop-steel-2",
+                            Id = 4,
                             Area = "85 Tấn",
                             BrokerPhone = "0983 777 666",
-                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9408),
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2026, 11, 9, 5, 22, 53, 245, DateTimeKind.Utc).AddTicks(239),
                             Desc = "Lô thép dầm chính H400x200, H300x150, I300 tháo dỡ từ nhà máy công nghiệp nhẹ, cây dài tiêu chuẩn 6m - 12m, bề mặt còn sơn lót chống rỉ tốt, không cong vênh.",
                             EmailNotified = true,
                             Image = "https://images.unsplash.com/photo-1535813547-99c456a41d4a?w=800&q=80",
@@ -284,6 +321,7 @@ namespace Nhaxuong.MODELS.Migrations
                             Price = 1250000000L,
                             PriceDisplay = "1.25 Tỷ VNĐ",
                             Province = "Đồng Nai",
+                            Status = "Còn hàng",
                             Title = "Lô Dầm Thép Hình Chữ H, I & Xà Gồ Tháo Dỡ Tái Sử Dụng 85 Tấn",
                             Type = "RECYCLED_STEEL",
                             TypeDisplay = "Sắt Thép Tái Sử Dụng",
@@ -331,9 +369,11 @@ namespace Nhaxuong.MODELS.Migrations
 
             modelBuilder.Entity("Nhaxuong.MODEL.Entities.User", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AuthProvider")
                         .IsRequired()
@@ -350,6 +390,9 @@ namespace Nhaxuong.MODELS.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<bool>("EmailVerified")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -377,15 +420,26 @@ namespace Nhaxuong.MODELS.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "usr_admin_01",
+                            Id = 1,
                             AuthProvider = "email",
-                            CreatedAt = new DateTime(2026, 11, 4, 5, 54, 25, 870, DateTimeKind.Utc).AddTicks(9360),
+                            CreatedAt = new DateTime(2026, 11, 9, 5, 22, 53, 245, DateTimeKind.Utc).AddTicks(211),
                             Email = "admin@nhaxuong.vn",
+                            EmailVerified = true,
                             Name = "Quản Trị Viên (Admin)",
                             PasswordHash = "$2a$11$N.vE9Q2d9m0W2sP4S6O0cOKxQe7C1I.8eJ2K4M6P8Q0S2U4W6Y8a.",
                             Phone = "0901234567",
                             Role = "admin"
                         });
+                });
+
+            modelBuilder.Entity("Nhaxuong.MODEL.Entities.PropertyItem", b =>
+                {
+                    b.HasOne("Nhaxuong.MODEL.Entities.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Category");
                 });
 #pragma warning restore 612, 618
         }
