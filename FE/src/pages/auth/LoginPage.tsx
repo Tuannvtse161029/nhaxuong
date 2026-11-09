@@ -526,7 +526,7 @@ export function LoginPage() {
           </button>
         </div>
 
-        <form onSubmit={handleForgotPinResetSubmit} className="space-y-4">
+        <form noValidate onSubmit={handleForgotPinResetSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               {forgotMethod === 'email' ? 'Địa Chỉ Email Đăng Ký' : 'Số Điện Thoại Đăng Ký (+84)'}
@@ -643,7 +643,7 @@ export function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={method === 'phone' ? handlePhoneRegisterStep2 : handleEmailRegisterStep2} className="space-y-5">
+        <form noValidate onSubmit={method === 'phone' ? handlePhoneRegisterStep2 : handleEmailRegisterStep2} className="space-y-5">
           <PinBoxInput
             label="Nhập 6 Số Mã OTP"
             value={method === 'phone' ? otp : emailOtp}
@@ -787,7 +787,7 @@ export function LoginPage() {
         <>
           {isRegisterMode ? (
             /* PHONE REGISTER STEP 1 */
-            <form onSubmit={handlePhoneRegisterStep1} className="space-y-4">
+            <form noValidate onSubmit={handlePhoneRegisterStep1} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Họ và Tên
@@ -849,7 +849,7 @@ export function LoginPage() {
             </form>
           ) : (
             /* PHONE LOGIN FORM */
-            <form onSubmit={handlePhoneLoginSubmit} className="space-y-4">
+            <form noValidate onSubmit={handlePhoneLoginSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Số Điện Thoại (+84)
@@ -953,7 +953,7 @@ export function LoginPage() {
         <>
           {isRegisterMode ? (
             /* EMAIL REGISTER STEP 1 */
-            <form onSubmit={handleEmailRegisterStep1} className="space-y-4">
+            <form noValidate onSubmit={handleEmailRegisterStep1} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Họ và Tên
@@ -1015,7 +1015,7 @@ export function LoginPage() {
             </form>
           ) : (
             /* EMAIL LOGIN FORM */
-            <form onSubmit={handleEmailLoginSubmit} className="space-y-4">
+            <form noValidate onSubmit={handleEmailLoginSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Địa Chỉ Email

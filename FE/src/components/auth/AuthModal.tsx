@@ -578,7 +578,7 @@ export function AuthModal() {
                 </button>
               </div>
 
-              <form onSubmit={handleForgotPinResetSubmit} className="space-y-4">
+              <form noValidate onSubmit={handleForgotPinResetSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {forgotMethod === 'email' ? 'Địa Chỉ Email Đăng Ký' : 'Số Điện Thoại Đăng Ký (+84)'}
@@ -649,7 +649,7 @@ export function AuthModal() {
             </div>
           ) : !isLogin && regStep === 2 ? (
             /* REGISTRATION STEP 2 (VERIFY OTP) */
-            <form onSubmit={method === 'phone' ? handlePhoneRegisterStep2 : handleEmailRegisterStep2} className="space-y-5">
+            <form noValidate onSubmit={method === 'phone' ? handlePhoneRegisterStep2 : handleEmailRegisterStep2} className="space-y-5">
               <PinBoxInput
                 label="Nhập 6 Số Mã OTP"
                 value={method === 'phone' ? otp : emailOtp}
@@ -767,7 +767,7 @@ export function AuthModal() {
                 <>
                   {isLogin ? (
                     /* PHONE LOGIN FORM */
-                    <form onSubmit={handlePhoneLoginSubmit} className="space-y-4 pt-1">
+                    <form noValidate onSubmit={handlePhoneLoginSubmit} className="space-y-4 pt-1">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                           Số Điện Thoại (+84)
@@ -864,7 +864,7 @@ export function AuthModal() {
                     </form>
                   ) : (
                     /* PHONE REGISTER STEP 1 (NO OTP BUTTON, CREATES PIN) */
-                    <form onSubmit={handlePhoneRegisterStep1} className="space-y-4 pt-1">
+                    <form noValidate onSubmit={handlePhoneRegisterStep1} className="space-y-4 pt-1">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                           Họ và Tên
@@ -933,7 +933,7 @@ export function AuthModal() {
                 <>
                   {isLogin ? (
                     /* EMAIL LOGIN FORM */
-                    <form onSubmit={handleEmailLoginSubmit} className="space-y-4 pt-1">
+                    <form noValidate onSubmit={handleEmailLoginSubmit} className="space-y-4 pt-1">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                           Địa Chỉ Email
@@ -981,7 +981,7 @@ export function AuthModal() {
                     </form>
                   ) : (
                     /* EMAIL REGISTER STEP 1 (NO OTP BUTTON, CREATES PIN) */
-                    <form onSubmit={handleEmailRegisterStep1} className="space-y-4 pt-1">
+                    <form noValidate onSubmit={handleEmailRegisterStep1} className="space-y-4 pt-1">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                           Họ và Tên

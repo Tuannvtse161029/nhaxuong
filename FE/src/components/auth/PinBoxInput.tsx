@@ -124,7 +124,6 @@ export function PinBoxInput({
         {Array.from({ length }).map((_, index) => {
           const char = digits[index] || ''
           const isFilled = char !== ''
-          const displayChar = isFilled ? (showMask ? '●' : char) : ''
 
           return (
             <input
@@ -133,11 +132,11 @@ export function PinBoxInput({
                 inputRefs.current[index] = el
               }}
               id={`${idPrefix}-${index}`}
-              type="text"
+              type={showMask ? 'password' : 'text'}
               inputMode="numeric"
-              pattern="[0-9]*"
+              autoComplete={isOtp ? 'one-time-code' : 'off'}
               maxLength={1}
-              value={displayChar}
+              value={char}
               disabled={disabled}
               onChange={(e) => handleDigitChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
