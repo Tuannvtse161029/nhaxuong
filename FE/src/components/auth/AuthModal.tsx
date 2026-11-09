@@ -10,6 +10,8 @@ import {
   Sparkles,
   KeyRound,
   ArrowLeft,
+  ShieldCheck,
+  Send,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { GoogleLoginButton } from './GoogleLoginButton'
@@ -34,6 +36,7 @@ export function AuthModal() {
 
   // Form Modes
   const [method, setMethod] = useState<'phone' | 'email'>('phone')
+  const [regStep, setRegStep] = useState<1 | 2>(1)
   const [isForgotPinMode, setIsForgotPinMode] = useState(false)
 
   // Phone Form States
@@ -73,42 +76,18 @@ export function AuthModal() {
 
   const isLogin = authModalTab === 'login'
 
-  const handleSendPhoneOtp = async () => {
-    const cleanedPhone = phone.replace(/\D/g, '')
-    if (!cleanedPhone) {
-      setError('Vui lòng nhập số điện thoại')
-      return
-    }
-    if (cleanedPhone.length !== 10 && cleanedPhone.length !== 11) {
-      setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
-      return
-    }
+  const handleTabSwitch = (tab: 'login' | 'register') => {
+    openAuthModal(tab)
+    setRegStep(1)
     setError(null)
     setSuccessMsg(null)
-    setIsLoading(true)
+  }
 
-    try {
-      await sendOtp(phone.trim(), isLogin ? 'login' : 'register')
-      setOtpSent(true)
-      setOtp('')
-      setSuccessMsg(`Mã OTP đã được gửi qua tin nhắn SMS tới số ${phone.trim()}. Vui lòng kiểm tra điện thoại của bạn!`)
-
-      setOtpCountdown(60)
-      const timer = setInterval(() => {
-        setOtpCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } catch (err: unknown) {
-      console.error('Send OTP error:', err)
-      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP. Vui lòng thử lại sau.')
-    } finally {
-      setIsLoading(false)
-    }
+  const handleMethodSwitch = (newMethod: 'phone' | 'email') => {
+    setMethod(newMethod)
+    setRegStep(1)
+    setError(null)
+    setSuccessMsg(null)
   }
 
   const handleGoogleAuth = async () => {
@@ -123,101 +102,208 @@ export function AuthModal() {
     }
   }
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
+  // --- PHONE HANDLERS ---
+  const handlePhoneLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const cleanedPhone = phone.replace(/\D/g, '')
-    if (!cleanedPhone) {
-      setError('Vui lòng nhập số điện thoại')
-      return
-    }
-    if (cleanedPhone.length !== 10 && cleanedPhone.length !== 11) {
+    const cleaned = phone.replace(/\D/g, '')
+    if (!cleaned || (cleaned.length !== 10 && cleaned.length !== 11)) {
       setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
       return
     }
 
-    if (!isLogin) {
-      // Register with Phone
+    if (phoneUseOtpLogin) {
       if (!otpSent) {
-        setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã xác thực qua tin nhắn SMS trước.')
+        setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã đăng nhập qua tin nhắn SMS.')
         return
       }
       if (otp.length !== 6) {
         setError('Vui lòng nhập đầy đủ mã OTP 6 số từ tin nhắn SMS.')
         return
       }
-      if (phonePin.length !== 6) {
-        setError('Mã PIN bảo mật bắt buộc phải có đúng 6 chữ số.')
-        return
-      }
-      if (phonePin !== phoneConfirmPin) {
-        setError('Mã PIN và Xác nhận mã PIN không trùng khớp!')
-        return
-      }
     } else {
-      // Login with Phone
-      if (phoneUseOtpLogin) {
-        if (!otpSent) {
-          setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã đăng nhập qua tin nhắn SMS.')
-          return
-        }
-        if (otp.length !== 6) {
-          setError('Vui lòng nhập mã OTP 6 số từ tin nhắn SMS.')
-          return
-        }
-      } else {
-        if (phonePin.length !== 6) {
-          setError('Vui lòng nhập đúng mã PIN bảo mật 6 số của bạn.')
-          return
-        }
+      if (phonePin.length !== 6) {
+        setError('Vui lòng nhập đúng mã PIN bảo mật 6 số của bạn.')
+        return
       }
     }
 
     setError(null)
     setIsLoading(true)
-
     try {
-      if (isLogin) {
-        if (phoneUseOtpLogin) {
-          await loginWithPhone(phone.trim(), otp.trim())
-        } else {
-          await loginWithPhone(phone.trim(), undefined, undefined, phonePin.trim())
-        }
+      if (phoneUseOtpLogin) {
+        await loginWithPhone(phone.trim(), otp.trim())
       } else {
-        await registerWithPhone(
-          phone.trim(),
-          phoneName.trim() || `Khách Hàng (${phone.slice(-4)})`,
-          otp.trim(),
-          phonePin.trim()
-        )
+        await loginWithPhone(phone.trim(), undefined, undefined, phonePin.trim())
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Thao tác số điện thoại thất bại')
+      setError(err instanceof Error ? err.message : 'Đăng nhập số điện thoại thất bại')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSendEmailOtp = async () => {
+  const handleSendPhoneLoginOtp = async () => {
+    const cleaned = phone.replace(/\D/g, '')
+    if (!cleaned || (cleaned.length !== 10 && cleaned.length !== 11)) {
+      setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
+      return
+    }
+    setError(null)
+    setIsLoading(true)
+    try {
+      await sendOtp(phone.trim(), 'login')
+      setOtpSent(true)
+      setOtp('')
+      setSuccessMsg(`Mã OTP đã được gửi qua tin nhắn SMS tới số ${phone.trim()}. Vui lòng kiểm tra điện thoại của bạn!`)
+      setOtpCountdown(60)
+      const timer = setInterval(() => {
+        setOtpCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP. Vui lòng thử lại sau.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // PHONE REGISTER STEP 1: Validate + PIN -> send OTP -> go to Step 2
+  const handlePhoneRegisterStep1 = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const cleaned = phone.replace(/\D/g, '')
+    if (!cleaned || (cleaned.length !== 10 && cleaned.length !== 11)) {
+      setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
+      return
+    }
+    if (!phoneName.trim()) {
+      setError('Vui lòng nhập Họ và Tên của bạn.')
+      return
+    }
+    if (phonePin.length !== 6) {
+      setError('Mã PIN bảo mật bắt buộc phải có đúng 6 chữ số.')
+      return
+    }
+    if (phonePin !== phoneConfirmPin) {
+      setError('Mã PIN và Xác nhận mã PIN không trùng khớp!')
+      return
+    }
+
+    setError(null)
+    setIsLoading(true)
+    try {
+      await sendOtp(phone.trim(), 'register')
+      setOtpSent(true)
+      setOtp('')
+      setSuccessMsg(`Mã OTP 6 số đã được gửi qua SMS tới ${phone.trim()}. Vui lòng nhập mã để hoàn tất đăng ký!`)
+      setOtpCountdown(60)
+      setRegStep(2)
+      const timer = setInterval(() => {
+        setOtpCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP xác thực.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // PHONE REGISTER STEP 2: Verify OTP and create user
+  const handlePhoneRegisterStep2 = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (otp.length !== 6) {
+      setError('Vui lòng nhập đầy đủ mã OTP 6 số từ tin nhắn SMS.')
+      return
+    }
+
+    setError(null)
+    setIsLoading(true)
+    try {
+      await registerWithPhone(
+        phone.trim(),
+        phoneName.trim() || `Khách Hàng (${phone.slice(-4)})`,
+        otp.trim(),
+        phonePin.trim()
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Xác thực OTP thất bại')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // --- EMAIL HANDLERS ---
+  const handleEmailLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!email.trim() || !email.includes('@')) {
       setError('Vui lòng nhập địa chỉ email hợp lệ')
       return
     }
-    setError(null)
-    setSuccessMsg(null)
-    setIsLoading(true)
+    if (pin.length !== 6) {
+      setError('Vui lòng nhập đúng mã PIN bảo mật 6 số')
+      return
+    }
 
+    setError(null)
+    setIsLoading(true)
     try {
-      const generatedOtp = await sendEmailOtp(email.trim(), isLogin ? 'login' : 'register')
+      await login({
+        email: email.trim(),
+        password: pin.trim(),
+        pin: pin.trim(),
+        otp: emailOtp.trim(),
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đăng nhập không thành công')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // EMAIL REGISTER STEP 1: Validate + PIN -> send OTP -> go to Step 2
+  const handleEmailRegisterStep1 = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name.trim()) {
+      setError('Vui lòng nhập Họ và Tên của bạn.')
+      return
+    }
+    if (!email.trim() || !email.includes('@')) {
+      setError('Vui lòng nhập địa chỉ email hợp lệ.')
+      return
+    }
+    if (pin.length !== 6) {
+      setError('Mã PIN bảo mật bắt buộc phải có đúng 6 chữ số.')
+      return
+    }
+    if (pin !== confirmPin) {
+      setError('Mã PIN xác nhận không trùng khớp!')
+      return
+    }
+
+    setError(null)
+    setIsLoading(true)
+    try {
+      const generatedOtp = await sendEmailOtp(email.trim(), 'register')
       setEmailOtpSent(true)
       if (generatedOtp) {
         setEmailOtp(generatedOtp)
         setSuccessMsg(`Mã xác thực OTP đã gửi về hòm thư ${email.trim()} (Mã của bạn: ${generatedOtp}).`)
       } else {
         setEmailOtp('')
-        setSuccessMsg(`Mã xác thực OTP đã được gửi về hòm thư ${email.trim()}. Vui lòng kiểm tra hộp thư đến (hoặc hòm thư spam)!`)
+        setSuccessMsg(`Mã xác thực OTP đã được gửi về hòm thư ${email.trim()}. Vui lòng kiểm tra hộp thư đến (hoặc spam)!`)
       }
-
       setEmailOtpCountdown(60)
+      setRegStep(2)
       const timer = setInterval(() => {
         setEmailOtpCountdown((prev) => {
           if (prev <= 1) {
@@ -228,66 +314,60 @@ export function AuthModal() {
         })
       }, 1000)
     } catch (err: unknown) {
-      console.error('Send Email OTP error:', err)
       setError(err instanceof Error ? err.message : 'Không thể gửi mã xác thực qua email.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  // EMAIL REGISTER STEP 2: Verify OTP and create user
+  const handleEmailRegisterStep2 = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim()) {
-      setError('Vui lòng nhập địa chỉ email')
+    if (emailOtp.length !== 6) {
+      setError('Vui lòng nhập đầy đủ mã xác thực OTP 6 số từ email của bạn.')
       return
-    }
-    if (pin.length !== 6) {
-      setError('Mã PIN bảo mật bắt buộc phải có đúng 6 chữ số')
-      return
-    }
-    if (!isLogin && pin !== confirmPin) {
-      setError('Mã PIN xác nhận không trùng khớp!')
-      return
-    }
-    if (!isLogin && email.trim().toLowerCase() !== 'admin@nhaxuong.vn') {
-      if (!emailOtpSent) {
-        setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã xác thực qua email trước.')
-        return
-      }
-      if (emailOtp.length !== 6) {
-        setError('Vui lòng nhập mã xác thực OTP 6 số đã được gửi về email của bạn.')
-        return
-      }
     }
 
     setError(null)
     setIsLoading(true)
-
     try {
-      if (isLogin) {
-        await login({
-          email: email.trim(),
-          password: pin.trim(),
-          pin: pin.trim(),
-          otp: emailOtp.trim(),
-        })
-      } else {
-        await register({
-          email: email.trim(),
-          password: pin.trim(),
-          pin: pin.trim(),
-          name: name.trim() || email.split('@')[0],
-          otp: emailOtp.trim(),
-        })
-      }
+      await register({
+        email: email.trim(),
+        password: pin.trim(),
+        pin: pin.trim(),
+        name: name.trim() || email.split('@')[0],
+        otp: emailOtp.trim(),
+      })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đăng nhập / Đăng ký không thành công')
+      setError(err instanceof Error ? err.message : 'Xác thực OTP thất bại')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Forgot PIN Handlers
+  // Resend Register OTP in Step 2
+  const handleResendRegisterOtp = async () => {
+    setError(null)
+    setIsLoading(true)
+    try {
+      if (method === 'phone') {
+        await sendOtp(phone.trim(), 'register')
+        setSuccessMsg(`Mã OTP mới đã được gửi qua SMS tới ${phone.trim()}!`)
+        setOtpCountdown(60)
+      } else {
+        const generatedOtp = await sendEmailOtp(email.trim(), 'register')
+        if (generatedOtp) setEmailOtp(generatedOtp)
+        setSuccessMsg(`Mã OTP mới đã được gửi về hòm thư ${email.trim()}!`)
+        setEmailOtpCountdown(60)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể gửi lại mã OTP')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // --- FORGOT PIN HANDLERS ---
   const handleForgotPinSendOtp = async () => {
     if (!forgotTarget.trim()) {
       setError(forgotMethod === 'email' ? 'Vui lòng nhập địa chỉ email đã đăng ký' : 'Vui lòng nhập số điện thoại đã đăng ký')
@@ -413,6 +493,29 @@ export function AuthModal() {
                   Nhận mã OTP qua Email hoặc Số điện thoại để tạo mã PIN 6 số mới.
                 </p>
               </div>
+            ) : !isLogin && regStep === 2 ? (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegStep(1)
+                    setError(null)
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white mb-2 transition"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Quay lại chỉnh sửa</span>
+                </button>
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldCheck className="w-5 h-5 text-teal-600" />
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                    Xác Nhận Mã OTP Đăng Ký
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Mã OTP 6 số đã được gửi tới: <b>{method === 'phone' ? phone : email}</b>
+                </p>
+              </div>
             ) : (
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -424,7 +527,7 @@ export function AuthModal() {
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {isLogin
                     ? 'Đăng nhập nhanh bằng Mã PIN 6 số bảo mật chuẩn ngân hàng.'
-                    : 'Đăng ký tài khoản với Mã PIN 6 số tiện lợi, an toàn.'}
+                    : 'Điền thông tin và tạo Mã PIN 6 số bảo mật để tạo tài khoản.'}
                 </p>
               </div>
             )}
@@ -448,7 +551,6 @@ export function AuthModal() {
           {/* IF FORGOT PIN MODE */}
           {isForgotPinMode ? (
             <div>
-              {/* Method Switcher for Forgot PIN */}
               <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-4">
                 <button
                   type="button"
@@ -551,13 +653,56 @@ export function AuthModal() {
                 </button>
               </form>
             </div>
+          ) : !isLogin && regStep === 2 ? (
+            /* REGISTRATION STEP 2 (VERIFY OTP) */
+            <form onSubmit={method === 'phone' ? handlePhoneRegisterStep2 : handleEmailRegisterStep2} className="space-y-5">
+              <PinBoxInput
+                label="Nhập 6 Số Mã OTP"
+                value={method === 'phone' ? otp : emailOtp}
+                onChange={method === 'phone' ? setOtp : setEmailOtp}
+                isOtp={true}
+                autoFocus={true}
+                idPrefix="modal-reg-step2-otp"
+                sublabel="Kiểm tra tin nhắn SMS hoặc hộp thư đến/spam"
+              />
+
+              <div className="text-center text-xs text-slate-500 dark:text-slate-400">
+                {(method === 'phone' ? otpCountdown : emailOtpCountdown) > 0 ? (
+                  <p>
+                    Gửi lại mã OTP sau{' '}
+                    <span className="font-bold text-teal-600 dark:text-teal-400">
+                      {method === 'phone' ? otpCountdown : emailOtpCountdown}s
+                    </span>
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendRegisterOtp}
+                    disabled={isLoading}
+                    className="font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400 hover:underline transition"
+                  >
+                    Gửi lại mã OTP ngay
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-700 transition disabled:opacity-50"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Xác Nhận & Hoàn Tất Đăng Ký</span>
+              </button>
+            </form>
           ) : (
+            /* NORMAL LOGIN OR REGISTRATION STEP 1 */
             <div>
               {/* Login / Register Tab switcher */}
               <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-4">
                 <button
                   type="button"
-                  onClick={() => openAuthModal('login')}
+                  onClick={() => handleTabSwitch('login')}
                   className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition ${
                     isLogin
                       ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
@@ -568,7 +713,7 @@ export function AuthModal() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => openAuthModal('register')}
+                  onClick={() => handleTabSwitch('register')}
                   className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition ${
                     !isLogin
                       ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
@@ -599,10 +744,7 @@ export function AuthModal() {
               <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    setMethod('phone')
-                    setError(null)
-                  }}
+                  onClick={() => handleMethodSwitch('phone')}
                   className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition ${
                     method === 'phone'
                       ? 'bg-white text-teal-800 shadow-xs dark:bg-slate-700 dark:text-teal-300'
@@ -614,10 +756,7 @@ export function AuthModal() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setMethod('email')
-                    setError(null)
-                  }}
+                  onClick={() => handleMethodSwitch('email')}
                   className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition ${
                     method === 'email'
                       ? 'bg-white text-teal-800 shadow-xs dark:bg-slate-700 dark:text-teal-300'
@@ -631,90 +770,39 @@ export function AuthModal() {
 
               {/* 3. PHONE FORM */}
               {method === 'phone' && (
-                <form onSubmit={handlePhoneSubmit} className="space-y-4 pt-1">
-                  {!isLogin && (
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Họ và Tên
-                      </label>
-                      <div className="relative">
-                        <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          placeholder="VD: Nguyễn Văn An"
-                          value={phoneName}
-                          onChange={(e) => setPhoneName(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                          required={!isLogin}
-                        />
+                <>
+                  {isLogin ? (
+                    /* PHONE LOGIN FORM */
+                    <form onSubmit={handlePhoneLoginSubmit} className="space-y-4 pt-1">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Số Điện Thoại (+84)
+                        </label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                            <input
+                              type="tel"
+                              placeholder="VD: 090 123 4567"
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
+                              required
+                            />
+                          </div>
+                          {phoneUseOtpLogin && (
+                            <button
+                              type="button"
+                              onClick={handleSendPhoneLoginOtp}
+                              disabled={isLoading || otpCountdown > 0}
+                              className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
+                            >
+                              {otpCountdown > 0 ? `${otpCountdown}s` : otpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Số Điện Thoại (+84)
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                        <input
-                          type="tel"
-                          placeholder="VD: 090 123 4567"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
-                          required
-                        />
-                      </div>
-                      {(!isLogin || phoneUseOtpLogin) && (
-                        <button
-                          type="button"
-                          onClick={handleSendPhoneOtp}
-                          disabled={isLoading || otpCountdown > 0}
-                          className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
-                        >
-                          {otpCountdown > 0 ? `${otpCountdown}s` : otpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* If Register: OTP + PIN setup */}
-                  {!isLogin && (
-                    <>
-                      {otpSent && (
-                        <PinBoxInput
-                          label="Mã Xác Thực SMS"
-                          value={otp}
-                          onChange={setOtp}
-                          isOtp={true}
-                          idPrefix="modal-phone-otp"
-                          sublabel="Mã OTP 6 số từ tin nhắn SMS"
-                        />
-                      )}
-
-                      <PinBoxInput
-                        label="Tạo Mã PIN Bảo Mật (6 Số)"
-                        value={phonePin}
-                        onChange={setPhonePin}
-                        idPrefix="modal-phone-reg-pin"
-                        sublabel="Thiết lập mã PIN 6 số cho tài khoản SĐT"
-                      />
-
-                      <PinBoxInput
-                        label="Xác Nhận Mã PIN (6 Số)"
-                        value={phoneConfirmPin}
-                        onChange={setPhoneConfirmPin}
-                        idPrefix="modal-phone-reg-confirm-pin"
-                        sublabel="Nhập lại đúng 6 số PIN ở trên"
-                      />
-                    </>
-                  )}
-
-                  {/* If Login: Phone PIN code OR quick SMS OTP */}
-                  {isLogin && (
-                    <>
                       {!phoneUseOtpLogin ? (
                         <>
                           <PinBoxInput
@@ -770,127 +858,197 @@ export function AuthModal() {
                           </div>
                         </>
                       )}
-                    </>
-                  )}
 
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-800 transition disabled:opacity-50"
-                  >
-                    <span>{isLogin ? 'Đăng Nhập Số Điện Thoại' : 'Đăng Ký Tài Khoản SĐT'}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </form>
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-800 transition disabled:opacity-50"
+                      >
+                        <span>Đăng Nhập Số Điện Thoại</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </form>
+                  ) : (
+                    /* PHONE REGISTER STEP 1 (NO OTP BUTTON, CREATES PIN) */
+                    <form onSubmit={handlePhoneRegisterStep1} className="space-y-4 pt-1">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Họ và Tên
+                        </label>
+                        <div className="relative">
+                          <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="VD: Nguyễn Văn An"
+                            value={phoneName}
+                            onChange={(e) => setPhoneName(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Số Điện Thoại (+84)
+                        </label>
+                        <div className="relative">
+                          <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                          <input
+                            type="tel"
+                            placeholder="VD: 090 123 4567"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <PinBoxInput
+                        label="Tạo Mã PIN Bảo Mật (6 Số)"
+                        value={phonePin}
+                        onChange={setPhonePin}
+                        idPrefix="modal-phone-reg-pin"
+                        sublabel="Thiết lập 6 số PIN để đăng nhập"
+                      />
+
+                      <PinBoxInput
+                        label="Nhập Lại Mã PIN (6 Số)"
+                        value={phoneConfirmPin}
+                        onChange={setPhoneConfirmPin}
+                        idPrefix="modal-phone-reg-confirm-pin"
+                        sublabel="Xác nhận đúng 6 số PIN ở trên"
+                      />
+
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-700 transition disabled:opacity-50 mt-2"
+                      >
+                        <span>Tạo Tài Khoản & Gửi OTP</span>
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </form>
+                  )}
+                </>
               )}
 
-              {/* 4. EMAIL & PIN FORM */}
+              {/* 4. EMAIL FORM */}
               {method === 'email' && (
-                <form onSubmit={handleEmailSubmit} className="space-y-4 pt-1">
-                  {!isLogin && (
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Họ và Tên
-                      </label>
-                      <div className="relative">
-                        <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          placeholder="VD: Trần Hoàng Long"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                          required={!isLogin}
-                        />
+                <>
+                  {isLogin ? (
+                    /* EMAIL LOGIN FORM */
+                    <form onSubmit={handleEmailLoginSubmit} className="space-y-4 pt-1">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Địa Chỉ Email
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                          <input
+                            type="email"
+                            placeholder="ban@gmail.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
+                            required
+                          />
+                        </div>
                       </div>
-                    </div>
-                  )}
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Địa Chỉ Email
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                        <input
-                          type="email"
-                          placeholder="ban@gmail.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
-                          required
-                        />
+                      <PinBoxInput
+                        label="Mã PIN Bảo Mật (6 Số)"
+                        value={pin}
+                        onChange={setPin}
+                        idPrefix="modal-email-pin"
+                        onForgotPin={() => {
+                          setIsForgotPinMode(true)
+                          setError(null)
+                          setSuccessMsg(null)
+                          setForgotTarget(email)
+                          setForgotMethod('email')
+                        }}
+                        sublabel="Nhập 6 số PIN để đăng nhập"
+                      />
+
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 transition disabled:opacity-50 mt-2"
+                      >
+                        <span>Đăng Nhập Với Mã PIN</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+
+                      <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 p-2.5 text-[11px] text-amber-900 dark:text-amber-300">
+                        <span className="font-bold">Tài khoản Admin mẫu:</span> admin@nhaxuong.vn | Mã PIN: 123456
                       </div>
-                      {!isLogin && (
-                        <button
-                          type="button"
-                          onClick={handleSendEmailOtp}
-                          disabled={isLoading || emailOtpCountdown > 0}
-                          className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
-                        >
-                          {emailOtpCountdown > 0 ? `${emailOtpCountdown}s` : emailOtpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                    </form>
+                  ) : (
+                    /* EMAIL REGISTER STEP 1 (NO OTP BUTTON, CREATES PIN) */
+                    <form onSubmit={handleEmailRegisterStep1} className="space-y-4 pt-1">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Họ và Tên
+                        </label>
+                        <div className="relative">
+                          <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="VD: Trần Hoàng Long"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            required
+                          />
+                        </div>
+                      </div>
 
-                  {!isLogin && emailOtpSent && (
-                    <PinBoxInput
-                      label="Mã Xác Thực Email"
-                      value={emailOtp}
-                      onChange={setEmailOtp}
-                      isOtp={true}
-                      idPrefix="modal-email-reg-otp"
-                      sublabel="Nhập 6 số xác thực từ hòm thư của bạn"
-                    />
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Địa Chỉ Email
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                          <input
+                            type="email"
+                            placeholder="ban@gmail.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <PinBoxInput
+                        label="Tạo Mã PIN Bảo Mật (6 Số)"
+                        value={pin}
+                        onChange={setPin}
+                        idPrefix="modal-email-reg-pin"
+                        sublabel="Thiết lập 6 số PIN để đăng nhập"
+                      />
+
+                      <PinBoxInput
+                        label="Nhập Lại Mã PIN (6 Số)"
+                        value={confirmPin}
+                        onChange={setConfirmPin}
+                        idPrefix="modal-email-reg-confirm-pin"
+                        sublabel="Xác nhận đúng 6 số PIN ở trên"
+                      />
+
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-700 transition disabled:opacity-50 mt-2"
+                      >
+                        <span>Tạo Tài Khoản & Gửi OTP</span>
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </form>
                   )}
-
-                  {/* Mã PIN 6 số */}
-                  <PinBoxInput
-                    label={isLogin ? 'Mã PIN Bảo Mật (6 Số)' : 'Tạo Mã PIN Bảo Mật (6 Số)'}
-                    value={pin}
-                    onChange={setPin}
-                    idPrefix="modal-email-pin"
-                    onForgotPin={
-                      isLogin
-                        ? () => {
-                            setIsForgotPinMode(true)
-                            setError(null)
-                            setSuccessMsg(null)
-                            setForgotTarget(email)
-                            setForgotMethod('email')
-                          }
-                        : undefined
-                    }
-                    sublabel={isLogin ? 'Nhập 6 số PIN để đăng nhập' : 'Thiết lập mã PIN 6 số dễ nhớ'}
-                  />
-
-                  {!isLogin && (
-                    <PinBoxInput
-                      label="Nhập Lại Mã PIN (6 Số)"
-                      value={confirmPin}
-                      onChange={setConfirmPin}
-                      idPrefix="modal-email-confirm-pin"
-                      sublabel="Xác nhận đúng 6 số PIN ở trên"
-                    />
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 transition disabled:opacity-50"
-                  >
-                    <span>{isLogin ? 'Đăng Nhập Với Mã PIN' : 'Tạo Tài Khoản Với Mã PIN'}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-
-                  {isLogin && (
-                    <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 p-2.5 text-[11px] text-amber-900 dark:text-amber-300">
-                      <span className="font-bold">Tài khoản Admin mẫu:</span> admin@nhaxuong.vn | Mã PIN: 123456
-                    </div>
-                  )}
-                </form>
+                </>
               )}
 
               {/* Privacy & Terms */}
