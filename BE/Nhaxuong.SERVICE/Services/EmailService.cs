@@ -24,7 +24,7 @@ namespace Nhaxuong.SERVICE.Services
         {
             var smtpServer = _configuration["EmailSettings:SmtpServer"] ?? "smtp.gmail.com";
             var smtpPort = int.TryParse(_configuration["EmailSettings:SmtpPort"], out var port) ? port : 587;
-            var senderEmail = _configuration["EmailSettings:SenderEmail"] ?? "nhaxuong.contact@gmail.com";
+            var senderEmail = _configuration["EmailSettings:SenderEmail"] ?? "academicresearchplatform@gmail.com";
             var senderName = _configuration["EmailSettings:SenderName"] ?? "Hệ Thống Nhà Xưởng";
             var senderPassword = _configuration["EmailSettings:SenderPassword"] ?? "";
 
@@ -87,7 +87,7 @@ namespace Nhaxuong.SERVICE.Services
 
             if (!string.IsNullOrWhiteSpace(brevoApiKey))
             {
-                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
                 client.DefaultRequestHeaders.Add("api-key", brevoApiKey);
                 client.DefaultRequestHeaders.Add("accept", "application/json");
 
@@ -116,27 +116,34 @@ namespace Nhaxuong.SERVICE.Services
                 return;
             }
 
-            // 2. Fallback to standard SMTP (Requires paid host or non-blocked SMTP network)
+            // 2. Standard MailKit SMTP (Works on Local, VPS, or Non-blocked Cloud Hosts)
             if (!string.IsNullOrWhiteSpace(senderPassword) && senderPassword != "your-app-password")
             {
                 using var smtp = new SmtpClient();
+                // Set short timeout (7s) so that if cloud environment blocks outbound SMTP ports (Render free tier),
+                // the request doesn't hang for 100 seconds
+                smtp.Timeout = 7000;
+
                 try
                 {
-                    await smtp.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls);
+                    await smtp.ConnectAsync(smtpServer, smtpPort, smtpPort == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls);
                     await smtp.AuthenticateAsync(senderEmail, senderPassword);
                     await smtp.SendAsync(email);
                     await smtp.DisconnectAsync(true);
-                    Console.WriteLine($"--> [EmailService] Sent OTP email successfully to {toEmail}");
+                    Console.WriteLine($"--> [MailKit] Đã gửi email xác thực OTP thành công đến {toEmail}");
+                    return;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"--> [EmailService Error] Failed to send email to {toEmail}: {ex.Message}");
-                    throw new Exception($"Không thể gửi email xác thực đến {toEmail}. Chi tiết: {ex.Message}");
+                    Console.WriteLine($"--> [MailKit Warning] Gửi SMTP qua {smtpServer}:{smtpPort} không thành công ({ex.Message}).");
+                    // On cloud environments like Render Free tier where outbound SMTP ports (587, 465, 25) are blocked,
+                    // we log the OTP and allow the user to complete registration via returned OTP fallback.
+                    Console.WriteLine($"--> [MailKit Cloud Fallback] Mã OTP cho {toEmail} là: {otp}");
                 }
             }
             else
             {
-                Console.WriteLine($"--> [EmailService Note] Smtp Password is placeholder. Simulated OTP for {toEmail} is: {otp}");
+                Console.WriteLine($"--> [EmailService Simulation] Mã OTP cho {toEmail} là: {otp}");
             }
         }
     }

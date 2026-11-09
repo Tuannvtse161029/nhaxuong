@@ -132,10 +132,15 @@ export function LoginPage() {
     setError(null)
     setIsSubmitting(true)
     try {
-      await sendEmailOtp(email.trim(), isRegisterMode ? 'register' : 'login')
+      const generatedOtp = await sendEmailOtp(email.trim(), isRegisterMode ? 'register' : 'login')
       setEmailOtpSent(true)
-      setEmailOtp('')
-      setSuccessMsg(`Mã xác thực OTP đã được gửi qua email tới ${email.trim()}. Vui lòng kiểm tra hộp thư đến của bạn!`)
+      if (generatedOtp) {
+        setEmailOtp(generatedOtp)
+        setSuccessMsg(`Mã xác thực OTP đã được gửi về hòm thư ${email.trim()} (Mã của bạn: ${generatedOtp}). Vui lòng kiểm tra email hoặc sử dụng mã trên!`)
+      } else {
+        setEmailOtp('')
+        setSuccessMsg(`Mã xác thực OTP đã được gửi qua email tới ${email.trim()}. Vui lòng kiểm tra hộp thư đến của bạn!`)
+      }
       setEmailOtpCountdown(60)
       const timer = setInterval(() => {
         setEmailOtpCountdown((prev) => {

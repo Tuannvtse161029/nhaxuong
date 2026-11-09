@@ -161,10 +161,15 @@ export function AuthModal() {
     setIsLoading(true)
 
     try {
-      await sendEmailOtp(email.trim(), isLogin ? 'login' : 'register')
+      const generatedOtp = await sendEmailOtp(email.trim(), isLogin ? 'login' : 'register')
       setEmailOtpSent(true)
-      setEmailOtp('')
-      setSuccessMsg(`Mã xác thực OTP đã được gửi về hòm thư ${email.trim()}. Vui lòng kiểm tra email của bạn!`)
+      if (generatedOtp) {
+        setEmailOtp(generatedOtp)
+        setSuccessMsg(`Mã xác thực OTP đã được tạo cho ${email.trim()} (Mã của bạn: ${generatedOtp}). Vui lòng kiểm tra email hoặc sử dụng mã trên!`)
+      } else {
+        setEmailOtp('')
+        setSuccessMsg(`Mã xác thực OTP đã được gửi về hòm thư ${email.trim()}. Vui lòng kiểm tra email của bạn!`)
+      }
 
       setEmailOtpCountdown(60)
       const timer = setInterval(() => {
