@@ -44,6 +44,7 @@ namespace Nhaxuong.SERVICE.DTOs.Request
         public string Phone { get; set; } = string.Empty;
         public string? Name { get; set; }
         public string? Otp { get; set; }
+        public string? Pin { get; set; }
     }
 
     public class SendOtpRequest

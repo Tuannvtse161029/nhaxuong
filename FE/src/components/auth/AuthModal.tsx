@@ -3,20 +3,17 @@ import {
   X,
   Smartphone,
   Mail,
-  Lock,
   User as UserIcon,
   AlertCircle,
   CheckCircle,
   ArrowRight,
-  ShieldCheck,
   Sparkles,
   KeyRound,
   ArrowLeft,
-  Eye,
-  EyeOff,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { GoogleLoginButton } from './GoogleLoginButton'
+import { PinBoxInput } from './PinBoxInput'
 
 export function AuthModal() {
   const {
@@ -42,6 +39,9 @@ export function AuthModal() {
   // Phone Form States
   const [phone, setPhone] = useState('')
   const [phoneName, setPhoneName] = useState('')
+  const [phonePin, setPhonePin] = useState('')
+  const [phoneConfirmPin, setPhoneConfirmPin] = useState('')
+  const [phoneUseOtpLogin, setPhoneUseOtpLogin] = useState(false)
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [otpCountdown, setOtpCountdown] = useState(0)
@@ -51,7 +51,6 @@ export function AuthModal() {
   const [pin, setPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
   const [name, setName] = useState('')
-  const [showPin, setShowPin] = useState(false)
   const [emailOtp, setEmailOtp] = useState('')
   const [emailOtpSent, setEmailOtpSent] = useState(false)
   const [emailOtpCountdown, setEmailOtpCountdown] = useState(0)
@@ -74,7 +73,7 @@ export function AuthModal() {
 
   const isLogin = authModalTab === 'login'
 
-  const handleSendOtp = async () => {
+  const handleSendPhoneOtp = async () => {
     const cleanedPhone = phone.replace(/\D/g, '')
     if (!cleanedPhone) {
       setError('Vui lòng nhập số điện thoại')
@@ -135,13 +134,42 @@ export function AuthModal() {
       setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
       return
     }
-    if (!otpSent) {
-      setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã xác thực qua tin nhắn SMS trước.')
-      return
-    }
-    if (!otp.trim()) {
-      setError('Vui lòng nhập mã OTP 6 số từ tin nhắn SMS.')
-      return
+
+    if (!isLogin) {
+      // Register with Phone
+      if (!otpSent) {
+        setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã xác thực qua tin nhắn SMS trước.')
+        return
+      }
+      if (otp.length !== 6) {
+        setError('Vui lòng nhập đầy đủ mã OTP 6 số từ tin nhắn SMS.')
+        return
+      }
+      if (phonePin.length !== 6) {
+        setError('Mã PIN bảo mật bắt buộc phải có đúng 6 chữ số.')
+        return
+      }
+      if (phonePin !== phoneConfirmPin) {
+        setError('Mã PIN và Xác nhận mã PIN không trùng khớp!')
+        return
+      }
+    } else {
+      // Login with Phone
+      if (phoneUseOtpLogin) {
+        if (!otpSent) {
+          setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã đăng nhập qua tin nhắn SMS.')
+          return
+        }
+        if (otp.length !== 6) {
+          setError('Vui lòng nhập mã OTP 6 số từ tin nhắn SMS.')
+          return
+        }
+      } else {
+        if (phonePin.length !== 6) {
+          setError('Vui lòng nhập đúng mã PIN bảo mật 6 số của bạn.')
+          return
+        }
+      }
     }
 
     setError(null)
@@ -149,9 +177,18 @@ export function AuthModal() {
 
     try {
       if (isLogin) {
-        await loginWithPhone(phone.trim(), otp.trim())
+        if (phoneUseOtpLogin) {
+          await loginWithPhone(phone.trim(), otp.trim())
+        } else {
+          await loginWithPhone(phone.trim(), undefined, undefined, phonePin.trim())
+        }
       } else {
-        await registerWithPhone(phone.trim(), phoneName.trim() || `Khách Hàng (${phone.slice(-4)})`, otp.trim())
+        await registerWithPhone(
+          phone.trim(),
+          phoneName.trim() || `Khách Hàng (${phone.slice(-4)})`,
+          otp.trim(),
+          phonePin.trim()
+        )
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Thao tác số điện thoại thất bại')
@@ -174,7 +211,7 @@ export function AuthModal() {
       setEmailOtpSent(true)
       if (generatedOtp) {
         setEmailOtp(generatedOtp)
-        setSuccessMsg(`Mã xác thực OTP đã gửi về hòm thư ${email.trim()} (Mã của bạn: ${generatedOtp}). Vui lòng kiểm tra email!`)
+        setSuccessMsg(`Mã xác thực OTP đã gửi về hòm thư ${email.trim()} (Mã của bạn: ${generatedOtp}).`)
       } else {
         setEmailOtp('')
         setSuccessMsg(`Mã xác thực OTP đã được gửi về hòm thư ${email.trim()}. Vui lòng kiểm tra hộp thư đến (hoặc hòm thư spam)!`)
@@ -200,24 +237,24 @@ export function AuthModal() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || !pin.trim()) {
-      setError('Vui lòng nhập email và mã PIN 6 số')
+    if (!email.trim()) {
+      setError('Vui lòng nhập địa chỉ email')
       return
     }
-    if (!/^\d{6}$/.test(pin.trim())) {
-      setError('Mã PIN bảo mật bắt buộc phải có đúng 6 chữ số (từ 0-9)')
+    if (pin.length !== 6) {
+      setError('Mã PIN bảo mật bắt buộc phải có đúng 6 chữ số')
       return
     }
     if (!isLogin && pin !== confirmPin) {
       setError('Mã PIN xác nhận không trùng khớp!')
       return
     }
-    if (email.trim().toLowerCase() !== 'admin@nhaxuong.vn') {
+    if (!isLogin && email.trim().toLowerCase() !== 'admin@nhaxuong.vn') {
       if (!emailOtpSent) {
-        setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã xác thực qua email trước khi tiếp tục.')
+        setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã xác thực qua email trước.')
         return
       }
-      if (!emailOtp.trim()) {
+      if (emailOtp.length !== 6) {
         setError('Vui lòng nhập mã xác thực OTP 6 số đã được gửi về email của bạn.')
         return
       }
@@ -291,15 +328,15 @@ export function AuthModal() {
       setError('Vui lòng nhập thông tin tài khoản')
       return
     }
-    if (!forgotOtp.trim()) {
+    if (forgotOtp.length !== 6) {
       setError('Vui lòng nhập mã xác thực OTP 6 số')
       return
     }
-    if (!/^\d{6}$/.test(forgotNewPin.trim())) {
-      setError('Mã PIN mới bắt buộc phải đúng 6 chữ số (ví dụ: 123456)')
+    if (forgotNewPin.length !== 6) {
+      setError('Mã PIN mới bắt buộc phải đúng 6 chữ số')
       return
     }
-    if (forgotNewPin.trim() !== forgotConfirmPin.trim()) {
+    if (forgotNewPin !== forgotConfirmPin) {
       setError('Mã PIN mới và xác nhận mã PIN không trùng khớp')
       return
     }
@@ -319,6 +356,7 @@ export function AuthModal() {
         setIsForgotPinMode(false)
         openAuthModal('login')
         setPin(forgotNewPin.trim())
+        setPhonePin(forgotNewPin.trim())
         if (forgotMethod === 'email') {
           setEmail(forgotTarget.trim())
           setMethod('email')
@@ -350,7 +388,7 @@ export function AuthModal() {
 
         <div className="p-6 sm:p-8">
           {/* Header */}
-          <div className="mb-6">
+          <div className="mb-5">
             {isForgotPinMode ? (
               <div>
                 <button
@@ -385,8 +423,8 @@ export function AuthModal() {
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {isLogin
-                    ? 'Đăng nhập bằng Mã PIN 6 số hoặc số điện thoại nhanh chóng.'
-                    : 'Đăng ký tài khoản với Mã PIN 6 số bảo mật để nhận báo giá kho xưởng.'}
+                    ? 'Đăng nhập nhanh bằng Mã PIN 6 số bảo mật chuẩn ngân hàng.'
+                    : 'Đăng ký tài khoản với Mã PIN 6 số tiện lợi, an toàn.'}
                 </p>
               </div>
             )}
@@ -444,7 +482,7 @@ export function AuthModal() {
                 </button>
               </div>
 
-              <form onSubmit={handleForgotPinResetSubmit} className="space-y-3.5">
+              <form onSubmit={handleForgotPinResetSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {forgotMethod === 'email' ? 'Địa Chỉ Email Đăng Ký' : 'Số Điện Thoại Đăng Ký (+84)'}
@@ -477,73 +515,31 @@ export function AuthModal() {
                 </div>
 
                 {forgotOtpSent && (
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Mã Xác Thực OTP (6 Số)
-                      </label>
-                      <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" />
-                        Hiệu lực 5 phút
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      inputMode="numeric"
-                      placeholder="Nhập 6 số OTP (VD: 123456)"
-                      value={forgotOtp}
-                      onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ''))}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-center text-sm font-mono tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                      required
-                    />
-                  </div>
+                  <PinBoxInput
+                    label="Mã Xác Thực OTP"
+                    value={forgotOtp}
+                    onChange={setForgotOtp}
+                    isOtp={true}
+                    idPrefix="modal-forgot-otp"
+                    sublabel="Nhập 6 số OTP từ hòm thư / điện thoại"
+                  />
                 )}
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Mã PIN 6 Số Mới
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                    <input
-                      type={showPin ? 'text' : 'password'}
-                      maxLength={6}
-                      inputMode="numeric"
-                      placeholder="Nhập mã PIN 6 số (VD: 654321)"
-                      value={forgotNewPin}
-                      onChange={(e) => setForgotNewPin(e.target.value.replace(/\D/g, ''))}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-9 text-xs font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPin(!showPin)}
-                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    >
-                      {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
+                <PinBoxInput
+                  label="Mã PIN 6 Số Mới"
+                  value={forgotNewPin}
+                  onChange={setForgotNewPin}
+                  idPrefix="modal-forgot-new-pin"
+                  sublabel="Nhập 6 số PIN mới bạn muốn đặt"
+                />
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Xác Nhận Mã PIN 6 Số Mới
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                    <input
-                      type={showPin ? 'text' : 'password'}
-                      maxLength={6}
-                      inputMode="numeric"
-                      placeholder="Nhập lại đúng 6 số"
-                      value={forgotConfirmPin}
-                      onChange={(e) => setForgotConfirmPin(e.target.value.replace(/\D/g, ''))}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                      required
-                    />
-                  </div>
-                </div>
+                <PinBoxInput
+                  label="Xác Nhận Mã PIN 6 Số Mới"
+                  value={forgotConfirmPin}
+                  onChange={setForgotConfirmPin}
+                  idPrefix="modal-forgot-confirm-pin"
+                  sublabel="Nhập lại đúng 6 số PIN ở trên"
+                />
 
                 <button
                   type="submit"
@@ -635,7 +631,7 @@ export function AuthModal() {
 
               {/* 3. PHONE FORM */}
               {method === 'phone' && (
-                <form onSubmit={handlePhoneSubmit} className="space-y-3 pt-1">
+                <form onSubmit={handlePhoneSubmit} className="space-y-4 pt-1">
                   {!isLogin && (
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -671,39 +667,110 @@ export function AuthModal() {
                           required
                         />
                       </div>
-                      <button
-                        type="button"
-                        onClick={handleSendOtp}
-                        disabled={isLoading || otpCountdown > 0}
-                        className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
-                      >
-                        {otpCountdown > 0 ? `${otpCountdown}s` : otpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
-                      </button>
+                      {(!isLogin || phoneUseOtpLogin) && (
+                        <button
+                          type="button"
+                          onClick={handleSendPhoneOtp}
+                          disabled={isLoading || otpCountdown > 0}
+                          className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
+                        >
+                          {otpCountdown > 0 ? `${otpCountdown}s` : otpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  {otpSent && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          Mã Xác Thực OTP (6 Số)
-                        </label>
-                        <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" />
-                          Tin nhắn SMS Viễn Thông (Hạn 3 phút)
-                        </span>
-                      </div>
-                      <input
-                        type="text"
-                        maxLength={6}
-                        inputMode="numeric"
-                        placeholder="Nhập 6 số OTP (VD: 123456)"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-center text-sm font-mono tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                        required
+                  {/* If Register: OTP + PIN setup */}
+                  {!isLogin && (
+                    <>
+                      {otpSent && (
+                        <PinBoxInput
+                          label="Mã Xác Thực SMS"
+                          value={otp}
+                          onChange={setOtp}
+                          isOtp={true}
+                          idPrefix="modal-phone-otp"
+                          sublabel="Mã OTP 6 số từ tin nhắn SMS"
+                        />
+                      )}
+
+                      <PinBoxInput
+                        label="Tạo Mã PIN Bảo Mật (6 Số)"
+                        value={phonePin}
+                        onChange={setPhonePin}
+                        idPrefix="modal-phone-reg-pin"
+                        sublabel="Thiết lập mã PIN 6 số cho tài khoản SĐT"
                       />
-                    </div>
+
+                      <PinBoxInput
+                        label="Xác Nhận Mã PIN (6 Số)"
+                        value={phoneConfirmPin}
+                        onChange={setPhoneConfirmPin}
+                        idPrefix="modal-phone-reg-confirm-pin"
+                        sublabel="Nhập lại đúng 6 số PIN ở trên"
+                      />
+                    </>
+                  )}
+
+                  {/* If Login: Phone PIN code OR quick SMS OTP */}
+                  {isLogin && (
+                    <>
+                      {!phoneUseOtpLogin ? (
+                        <>
+                          <PinBoxInput
+                            label="Mã PIN Bảo Mật (6 Số)"
+                            value={phonePin}
+                            onChange={setPhonePin}
+                            idPrefix="modal-phone-login-pin"
+                            onForgotPin={() => {
+                              setIsForgotPinMode(true)
+                              setError(null)
+                              setSuccessMsg(null)
+                              setForgotTarget(phone)
+                              setForgotMethod('phone')
+                            }}
+                            sublabel="Nhập 6 số PIN để đăng nhập"
+                          />
+                          <div className="text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPhoneUseOtpLogin(true)
+                                setError(null)
+                              }}
+                              className="text-[11px] text-teal-600 hover:text-teal-700 dark:text-teal-400 font-semibold"
+                            >
+                              ⚡ Đăng nhập bằng SMS OTP thay vì PIN
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {otpSent && (
+                            <PinBoxInput
+                              label="Mã Xác Thực SMS (6 Số)"
+                              value={otp}
+                              onChange={setOtp}
+                              isOtp={true}
+                              idPrefix="modal-phone-login-otp"
+                              sublabel="Nhập 6 số từ tin nhắn SMS"
+                            />
+                          )}
+                          <div className="text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPhoneUseOtpLogin(false)
+                                setError(null)
+                              }}
+                              className="text-[11px] text-teal-600 hover:text-teal-700 dark:text-teal-400 font-semibold"
+                            >
+                              🔑 Đăng nhập bằng Mã PIN 6 số
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </>
                   )}
 
                   <button
@@ -711,7 +778,7 @@ export function AuthModal() {
                     disabled={isLoading}
                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-800 transition disabled:opacity-50"
                   >
-                    <span>{isLogin ? 'Đăng Nhập Bằng Số Điện Thoại' : 'Đăng Ký Bằng Số Điện Thoại'}</span>
+                    <span>{isLogin ? 'Đăng Nhập Số Điện Thoại' : 'Đăng Ký Tài Khoản SĐT'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
@@ -719,7 +786,7 @@ export function AuthModal() {
 
               {/* 4. EMAIL & PIN FORM */}
               {method === 'email' && (
-                <form onSubmit={handleEmailSubmit} className="space-y-3 pt-1">
+                <form onSubmit={handleEmailSubmit} className="space-y-4 pt-1">
                   {!isLogin && (
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -755,104 +822,58 @@ export function AuthModal() {
                           required
                         />
                       </div>
-                      <button
-                        type="button"
-                        onClick={handleSendEmailOtp}
-                        disabled={isLoading || emailOtpCountdown > 0}
-                        className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
-                      >
-                        {emailOtpCountdown > 0 ? `${emailOtpCountdown}s` : emailOtpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
-                      </button>
+                      {!isLogin && (
+                        <button
+                          type="button"
+                          onClick={handleSendEmailOtp}
+                          disabled={isLoading || emailOtpCountdown > 0}
+                          className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
+                        >
+                          {emailOtpCountdown > 0 ? `${emailOtpCountdown}s` : emailOtpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  {emailOtpSent && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          Mã Xác Thực Email (6 Số)
-                        </label>
-                        <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" />
-                          Hộp thư đến/Spam (Hạn 5 phút)
-                        </span>
-                      </div>
-                      <input
-                        type="text"
-                        maxLength={6}
-                        inputMode="numeric"
-                        placeholder="Nhập 6 số OTP từ Email (VD: 123456)"
-                        value={emailOtp}
-                        onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ''))}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-center text-sm font-mono tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                        required={email.trim().toLowerCase() !== 'admin@nhaxuong.vn'}
-                      />
-                    </div>
+                  {!isLogin && emailOtpSent && (
+                    <PinBoxInput
+                      label="Mã Xác Thực Email"
+                      value={emailOtp}
+                      onChange={setEmailOtp}
+                      isOtp={true}
+                      idPrefix="modal-email-reg-otp"
+                      sublabel="Nhập 6 số xác thực từ hòm thư của bạn"
+                    />
                   )}
 
                   {/* Mã PIN 6 số */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        {isLogin ? 'Mã PIN Bảo Mật (6 Số)' : 'Tạo Mã PIN Bảo Mật (6 Số)'}
-                      </label>
-                      {isLogin && (
-                        <button
-                          type="button"
-                          onClick={() => {
+                  <PinBoxInput
+                    label={isLogin ? 'Mã PIN Bảo Mật (6 Số)' : 'Tạo Mã PIN Bảo Mật (6 Số)'}
+                    value={pin}
+                    onChange={setPin}
+                    idPrefix="modal-email-pin"
+                    onForgotPin={
+                      isLogin
+                        ? () => {
                             setIsForgotPinMode(true)
                             setError(null)
                             setSuccessMsg(null)
                             setForgotTarget(email)
                             setForgotMethod('email')
-                          }}
-                          className="text-xs font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400"
-                        >
-                          Quên mã PIN?
-                        </button>
-                      )}
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                      <input
-                        type={showPin ? 'text' : 'password'}
-                        maxLength={6}
-                        inputMode="numeric"
-                        placeholder="•••••• (Nhập 6 số PIN, VD: 123456)"
-                        value={pin}
-                        onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-9 text-xs font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPin(!showPin)}
-                        className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                      >
-                        {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+                          }
+                        : undefined
+                    }
+                    sublabel={isLogin ? 'Nhập 6 số PIN để đăng nhập' : 'Thiết lập mã PIN 6 số dễ nhớ'}
+                  />
 
                   {!isLogin && (
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Xác Nhận Mã PIN (6 Số)
-                      </label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                        <input
-                          type={showPin ? 'text' : 'password'}
-                          maxLength={6}
-                          inputMode="numeric"
-                          placeholder="•••••• (Nhập lại đúng 6 số)"
-                          value={confirmPin}
-                          onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                          required
-                        />
-                      </div>
-                    </div>
+                    <PinBoxInput
+                      label="Nhập Lại Mã PIN (6 Số)"
+                      value={confirmPin}
+                      onChange={setConfirmPin}
+                      idPrefix="modal-email-confirm-pin"
+                      sublabel="Xác nhận đúng 6 số PIN ở trên"
+                    />
                   )}
 
                   <button

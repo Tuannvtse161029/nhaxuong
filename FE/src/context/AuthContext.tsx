@@ -21,8 +21,8 @@ export interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>
   register: (credentials: RegisterCredentials) => Promise<void>
   loginWithGoogle: (idToken?: string) => Promise<void>
-  loginWithPhone: (phone: string, otp?: string, name?: string) => Promise<void>
-  registerWithPhone: (phone: string, name: string, otp?: string) => Promise<void>
+  loginWithPhone: (phone: string, otp?: string, name?: string, pin?: string) => Promise<void>
+  registerWithPhone: (phone: string, name: string, otp?: string, pin?: string) => Promise<void>
   sendOtp: (phone: string, type?: 'login' | 'register') => Promise<string | undefined>
   sendEmailOtp: (email: string, type?: 'login' | 'register' | 'forgot-pin') => Promise<string | undefined>
   forgotPinSendOtp: (params: ForgotPinSendOtpParams) => Promise<{ success: boolean; message: string; otp?: string }>
@@ -109,20 +109,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const loginWithPhone = async (phone: string, otp?: string, name?: string) => {
+  const loginWithPhone = async (phone: string, otp?: string, name?: string, pin?: string) => {
     setIsLoading(true)
     try {
-      const res = await authApi.loginWithPhone({ phone, otp, name })
+      const res = await authApi.loginWithPhone({ phone, otp, name, pin })
       handleAuthSuccess(res)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const registerWithPhone = async (phone: string, name: string, otp?: string) => {
+  const registerWithPhone = async (phone: string, name: string, otp?: string, pin?: string) => {
     setIsLoading(true)
     try {
-      const res = await authApi.registerWithPhone({ phone, name, otp })
+      const res = await authApi.registerWithPhone({ phone, name, otp, pin })
       handleAuthSuccess(res)
     } finally {
       setIsLoading(false)
