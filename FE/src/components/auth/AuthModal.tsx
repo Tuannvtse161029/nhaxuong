@@ -151,10 +151,15 @@ export function AuthModal() {
     setError(null)
     setIsLoading(true)
     try {
-      await sendOtp(phone.trim(), 'login')
+      const generatedOtp = await sendOtp(phone.trim(), 'login')
       setOtpSent(true)
-      setOtp('')
-      setSuccessMsg(`Mã OTP đã được gửi qua tin nhắn SMS tới số ${phone.trim()}. Vui lòng kiểm tra điện thoại của bạn!`)
+      if (generatedOtp) {
+        setOtp(generatedOtp)
+        setSuccessMsg(`Mã OTP đã được gửi qua tin nhắn SMS tới số ${phone.trim()} (Mã của bạn: ${generatedOtp}). Vui lòng kiểm tra điện thoại của bạn!`)
+      } else {
+        setOtp('')
+        setSuccessMsg(`Mã OTP đã được gửi qua tin nhắn SMS tới số ${phone.trim()}. Vui lòng kiểm tra điện thoại của bạn!`)
+      }
       setOtpCountdown(60)
       const timer = setInterval(() => {
         setOtpCountdown((prev) => {
@@ -196,10 +201,15 @@ export function AuthModal() {
     setError(null)
     setIsLoading(true)
     try {
-      await sendOtp(phone.trim(), 'register')
+      const generatedOtp = await sendOtp(phone.trim(), 'register')
       setOtpSent(true)
-      setOtp('')
-      setSuccessMsg(`Mã OTP 6 số đã được gửi qua SMS tới ${phone.trim()}. Vui lòng nhập mã để hoàn tất đăng ký!`)
+      if (generatedOtp) {
+        setOtp(generatedOtp)
+        setSuccessMsg(`Mã OTP 6 số đã được gửi qua SMS tới ${phone.trim()} (Mã của bạn: ${generatedOtp}). Vui lòng nhập mã để hoàn tất đăng ký!`)
+      } else {
+        setOtp('')
+        setSuccessMsg(`Mã OTP 6 số đã được gửi qua SMS tới ${phone.trim()}. Vui lòng nhập mã để hoàn tất đăng ký!`)
+      }
       setOtpCountdown(60)
       setRegStep(2)
       const timer = setInterval(() => {
@@ -351,8 +361,13 @@ export function AuthModal() {
     setIsLoading(true)
     try {
       if (method === 'phone') {
-        await sendOtp(phone.trim(), 'register')
-        setSuccessMsg(`Mã OTP mới đã được gửi qua SMS tới ${phone.trim()}!`)
+        const generatedOtp = await sendOtp(phone.trim(), 'register')
+        if (generatedOtp) {
+          setOtp(generatedOtp)
+          setSuccessMsg(`Mã OTP mới đã được gửi qua SMS tới ${phone.trim()} (Mã của bạn: ${generatedOtp})!`)
+        } else {
+          setSuccessMsg(`Mã OTP mới đã được gửi qua SMS tới ${phone.trim()}!`)
+        }
         setOtpCountdown(60)
       } else {
         const generatedOtp = await sendEmailOtp(email.trim(), 'register')

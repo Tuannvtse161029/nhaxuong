@@ -490,14 +490,17 @@ namespace Nhaxuong.SERVICE.Services
                 try
                 {
                     using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-                    var brandname = _configuration["EsmsSettings:Brandname"] ?? "NxThienBao";
+                    // 1. Send via registered carrier Brandname "Baotrixemay" with the approved carrier template
+                    var brandname = _configuration["EsmsSettings:Brandname"] ?? "Baotrixemay";
+                    var approvedTemplate = $"{otp} la ma xac minh dang ky Baotrixemay cua ban";
+
                     var payload = new
                     {
                         ApiKey = apiKey,
                         SecretKey = secretKey,
                         Phone = localPhone,
                         Brandname = brandname,
-                        Content = $"{otp} la ma xac minh OTP Nha Xuong cua ban",
+                        Content = approvedTemplate,
                         SmsType = "2",
                         IsUnicode = "0"
                     };
@@ -509,18 +512,19 @@ namespace Nhaxuong.SERVICE.Services
 
                     var response = await client.PostAsync("http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/", content);
                     var respString = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"--> [eSMS] Sent OTP with {brandname} to {localPhone}: {respString}");
+                    Console.WriteLine($"--> [eSMS Brandname {brandname}] Sent to {localPhone}: {respString}");
 
-                    if (respString.Contains("\"CodeResult\":\"104\"") || respString.Contains("\"CodeResult\":104"))
+                    // 2. If Brandname failed, immediately fallback to fixed 10-digit number (SmsType 8)
+                    if (!respString.Contains("\"CodeResult\":\"100\"") && !respString.Contains("\"CodeResult\":100"))
                     {
+                        Console.WriteLine($"--> [eSMS Fallback SmsType 8] Attempting fallback for {localPhone}...");
                         var fallbackPayload = new
                         {
                             ApiKey = apiKey,
                             SecretKey = secretKey,
                             Phone = localPhone,
-                            Brandname = "Baotrixemay",
                             Content = $"{otp} la ma xac minh OTP Nha Xuong cua ban",
-                            SmsType = "2",
+                            SmsType = "8",
                             IsUnicode = "0"
                         };
                         var fallbackContent = new StringContent(
@@ -529,7 +533,7 @@ namespace Nhaxuong.SERVICE.Services
                             "application/json");
                         var fallbackResp = await client.PostAsync("http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/", fallbackContent);
                         var fallbackStr = await fallbackResp.Content.ReadAsStringAsync();
-                        Console.WriteLine($"--> [eSMS Fallback Baotrixemay] Sent to {localPhone}: {fallbackStr}");
+                        Console.WriteLine($"--> [eSMS Fallback SmsType 8 Result] Sent to {localPhone}: {fallbackStr}");
                     }
                 }
                 catch (Exception ex)

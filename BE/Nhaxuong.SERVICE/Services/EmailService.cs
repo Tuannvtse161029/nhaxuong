@@ -104,47 +104,92 @@ namespace Nhaxuong.SERVICE.Services
 
             email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
 
-            // 1. If Brevo API Key is configured, use HTTP REST API (port 443) which never gets blocked on Render Free
+            // 1. Try Vercel Serverless Email Relay (HTTPS Port 443 - Never blocked on Render Free)
+            var emailApiUrl = _configuration["EmailSettings:EmailApiUrl"] ?? "https://nhaxuong-fe.vercel.app/api/send-email";
+            if (!string.IsNullOrWhiteSpace(emailApiUrl))
+            {
+                try
+                {
+                    using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                    var payload = new
+                    {
+                        to = toEmail,
+                        subject = subject,
+                        html = htmlBody,
+                        text = $"Mã OTP xác thực của bạn là: {otp}"
+                    };
+                    var content = new StringContent(
+                        System.Text.Json.JsonSerializer.Serialize(payload),
+                        System.Text.Encoding.UTF8,
+                        "application/json");
+
+                    var response = await client.PostAsync(emailApiUrl, content);
+                    var respString = await response.Content.ReadAsStringAsync();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"--> [Vercel Email Relay] Sent OTP email successfully to {toEmail}: {respString}");
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"--> [Vercel Email Relay Warning] HTTP {response.StatusCode}: {respString}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"--> [Vercel Email Relay Warning] {ex.Message}");
+                }
+            }
+
+            // 2. If Brevo API Key is configured, use Brevo HTTP REST API (port 443)
             var brevoApiKey = _configuration["EmailSettings:BrevoApiKey"] 
                 ?? _configuration["BrevoApiKey"] 
                 ?? Environment.GetEnvironmentVariable("BREVO_API_KEY");
 
             if (!string.IsNullOrWhiteSpace(brevoApiKey))
             {
-                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-                client.DefaultRequestHeaders.Add("api-key", brevoApiKey);
-                client.DefaultRequestHeaders.Add("accept", "application/json");
-
-                var payload = new
+                try
                 {
-                    sender = new { name = senderName, email = senderEmail },
-                    to = new[] { new { email = toEmail, name = toEmail } },
-                    subject = subject,
-                    htmlContent = htmlBody
-                };
+                    using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                    client.DefaultRequestHeaders.Add("api-key", brevoApiKey);
+                    client.DefaultRequestHeaders.Add("accept", "application/json");
 
-                var content = new StringContent(
-                    System.Text.Json.JsonSerializer.Serialize(payload),
-                    System.Text.Encoding.UTF8,
-                    "application/json");
+                    var payload = new
+                    {
+                        sender = new { name = senderName, email = senderEmail },
+                        to = new[] { new { email = toEmail, name = toEmail } },
+                        subject = subject,
+                        htmlContent = htmlBody
+                    };
 
-                var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
-                var respString = await response.Content.ReadAsStringAsync();
-                if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"--> [Brevo Error] {respString}");
-                    throw new Exception($"Không thể gửi email xác thực qua Brevo: {respString}");
+                    var content = new StringContent(
+                        System.Text.Json.JsonSerializer.Serialize(payload),
+                        System.Text.Encoding.UTF8,
+                        "application/json");
+
+                    var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+                    var respString = await response.Content.ReadAsStringAsync();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"--> [Brevo] Sent OTP email successfully to {toEmail}: {respString}");
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"--> [Brevo Error] {respString}");
+                    }
                 }
-
-                Console.WriteLine($"--> [Brevo] Sent OTP email successfully to {toEmail}: {respString}");
-                return;
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"--> [Brevo Warning] {ex.Message}");
+                }
             }
 
-            // 2. Standard MailKit SMTP (Works on Local, VPS, or Non-blocked Cloud Hosts)
+            // 3. Standard MailKit SMTP (Works on Local, VPS, or Non-blocked Cloud Hosts)
             if (!string.IsNullOrWhiteSpace(senderPassword) && senderPassword != "your-app-password")
             {
                 using var smtp = new SmtpClient();
-                smtp.Timeout = 7000;
+                smtp.Timeout = 5000;
 
                 try
                 {
