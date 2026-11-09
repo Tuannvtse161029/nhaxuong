@@ -115,8 +115,12 @@ export function AuthModal() {
       setError('Vui lòng nhập số điện thoại')
       return
     }
-    if (otpSent && !otp.trim()) {
-      setError('Vui lòng nhập mã OTP 6 số từ tin nhắn SMS')
+    if (!otpSent) {
+      setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã xác thực qua tin nhắn SMS trước.')
+      return
+    }
+    if (!otp.trim()) {
+      setError('Vui lòng nhập mã OTP 6 số từ tin nhắn SMS.')
       return
     }
 

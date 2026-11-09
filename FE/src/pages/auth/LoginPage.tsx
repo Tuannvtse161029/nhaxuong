@@ -100,6 +100,14 @@ export function LoginPage() {
       setError('Vui lòng nhập số điện thoại')
       return
     }
+    if (!otpSent) {
+      setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã xác thực qua tin nhắn SMS trước.')
+      return
+    }
+    if (!otp.trim()) {
+      setError('Vui lòng nhập mã OTP 6 số từ tin nhắn SMS.')
+      return
+    }
     setError(null)
     setIsSubmitting(true)
     try {
@@ -345,16 +353,17 @@ export function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Mã OTP (6 số)
+                  Mã Xác Thực OTP (6 Số)
                 </label>
-                <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold">
-                  Mã thử nghiệm: 123456
+                <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  Tin nhắn SMS Viễn Thông (Hạn 3 phút)
                 </span>
               </div>
               <input
                 type="text"
                 maxLength={6}
-                placeholder="123456"
+                placeholder="Nhập 6 số OTP (VD: 123456)"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-center text-sm font-mono tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"

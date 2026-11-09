@@ -296,34 +296,34 @@ namespace Nhaxuong.SERVICE.Services
             if (localPhone.StartsWith("+84")) localPhone = "0" + localPhone[3..];
             else if (localPhone.StartsWith("84") && localPhone.Length > 9) localPhone = "0" + localPhone[2..];
 
-            // Verify OTP if provided
-            if (!string.IsNullOrWhiteSpace(request.Otp))
+            // 1. Mandatory OTP verification for Phone Auth (both Login & Register)
+            if (string.IsNullOrWhiteSpace(request.Otp))
             {
-                var inputOtp = request.Otp.Trim();
-                if (inputOtp != "VERIFIED_BY_FIREBASE" && inputOtp != "123456")
-                {
-                    bool found = _otpCache.TryGetValue(phone, out var cached) || _otpCache.TryGetValue(localPhone, out cached);
-                    if (found)
-                    {
-                        if (DateTime.UtcNow > cached.ExpireAt)
-                        {
-                            _otpCache.TryRemove(phone, out _);
-                            _otpCache.TryRemove(localPhone, out _);
-                            throw new Exception("Mã OTP đã hết hạn (sau 3 phút). Vui lòng bấm 'Gửi Mã OTP' để nhận mã mới.");
-                        }
-                        if (cached.Code != inputOtp)
-                        {
-                            throw new Exception("Mã OTP không chính xác. Vui lòng kiểm tra lại tin nhắn SMS trên điện thoại.");
-                        }
-                        _otpCache.TryRemove(phone, out _);
-                        _otpCache.TryRemove(localPhone, out _);
-                    }
-                    else
-                    {
-                        throw new Exception("Mã OTP không hợp lệ hoặc đã hết hạn. Vui lòng bấm 'Gửi Mã OTP' để nhận mã mới.");
-                    }
-                }
+                throw new Exception("Vui lòng bấm 'Gửi Mã OTP' và nhập mã xác thực 6 số từ tin nhắn SMS trên điện thoại của bạn.");
             }
+
+            var inputOtp = request.Otp.Trim();
+            bool found = _otpCache.TryGetValue(phone, out var cached) || _otpCache.TryGetValue(localPhone, out cached);
+            if (!found)
+            {
+                throw new Exception("Mã OTP không hợp lệ hoặc bạn chưa bấm 'Gửi Mã OTP'. Vui lòng bấm 'Gửi Mã OTP' để nhận mã xác thực qua tin nhắn SMS.");
+            }
+
+            if (DateTime.UtcNow > cached.ExpireAt)
+            {
+                _otpCache.TryRemove(phone, out _);
+                _otpCache.TryRemove(localPhone, out _);
+                throw new Exception("Mã OTP đã hết hạn (sau 3 phút). Vui lòng bấm 'Gửi Mã OTP' để nhận mã mới.");
+            }
+
+            if (cached.Code != inputOtp)
+            {
+                throw new Exception("Mã OTP không chính xác. Vui lòng kiểm tra lại tin nhắn SMS trên điện thoại.");
+            }
+
+            // OTP verified successfully: remove from cache to prevent replay
+            _otpCache.TryRemove(phone, out _);
+            _otpCache.TryRemove(localPhone, out _);
 
             User? user = null;
             try
