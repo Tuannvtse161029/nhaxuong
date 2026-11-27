@@ -18,10 +18,20 @@ export const propertyApi = {
     const params = new URLSearchParams()
     if (filter?.type && filter.type !== 'ALL') params.append('type', filter.type)
     if (filter?.status && filter.status !== 'ALL') params.append('status', filter.status)
+    if (filter?.stockStatus && filter.stockStatus !== 'ALL') params.append('stockStatus', filter.stockStatus)
+    if (filter?.storageLocation && filter.storageLocation !== 'ALL') params.append('storageLocation', filter.storageLocation)
     if (filter?.categoryId) params.append('categoryId', filter.categoryId.toString())
     if (filter?.keyword) params.append('keyword', filter.keyword)
-    if (filter?.province && filter.province !== 'Toàn Quốc') params.append('province', filter.province)
+    if (filter?.province && filter.province !== 'Toàn Quốc' && filter.province !== 'ALL') params.append('province', filter.province)
+    if (filter?.city && filter.city !== 'ALL') params.append('city', filter.city)
+    if (filter?.district && filter.district !== 'ALL') params.append('district', filter.district)
     if (filter?.kcn && filter.kcn !== 'Tất cả bãi kho' && filter.kcn !== 'Tất cả KCN') params.append('kcn', filter.kcn)
+    if (filter?.structureType && filter.structureType !== 'ALL') params.append('structureType', filter.structureType)
+    if (filter?.hasCrane !== undefined && filter?.hasCrane !== null) params.append('hasCrane', filter.hasCrane.toString())
+    if (filter?.lengthMin) params.append('minLength', filter.lengthMin.toString())
+    if (filter?.lengthMax) params.append('maxLength', filter.lengthMax.toString())
+    if (filter?.widthMin) params.append('minWidth', filter.widthMin.toString())
+    if (filter?.widthMax) params.append('maxWidth', filter.widthMax.toString())
     if (filter?.minPrice) params.append('minPrice', filter.minPrice.toString())
     if (filter?.maxPrice) params.append('maxPrice', filter.maxPrice.toString())
     if (filter?.sortBy) params.append('sortBy', filter.sortBy)
@@ -56,6 +66,10 @@ export const propertyApi = {
 
   async createCategory(cat: Category): Promise<Category> {
     return axiosClient.post<any, Category>(API_ENDPOINTS.CATEGORIES.CREATE, cat)
+  },
+
+  async updateCategory(id: number, cat: Partial<Category>): Promise<Category> {
+    return axiosClient.put<any, Category>(`${API_ENDPOINTS.CATEGORIES.LIST}/${id}`, cat)
   },
 
   async deleteCategory(codeOrId: string | number): Promise<{ message: string }> {

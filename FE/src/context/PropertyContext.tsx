@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react'
 import type { Property, PropertyType, Category, Notice, Subscriber, PropertyFilterState } from '@/types/property.types'
 import {
   INITIAL_PROPERTIES,
@@ -26,7 +26,8 @@ interface PropertyContextType {
   // Categories
   categories: Category[]
   addCategory: (cat: Category) => void
-  deleteCategory: (code: string) => void
+  updateCategory: (id: number, cat: Partial<Category>) => void
+  deleteCategory: (codeOrId: string | number) => void
 
   // Notices
   notices: Notice[]
@@ -77,46 +78,52 @@ const DEFAULT_FILTER: PropertyFilterState = {
   type: 'ALL',
   keyword: '',
   province: 'Toàn Quốc',
+  city: 'ALL',
+  district: 'ALL',
   kcn: 'Tất cả bãi kho',
+  stockStatus: 'ALL',
+  storageLocation: 'ALL',
+  structureType: 'ALL',
+  hasCrane: null,
   minPrice: 0,
-  maxPrice: 150000000000, // 150 tỷ
+  maxPrice: 150000000000,
   sortBy: 'newest',
 }
 
 export function PropertyProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[]>(() => {
-    const saved = storage.getItem<Property[]>('kcn_properties', INITIAL_PROPERTIES)
+    const saved = storage.getItem<Property[]>('nhaxuong_properties_v3', INITIAL_PROPERTIES)
     const existingIds = new Set(saved.map((p) => p.id))
     const missing = INITIAL_PROPERTIES.filter((p) => !existingIds.has(p.id))
     if (missing.length > 0) {
       const merged = [...missing, ...saved]
-      storage.setItem('kcn_properties', merged)
+      storage.setItem('nhaxuong_properties_v3', merged)
       return merged
     }
     return saved
   })
+
   const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = storage.getItem<Category[]>('kcn_categories', INITIAL_CATEGORIES)
-    const validCodes = new Set(INITIAL_CATEGORIES.map((c) => c.code))
-    const cleaned = saved.filter((c) => validCodes.has(c.code) || c.code.startsWith('CAT_'))
-    const existingCodes = new Set(cleaned.map((c) => c.code))
-    const missing = INITIAL_CATEGORIES.filter((c) => !existingCodes.has(c.code))
-    const merged = [...cleaned, ...missing]
-    storage.setItem('kcn_categories', merged)
+    const saved = storage.getItem<Category[]>('nhaxuong_categories_v3', INITIAL_CATEGORIES)
+    const initialCodes = new Set(INITIAL_CATEGORIES.map((c) => c.code))
+    const userCreated = saved.filter((c) => !initialCodes.has(c.code))
+    const merged = [...INITIAL_CATEGORIES, ...userCreated]
+    storage.setItem('nhaxuong_categories_v3', merged)
     return merged
   })
+
   const [notices, setNotices] = useState<Notice[]>(() =>
-    storage.getItem('kcn_notices', INITIAL_NOTICES)
+    storage.getItem('nhaxuong_notices_v3', INITIAL_NOTICES)
   )
   const [subscribers, setSubscribers] = useState<Subscriber[]>(() =>
-    storage.getItem('kcn_subscribers', INITIAL_SUBSCRIBERS)
+    storage.getItem('nhaxuong_subscribers_v3', INITIAL_SUBSCRIBERS)
   )
   const [savedPropertyIds, setSavedPropertyIds] = useState<(string | number)[]>(() =>
-    storage.getItem('kcn_saved_ids', ['prop-1'])
+    storage.getItem('nhaxuong_saved_ids_v3', ['prop-1'])
   )
   const [role, setRoleState] = useState<'user' | 'admin'>('user')
   const [activeNoticeText, setActiveNoticeText] = useState(
-    'Ưu đãi thuế quan mở rộng KCN VSIP 1, Long Đức. Hỗ trợ mô hình 3D HTML xoay tương tác 360° và Audio thuyết minh trực quan!'
+    'Tổng kho khung xưởng & sắt thép tại Dĩ An - Bình Dương & Lâm Đồng. Xem mô hình 3D kết cấu 360° trực tuyến!'
   )
 
   const [filterState, setFilterStateInternal] = useState<PropertyFilterState>(DEFAULT_FILTER)
@@ -124,190 +131,221 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
   const [toasts, setToasts] = useState<ToastItem[]>([])
 
-  // Ensure default categories and recycled steel properties exist even on previously cached browser sessions
+  // Load from backend on mount if not in pure mock mode
   useEffect(() => {
-    setCategories((prev) => {
-      const validCodes = new Set(INITIAL_CATEGORIES.map((c) => c.code))
-      const cleaned = prev.filter((c) => validCodes.has(c.code) || c.code.startsWith('CAT_'))
-      const existingCodes = new Set(cleaned.map((c) => c.code))
-      const missing = INITIAL_CATEGORIES.filter((c) => !existingCodes.has(c.code))
-      const next = [...cleaned, ...missing]
-      storage.setItem('kcn_categories', next)
-      return next
-    })
-
-    setProperties((prev) => {
-      const existingIds = new Set(prev.map((p) => p.id))
-      const missing = INITIAL_PROPERTIES.filter((p) => !existingIds.has(p.id))
-      const merged = [...missing, ...prev].map((p) => {
-        if ((p.type as string) === 'KCN_PROJECT' || (p.type as string) === 'STANDARD_FACTORY' || (p.type as string) === 'COLD_LOGISTICS') {
-          return { ...p, type: 'SALE' as PropertyType, typeDisplay: 'Bán Nhà Xưởng' }
-        }
-        return p
-      })
-      storage.setItem('kcn_properties', merged)
-      return merged
-    })
-
-    // Fetch live backend data if not in mock mode
     if (!ENV.USE_MOCK_API) {
-      propertyApi.getProperties().then((data) => {
-        if (data && data.length > 0) setProperties(data)
-      }).catch((err) => console.log('Offline / Initial BE load fallback:', err.message))
+      propertyApi
+        .getCategories()
+        .then((cats) => {
+          if (Array.isArray(cats) && cats.length > 0) {
+            setCategories(cats)
+            storage.setItem('nhaxuong_categories_v3', cats)
+          }
+        })
+        .catch(() => {})
 
-      propertyApi.getCategories().then((data) => {
-        if (data && data.length > 0) setCategories(data)
-      }).catch(() => {})
-
-      propertyApi.getNotices().then((data) => {
-        if (data && data.length > 0) setNotices(data)
-      }).catch(() => {})
-
-      propertyApi.getSubscribers().then((data) => {
-        if (data && data.length > 0) setSubscribers(data)
-      }).catch(() => {})
-
-      propertyApi.getTicker().then((data) => {
-        if (data?.ticker) setActiveNoticeText(data.ticker)
-      }).catch(() => {})
+      propertyApi
+        .getProperties()
+        .then((props) => {
+          if (Array.isArray(props) && props.length > 0) {
+            setProperties(props)
+            storage.setItem('nhaxuong_properties_v3', props)
+          }
+        })
+        .catch(() => {})
     }
   }, [])
 
   // Sync to localStorage
   useEffect(() => {
-    storage.setItem('kcn_properties', properties)
+    storage.setItem('nhaxuong_properties_v3', properties)
   }, [properties])
 
   useEffect(() => {
-    storage.setItem('kcn_categories', categories)
+    storage.setItem('nhaxuong_categories_v3', categories)
   }, [categories])
 
   useEffect(() => {
-    storage.setItem('kcn_saved_ids', savedPropertyIds)
-  }, [savedPropertyIds])
+    storage.setItem('nhaxuong_notices_v3', notices)
+  }, [notices])
 
   useEffect(() => {
-    storage.setItem('kcn_subscribers', subscribers)
+    storage.setItem('nhaxuong_subscribers_v3', subscribers)
   }, [subscribers])
 
-  const showToast = (message: string, type: ToastItem['type'] = 'success') => {
-    const id = 'toast_' + Date.now() + Math.random()
+  useEffect(() => {
+    storage.setItem('nhaxuong_saved_ids_v3', savedPropertyIds)
+  }, [savedPropertyIds])
+
+  const setFilterState = (updater: Partial<PropertyFilterState> | ((prev: PropertyFilterState) => PropertyFilterState)) => {
+    if (typeof updater === 'function') {
+      setFilterStateInternal((prev) => updater(prev))
+    } else {
+      setFilterStateInternal((prev) => ({ ...prev, ...updater }))
+    }
+  }
+
+  const resetFilters = () => setFilterStateInternal(DEFAULT_FILTER)
+
+  // Filter properties client-side
+  const filteredProperties = useMemo(() => {
+    return properties.filter((item) => {
+      // Category filter
+      if (filterState.type && filterState.type !== 'ALL') {
+        const targetType = filterState.type.toUpperCase()
+        const matchesType = (item.type || '').toUpperCase() === targetType
+        const matchesCategory = item.categoryName?.toUpperCase().includes(targetType)
+        if (!matchesType && !matchesCategory) return false
+      }
+
+      // CategoryId
+      if (filterState.categoryId && item.categoryId !== filterState.categoryId) {
+        return false
+      }
+
+      // Stock status filter (IN_STOCK / OUT_OF_STOCK)
+      if (filterState.stockStatus && filterState.stockStatus !== 'ALL') {
+        const itemStock = (item.stockStatus || 'IN_STOCK').toUpperCase()
+        if (itemStock !== filterState.stockStatus.toUpperCase()) return false
+      }
+
+      // Storage location filter (AT_YARD / AT_SITE)
+      if (filterState.storageLocation && filterState.storageLocation !== 'ALL') {
+        const itemLoc = (item.storageLocation || 'AT_YARD').toUpperCase()
+        if (itemLoc !== filterState.storageLocation.toUpperCase()) return false
+      }
+
+      // Structure type (Thép I, Zamil, Kèo Tiệp)
+      if (filterState.structureType && filterState.structureType !== 'ALL') {
+        const itemStructure = (item.structureType || '').toLowerCase()
+        const filterStructure = filterState.structureType.toLowerCase()
+        if (!itemStructure.includes(filterStructure)) return false
+      }
+
+      // Has Crane filter
+      if (filterState.hasCrane !== null && filterState.hasCrane !== undefined) {
+        if (Boolean(item.hasCrane) !== filterState.hasCrane) return false
+      }
+
+      // Dimension filters: Length
+      if (filterState.lengthMin && (item.length || 0) < filterState.lengthMin) {
+        return false
+      }
+      if (filterState.lengthMax && (item.length || 0) > filterState.lengthMax) {
+        return false
+      }
+
+      // Dimension filters: Width
+      if (filterState.widthMin && (item.width || 0) < filterState.widthMin) {
+        return false
+      }
+      if (filterState.widthMax && (item.width || 0) > filterState.widthMax) {
+        return false
+      }
+
+      // Province filter
+      if (filterState.province && filterState.province !== 'Toàn Quốc' && filterState.province !== 'ALL') {
+        const itemProv = (item.province || '').toLowerCase()
+        const targetProv = filterState.province.toLowerCase()
+        if (!itemProv.includes(targetProv)) return false
+      }
+
+      // District / City filter
+      if (filterState.district && filterState.district !== 'ALL' && filterState.district !== 'Tất cả khu vực') {
+        const itemDist = ((item.district || '') + ' ' + (item.kcn || '')).toLowerCase()
+        const cleanDist = filterState.district.replace(/\s*\(.*\)/, '').toLowerCase()
+        if (!itemDist.includes(cleanDist)) return false
+      }
+
+      // Keyword search
+      if (filterState.keyword.trim()) {
+        const kw = filterState.keyword.toLowerCase().trim()
+        const text = `${item.title} ${item.desc} ${item.kcn} ${item.province} ${item.district || ''} ${item.structureType || ''}`.toLowerCase()
+        if (!text.includes(kw)) return false
+      }
+
+      // Price filter
+      if (item.price < filterState.minPrice || item.price > filterState.maxPrice) {
+        return false
+      }
+
+      return true
+    }).sort((a, b) => {
+      if (filterState.sortBy === 'price-asc') return a.price - b.price
+      if (filterState.sortBy === 'price-desc') return b.price - a.price
+      return 0
+    })
+  }, [properties, filterState])
+
+  // Toasts
+  const showToast = (message: string, type: ToastItem['type'] = 'info') => {
+    const id = 'toast-' + Date.now() + Math.random().toString(36).substring(2, 5)
     setToasts((prev) => [...prev, { id, message, type }])
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 4500)
+    }, 5000)
   }
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }
 
-  const setRole = (newRole: 'user' | 'admin') => {
-    setRoleState(newRole)
-    if (newRole === 'admin') {
-      showToast('👑 Đã chuyển sang chế độ Quản Trị Viên (Admin)', 'info')
-    } else {
-      showToast('👤 Đã chuyển sang chế độ Khách Hàng (User)', 'info')
-    }
-  }
-
+  // Wishlist
   const toggleSaveProperty = (id: string | number) => {
     setSavedPropertyIds((prev) => {
-      const exists = prev.some((item) => String(item) === String(id))
+      const exists = prev.includes(id)
       if (exists) {
-        showToast('Đã bỏ lưu nhà xưởng khỏi danh sách yêu thích')
-        return prev.filter((item) => String(item) !== String(id))
+        showToast('Đã xóa mặt hàng khỏi danh sách quan tâm')
+        return prev.filter((item) => item !== id)
       } else {
-        showToast('❤️ Đã lưu nhà xưởng vào danh sách yêu thích!')
+        showToast('Đã lưu vào danh sách quan tâm!')
         return [...prev, id]
       }
     })
   }
 
-  const isSaved = (id: string | number) => savedPropertyIds.some((item) => String(item) === String(id))
+  const isSaved = (id: string | number) => savedPropertyIds.includes(id)
 
-  const setFilterState = (
-    updater: Partial<PropertyFilterState> | ((prev: PropertyFilterState) => PropertyFilterState)
-  ) => {
-    if (typeof updater === 'function') {
-      setFilterStateInternal(updater)
-    } else {
-      setFilterStateInternal((prev) => ({ ...prev, ...updater }))
-    }
+  const setRole = (newRole: 'user' | 'admin') => {
+    setRoleState(newRole)
+    showToast(
+      newRole === 'admin'
+        ? 'Đã chuyển sang chế độ Quản Trị Viên (Admin)'
+        : 'Đã chuyển về chế độ Xem Khách Hàng',
+      'info'
+    )
   }
 
-  const resetFilters = () => {
-    setFilterStateInternal(DEFAULT_FILTER)
-  }
-
-  // Filtered properties calculation
-  const filteredProperties = properties
-    .filter((p) => {
-      // Type filter
-      if (filterState.type !== 'ALL' && p.type !== filterState.type) {
-        return false
-      }
-      // Keyword
-      if (filterState.keyword.trim()) {
-        const kw = filterState.keyword.toLowerCase().trim()
-        const matchTitle = p.title.toLowerCase().includes(kw)
-        const matchDesc = p.desc.toLowerCase().includes(kw)
-        const matchKcn = p.kcn.toLowerCase().includes(kw)
-        if (!matchTitle && !matchDesc && !matchKcn) return false
-      }
-      // Province
-      if (filterState.province !== 'Toàn Quốc' && p.province !== filterState.province) {
-        return false
-      }
-      // Bãi kho / KCN
-      if (filterState.kcn !== 'Tất cả bãi kho' && filterState.kcn !== 'Tất cả KCN' && p.kcn !== filterState.kcn) {
-        return false
-      }
-      // Price range
-      if (p.price < filterState.minPrice || p.price > filterState.maxPrice) {
-        return false
-      }
-      return true
-    })
-    .sort((a, b) => {
-      if (filterState.sortBy === 'price-asc') return a.price - b.price
-      if (filterState.sortBy === 'price-desc') return b.price - a.price
-      return 0 // Default newest
-    })
-
-  // CRUD Properties
-  const addProperty = (
-    propertyData: Omit<Property, 'id' | 'created'>,
-    triggerEmail = true
-  ) => {
-    const now = new Date()
-    const timeStr = `${now.toLocaleTimeString('vi-VN')} ${now.toLocaleDateString('vi-VN')}`
+  // Properties CRUD
+  const addProperty = (property: Omit<Property, 'id' | 'created'>, triggerEmail = true) => {
+    const newId = 'prop-' + Date.now()
     const newProp: Property = {
-      ...propertyData,
-      id: 'prop-' + Date.now(),
-      created: timeStr,
+      ...property,
+      id: newId,
+      created: 'Vừa xong',
       emailNotified: triggerEmail,
     }
-
     setProperties((prev) => [newProp, ...prev])
 
     if (!ENV.USE_MOCK_API) {
-      propertyApi.createProperty({ ...propertyData, triggerEmail }).catch((err) => {
+      propertyApi.createProperty({ ...property, triggerEmail }).catch((err) => {
         console.warn('API sync warning:', err.message)
       })
     }
 
     if (triggerEmail) {
       showToast(
-        `✉️ <b>Email Broadcast:</b> Đã phát hành bản tin email kèm video drone và thông số nhà xưởng!`,
+        `Đã kích hoạt <b>Email Broadcast Real-time:</b> Thông báo sản phẩm mới tới các khách hàng quan tâm!`,
         'email'
       )
+    } else {
+      showToast('Đã đăng tin mới thành công!', 'success')
     }
   }
 
   const updateProperty = (id: string | number, updated: Partial<Property>, triggerBroadcast = false) => {
     setProperties((prev) =>
-      prev.map((item) => (String(item.id) === String(id) ? { ...item, ...updated } : item))
+      prev.map((p) => (String(p.id) === String(id) ? { ...p, ...updated } : p))
     )
 
     if (!ENV.USE_MOCK_API) {
@@ -318,11 +356,11 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 
     if (triggerBroadcast) {
       showToast(
-        `✉️ <b>Email Broadcast:</b> Đã thông báo cập nhật giá & mặt bằng tới các nhà đầu tư quan tâm!`,
+        `Đã gửi Email thông báo cập nhật giá & mặt bằng tới các khách hàng quan tâm!`,
         'email'
       )
     } else {
-      showToast('Đã lưu cập nhật thông tin mặt hàng thành công')
+      showToast('Đã lưu cập nhật thông tin thành công')
     }
   }
 
@@ -336,7 +374,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     showToast('Đã xóa mặt hàng khỏi hệ thống')
   }
 
-  // Categories
+  // Categories CRUD
   const addCategory = (cat: Category) => {
     setCategories((prev) => [...prev, cat])
     if (!ENV.USE_MOCK_API) {
@@ -347,14 +385,24 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     showToast(`Đã thêm danh mục mới: ${cat.name}`)
   }
 
-  const deleteCategory = (code: string) => {
-    if (['SALE', 'RENT', 'KCN_PROJECT', 'RECYCLED_STEEL'].includes(code)) {
-      alert('Không thể xóa danh mục hệ thống cốt lõi!')
-      return
-    }
-    setCategories((prev) => prev.filter((c) => c.code !== code))
+  const updateCategory = (id: number, cat: Partial<Category>) => {
+    setCategories((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...cat } : c))
+    )
     if (!ENV.USE_MOCK_API) {
-      propertyApi.deleteCategory(code).catch((err) => {
+      propertyApi.updateCategory(id, cat).catch((err) => {
+        console.warn('API sync warning:', err.message)
+      })
+    }
+    showToast('Đã cập nhật danh mục thành công')
+  }
+
+  const deleteCategory = (codeOrId: string | number) => {
+    setCategories((prev) =>
+      prev.filter((c) => String(c.id) !== String(codeOrId) && c.code !== String(codeOrId))
+    )
+    if (!ENV.USE_MOCK_API) {
+      propertyApi.deleteCategory(codeOrId).catch((err) => {
         console.warn('API sync warning:', err.message)
       })
     }
@@ -401,7 +449,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         console.warn('API sync warning:', err.message)
       })
     }
-    showToast(`🎉 Cảm ơn bạn! Đã đăng ký nhận bản tin qua ${sub.channel.toUpperCase()} thành công.`, 'success')
+    showToast(`Cảm ơn bạn! Đã đăng ký nhận bản tin qua ${sub.channel.toUpperCase()} thành công.`, 'success')
   }
 
   // Modals
@@ -436,6 +484,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         deleteProperty,
         categories,
         addCategory,
+        updateCategory,
         deleteCategory,
         notices,
         activeNoticeText,

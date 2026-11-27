@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MÔ HÌNH 3D KẾT CẤU NHÀ XƯỞNG 24M x 84M (THEO BẢN VẼ CHUẨN)</title>
+    <!-- Three.js + OrbitControls + FontAwesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-canvas: #f8fafc;
+            --bg-card: rgba(255, 255, 255, 0.94);
+            --border: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary-orange: #ea580c;
+            --accent-blue: #0284c7;
+            --accent-green: #16a34a;
+            --concrete-color: #64748b;
+        }
+
+        body.dark-mode {
+            --bg-canvas: #090d16;
+            --bg-card: rgba(15, 23, 42, 0.94);
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary-orange: #f97316;
+            --accent-blue: #38bdf8;
+            --accent-green: #22c55e;
+            --concrete-color: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            transition: background-color 0.3s;
+        }
+
+        #webgl-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .header-bar {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            padding: 12px 24px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            pointer-events: auto;
+        }
+
+        .header-bar .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-bar .logo-icon {
+            font-size: 26px;
+            color: var(--primary-orange);
+        }
+
+        .header-bar h1 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 0.3px;
+        }
+
+        .header-bar p {
+            font-size: 12px;
+            color: var(--accent-blue);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-action {
+            background: rgba(241, 245, 249, 0.9);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 7px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        body.dark-mode .btn-action {
+            background: rgba(30, 41, 59, 0.85);
+            border-color: #475569;
+            color: #e2e8f0;
+        }
+
+        .btn-action:hover {
+            background: var(--primary-orange);
+            color: #ffffff;
+            border-color: var(--primary-orange);
+            transform: translateY(-1px);
+        }
+
+        .glass-panel {
+            position: absolute;
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            color: var(--text-main);
+        }
+
+        .panel-specs {
+            top: 90px;
+            left: 20px;
+            width: 380px;
+            max-height: calc(100vh - 110px);
+            overflow-y: auto;
+            padding: 20px;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+
+        .panel-specs.collapsed {
+            transform: translateX(-430px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .panel-specs::-webkit-scrollbar {
+            width: 5px;
+        }
+        .panel-specs::-webkit-scrollbar-thumb {
+            background: var(--primary-orange);
+            border-radius: 4px;
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            margin-bottom: 14px;
+        }
+
+        .spec-table tr {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        body.dark-mode .spec-table tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .spec-table td {
+            padding: 7px 4px;
+        }
+
+        .spec-table td:first-child {
+            color: var(--text-muted);
+            width: 46%;
+        }
+
+        .spec-table td:last-child {
+            color: var(--text-main);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .badge-callout {
+            background: rgba(234, 88, 12, 0.1);
+            border-left: 4px solid var(--primary-orange);
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.45;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        .badge-callout b {
+            color: var(--primary-orange);
+        }
+
+        .btn-floating-open {
+            position: absolute;
+            top: 90px;
+            left: 20px;
+            z-index: 15;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--primary-orange);
+            color: var(--primary-orange);
+            padding: 10px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(234, 88, 12, 0.25);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+
+        .btn-floating-open:hover {
+            background: var(--primary-orange);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .panel-controls {
+            top: 90px;
+            right: 20px;
+            width: 290px;
+            padding: 18px;
+        }
+
+        .ctrl-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: rgba(241, 245, 249, 0.85);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11.5px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        body.dark-mode .btn-ctrl {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: #334155;
+            color: #cbd5e1;
+        }
+
+        .btn-ctrl:hover {
+            background: var(--primary-orange);
+            color: #ffffff;
+            border-color: var(--primary-orange);
+            transform: translateX(3px);
+        }
+
+        .btn-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 7px 12px;
+            margin-bottom: 5px;
+            background: rgba(241, 245, 249, 0.6);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11.5px;
+            transition: all 0.2s;
+        }
+
+        body.dark-mode .btn-toggle {
+            background: rgba(30, 41, 59, 0.5);
+            border-color: #334155;
+            color: #94a3b8;
+        }
+
+        .btn-toggle.active {
+            background: rgba(234, 88, 12, 0.12);
+            border-color: var(--primary-orange);
+            color: var(--primary-orange);
+            font-weight: 600;
+        }
+
+        .color-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 11.5px;
+        }
+
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        /* 3D Floating Leader Annotation Labels */
+        .annotation-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+
+        .annotation-pin {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.96);
+            color: #0f172a;
+            border: 1.5px solid var(--primary-orange);
+            padding: 5px 11px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transform: translate(-50%, -100%);
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        body.dark-mode .annotation-pin {
+            background: rgba(15, 23, 42, 0.95);
+            color: #f8fafc;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .annotation-pin:hover {
+            background: var(--primary-orange);
+            color: #ffffff;
+            transform: translate(-50%, -115%) scale(1.08);
+            border-color: #ffffff;
+        }
+
+        .annotation-pin::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px 6px 0;
+            border-style: solid;
+            border-color: var(--primary-orange) transparent transparent;
+        }
+
+        .hud-bottom {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 8px 24px;
+            border-radius: 30px;
+            display: flex;
+            gap: 18px;
+            font-size: 12px;
+            color: var(--text-muted);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .hud-bottom b {
+            color: var(--primary-orange);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div id="webgl-container"></div>
+    <div class="annotation-container" id="annotation-layer"></div>
+
+    <div class="header-bar">
+        <div class="brand-info">
+            <i class="fa-solid fa-industry logo-icon"></i>
+            <div>
+                <h1>KẾT CẤU THÉP NHÀ XƯỞNG 24M x 84M (14 GIAN x 6M)</h1>
+                <p>Khung Sơn Cam Chuẩn • Kèo 650x300 • Cột I500 • Móng Cổ Cột Bê Tông • Giằng Ống D114</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-action" onclick="toggleSpecsPanel()" title="Thu gọn / Tạm tắt bảng thông số (Phím T)">
+                <i class="fa-solid fa-table-list"></i>
+                <span id="btn-text-specs">Tắt Bảng Thông Số</span>
+            </button>
+            <button class="btn-action" onclick="toggleAnnotations()" title="Bật / Tắt nhãn chú thích 3D (Phím A)">
+                <i class="fa-solid fa-tags"></i>
+                <span id="btn-text-anno">Bật/Tắt Chú Thích</span>
+            </button>
+            <button class="btn-action" onclick="toggleTheme()" title="Đổi màu nền sáng / tối (Phím C)">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+                <span id="btn-text-theme">Nền Sáng/Tối</span>
+            </button>
+            <button class="btn-action" onclick="toggleZenMode()" title="Toàn màn hình không vướng bảng (Phím Z)">
+                <i class="fa-solid fa-expand"></i>
+                <span id="btn-text-zen">Toàn Màn Hình</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Nút mở lại bảng thông số khi đang bị tắt -->
+    <button id="btn-show-specs" class="btn-floating-open" onclick="toggleSpecsPanel()" style="display:none;" title="Nhấn để mở lại bảng thông số (Phím T)">
+        <i class="fa-solid fa-table-list"></i>
+        <span>Hiện Bảng Thông Số Kỹ Thuật</span>
+        <i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>
+    </button>
+
+    <div class="glass-panel panel-specs" id="panel-specs">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+            <h2 style="font-size:14px; font-weight:700; color:var(--primary-orange); margin:0;">
+                <i class="fa-solid fa-circle-check"></i> THÔNG SỐ KẾT CẤU CHUẨN BẢN VẼ
+            </h2>
+            <button class="btn-action" style="padding:3px 8px; font-size:11px;" onclick="toggleSpecsPanel()">
+                <i class="fa-solid fa-xmark"></i> Tắt
+            </button>
+        </div>
+
+        <div class="badge-callout">
+            <b><i class="fa-solid fa-cubes"></i> ĐẶC ĐIỂM KẾT CẤU Y HỆT HÌNH MINH HỌA:</b><br>
+            • Khung thép chính sơn <b>MÀU CAM CÔNG NGHIỆP</b> nổi bật.<br>
+            • Chân cột đặt trên <b>MÓNG CỔ CỘT BÊ TÔNG</b> vững chắc.<br>
+            • <b>KÈO 650x300</b> (cánh 8 ly, bụng 6 ly) vát nách.<br>
+            • <b>CỘT I500</b> (cánh 12 ly, bụng 8 ly) cao 9m.<br>
+            • <b>GIẰNG ỐNG Ø114x2.5 LY</b> (2 lần) + giằng chéo chữ X.<br>
+            • <b>XÀ GỒ MÁI C150</b> (20 đường) & <b>XÀ GỒ VÁCH C120</b> (4 tầng).
+        </div>
+
+        <table class="spec-table">
+            <tr><td>Kích thước mặt bằng:</td><td><b>24.0m x 84.0m</b> (2,016 m²)</td></tr>
+            <tr><td>Bước gian dọc nhà:</td><td><b>14 gian x 6.0m = 84m</b> (15 khung)</td></tr>
+            <tr><td>Khẩu độ thông thủy:</td><td><b>Rộng 24m</b> không cột giữa</td></tr>
+            <tr><td>Chiều cao cột:</td><td><b>Cao cột 9m</b> (FL+9.000m)</td></tr>
+            <tr><td>Tổng chiều cao đỉnh nóc:</td><td><b>Tổng cao ~10m</b> (FL+10.000m)</td></tr>
+            <tr><td>Quy cách kèo chính:</td><td><b>Kèo 650x300</b> (Cánh 8 ly, bụng 6 ly)</td></tr>
+            <tr><td>Quy cách cột chính:</td><td><b>Cột I500</b> (Cánh 12 ly, bụng 8 ly)</td></tr>
+            <tr><td>Móng chân cột:</td><td><b>Móng cổ cột bê tông</b> (0.8x0.8m)</td></tr>
+            <tr><td>Xà gồ mái:</td><td><b>Thép C150</b> (gồm 2 xà gồ nóc đỉnh)</td></tr>
+            <tr><td>Xà gồ vách:</td><td><b>Thép C120</b> (4 tầng chạy dọc hông)</td></tr>
+            <tr><td>Hệ giằng ống:</td><td><b>Ống Ø114 x 2.5 ly</b> (2 tầng cao)</td></tr>
+            <tr><td>Hệ giằng chéo:</td><td><b>Giằng chéo chữ X</b> (gian 1, 7, 14)</td></tr>
+        </table>
+
+        <div class="color-legend">
+            <div class="color-item"><span class="color-dot" style="background:#ea580c;"></span> Kèo 650x300 & Cột I500</div>
+            <div class="color-item"><span class="color-dot" style="background:#64748b;"></span> Móng cổ cột bê tông</div>
+            <div class="color-item"><span class="color-dot" style="background:#94a3b8;"></span> Xà gồ mái C150</div>
+            <div class="color-item"><span class="color-dot" style="background:#94a3b8;"></span> Xà gồ vách C120</div>
+            <div class="color-item"><span class="color-dot" style="background:#ea580c;"></span> Giằng ống & chéo X</div>
+            <div class="color-item"><span class="color-dot" style="background:#f59e0b;"></span> Bản mã bu lông liên kết</div>
+        </div>
+    </div>
+
+    <div class="glass-panel panel-controls">
+        <div class="ctrl-title"><i class="fa-solid fa-camera"></i> Góc Nhìn Cài Đặt Sẵn</div>
+        <button class="btn-ctrl" onclick="flyCam(48, 28, -62, 0, 5, 0)"><i class="fa-solid fa-image"></i> 1. Phối Cảnh Y Như Hình Vẽ</button>
+        <button class="btn-ctrl" onclick="flyCam(0, 10, -56, 0, 6, -30)"><i class="fa-solid fa-door-open"></i> 2. Mặt Tiền Đầu Hồi 24M</button>
+        <button class="btn-ctrl" onclick="flyCam(28, 7, 0, 0, 6, 0)"><i class="fa-solid fa-drafting-compass"></i> 3. Khung Kèo 24m (650x300)</button>
+        <button class="btn-ctrl" onclick="flyCam(14, 2.5, -36, 12, 1, -42)"><i class="fa-solid fa-cube"></i> 4. Móng Cổ Cột Bê Tông</button>
+        <button class="btn-ctrl" onclick="flyCam(15, 6, -38, 12, 5, -42)"><i class="fa-solid fa-arrows-split-up-and-left"></i> 5. Giằng Ống D114 & Chéo X</button>
+        <button class="btn-ctrl" onclick="flyCam(0, 12.5, -20, 0, 10, -26)"><i class="fa-solid fa-bars"></i> 6. Hai Xà Gồ Đỉnh Nóc C150</button>
+        <button class="btn-ctrl" onclick="flyCam(0, 75, 0, 0, 0, 0)"><i class="fa-solid fa-map"></i> 7. Mặt Bằng Nhìn Từ Trên Xuống</button>
+
+        <div class="ctrl-title" style="margin-top:12px;"><i class="fa-solid fa-layer-group"></i> Bóc Tách Kết Cấu</div>
+        <button class="btn-toggle active" id="btn-frames" onclick="toggleLayer('frames')">
+            <span><i class="fa-solid fa-industry"></i> Khung Cam (Cột I500 & Kèo)</span>
+            <i class="fa-solid fa-check"></i>
+        </button>
+        <button class="btn-toggle active" id="btn-foundations" onclick="toggleLayer('foundations')">
+            <span><i class="fa-solid fa-cube"></i> Móng Cổ Cột Bê Tông</span>
+            <i class="fa-solid fa-check"></i>
+        </button>
+        <button class="btn-toggle active" id="btn-purlin" onclick="toggleLayer('purlin')">
+            <span><i class="fa-solid fa-bars"></i> Xà Gồ Mái C150 (2 Nóc)</span>
+            <i class="fa-solid fa-check"></i>
+        </button>
+        <button class="btn-toggle active" id="btn-walls" onclick="toggleLayer('walls')">
+            <span><i class="fa-solid fa-border-all"></i> Xà Gồ Vách C120</span>
+            <i class="fa-solid fa-check"></i>
+        </button>
+        <button class="btn-toggle active" id="btn-pipe" onclick="toggleLayer('pipe')">
+            <span><i class="fa-solid fa-circle-dot"></i> Giằng Ống D114 & Chéo X</span>
+            <i class="fa-solid fa-check"></i>
+        </button>
+        <button class="btn-toggle" id="btn-roof" onclick="toggleLayer('roof')">
+            <span><i class="fa-solid fa-sheet-plastic"></i> Mái Tôn (Mặc định ẩn)</span>
+            <i class="fa-solid fa-check"></i>
+        </button>
+
+        <button class="btn-ctrl" id="btn-rotate" style="margin-top:10px;" onclick="toggleAutoRotate()"><i class="fa-solid fa-arrows-rotate"></i> 🔄 Tự Động Xoay</button>
+    </div>
+
+    <div class="hud-bottom">
+        <span>Khẩu độ: <b>Rộng 24m</b></span>
+        <span>Chiều dài: <b>Dài 84m (14 gian x 6m)</b></span>
+        <span>Chiều cao: <b>Cao cột 9m / Tổng cao ~10m</b></span>
+        <span>Kèo: <b>650x300</b></span>
+        <span>Cột: <b>I500</b></span>
+    </div>
+
+    <script>
+        let scene, camera, renderer, controls;
+        let groupFrames, groupFoundations, groupPurlins, groupWalls, groupPipe, groupRoof, groupDims;
+        let sunLight, ambientLight;
+        let labels = [];
+        let showAnnotations = true;
+
+        function initScene() {
+            const container = document.getElementById('webgl-container');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf8fafc);
+            scene.fog = new THREE.FogExp2(0xf8fafc, 0.005);
+
+            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+            // Camera position matching exact image angle
+            camera.position.set(48, 28, -62);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.15;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 - 0.01;
+            controls.minDistance = 5;
+            controls.maxDistance = 260;
+            controls.target.set(0, 5, 0);
+
+            setupLights();
+            buildMaterials();
+            buildFactoryModel();
+            create3DAnnotations();
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function setupLights() {
+            sunLight = new THREE.DirectionalLight(0xfffaed, 1.35);
+            sunLight.position.set(45, 65, -35);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 10;
+            sunLight.shadow.camera.far = 200;
+            sunLight.shadow.camera.left = -55;
+            sunLight.shadow.camera.right = 55;
+            sunLight.shadow.camera.top = 55;
+            sunLight.shadow.camera.bottom = -55;
+            scene.add(sunLight);
+
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+        }
+
+        let matSteelOrange, matConcreteFooting, matPurlinSilver, matGirtSilver, matBraceOrange, matPlateGold, matRoofBlue, matFloor;
+
+        function buildMaterials() {
+            // Iconic Safety Industrial Orange
+            matSteelOrange = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.35, metalness: 0.65 });
+            // Concrete grey for footings
+            matConcreteFooting = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.85, metalness: 0.1 });
+            // Silver galvanized steel for purlins and girts
+            matPurlinSilver = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.45, metalness: 0.7 });
+            matGirtSilver = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.45, metalness: 0.7 });
+            matBraceOrange = new THREE.MeshStandardMaterial({ color: 0xc2410c, roughness: 0.4, metalness: 0.7 });
+            matPlateGold = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3, metalness: 0.85 });
+            matRoofBlue = new THREE.MeshStandardMaterial({ color: 0x0080ff, roughness: 0.35, metalness: 0.1, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+            matFloor = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9, metalness: 0.05 });
+        }
+
+        function createExtrudeGeom(pts, depth) {
+            const shape = new THREE.Shape();
+            shape.moveTo(pts[0][0], pts[0][1]);
+            for (let i = 1; i < pts.length; i++) {
+                shape.lineTo(pts[i][0], pts[i][1]);
+            }
+            shape.closePath();
+            const extrudeSettings = {
+                steps: 1,
+                depth: depth,
+                bevelEnabled: true,
+                bevelThickness: 0.006,
+                bevelSize: 0.006,
+                bevelSegments: 2
+            };
+            const geom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            geom.translate(0, 0, -depth / 2);
+            return geom;
+        }
+
+        function buildFactoryModel() {
+            groupFrames = new THREE.Group();
+            groupFoundations = new THREE.Group();
+            groupPurlins = new THREE.Group();
+            groupWalls = new THREE.Group();
+            groupPipe = new THREE.Group();
+            groupRoof = new THREE.Group();
+            groupDims = new THREE.Group();
+
+            const spanW = 24.0;
+            const halfW = 12.0;
+            const lengthL = 84.0;
+            const halfL = 42.0;
+            const bayL = 6.0;
+            const numFrames = 15;
+            const hCol = 9.0;
+            const hRidge = 10.0; // Peak ~10m matching diagram label
+
+            // 1. Concrete Ground Floor Slab
+            const slabGeo = new THREE.BoxGeometry(26.0, 0.15, 86.0);
+            const slabMesh = new THREE.Mesh(slabGeo, matFloor);
+            slabMesh.position.set(0, -0.075, 0);
+            slabMesh.receiveShadow = true;
+            scene.add(slabMesh);
+
+            const gridHelper = new THREE.GridHelper(90, 30, 0x94a3b8, 0xe2e8f0);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+
+            function createBeam(p1, p2, depth, width, mat) {
+                const v1 = new THREE.Vector3(...p1);
+                const v2 = new THREE.Vector3(...p2);
+                const dir = new THREE.Vector3().subVectors(v2, v1);
+                const len = dir.length();
+                if (len < 0.001) return null;
+
+                const beamGeo = new THREE.BoxGeometry(width, depth, len);
+                const mesh = new THREE.Mesh(beamGeo, mat);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+
+                mesh.position.addVectors(v1, v2).multiplyScalar(0.5);
+                mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir.clone().normalize());
+                return mesh;
+            }
+
+            function createPipe(p1, p2, radius, mat) {
+                const v1 = new THREE.Vector3(...p1);
+                const v2 = new THREE.Vector3(...p2);
+                const dir = new THREE.Vector3().subVectors(v2, v1);
+                const len = dir.length();
+                if (len < 0.001) return null;
+
+                const cylGeo = new THREE.CylinderGeometry(radius, radius, len, 16);
+                const mesh = new THREE.Mesh(cylGeo, mat);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+
+                mesh.position.addVectors(v1, v2).multiplyScalar(0.5);
+                mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+                return mesh;
+            }
+
+            // ============================================================
+            // 2. MÓNG CỔ CỘT BÊ TÔNG (Concrete Footing Pedestals)
+            // ============================================================
+            const geomPedestal = new THREE.BoxGeometry(0.70, 0.40, 0.70);
+            const geomFootingPad = new THREE.BoxGeometry(0.95, 0.15, 0.95);
+
+            function addFooting(x, z) {
+                const pad = new THREE.Mesh(geomFootingPad, matConcreteFooting);
+                pad.position.set(x, 0.075, z);
+                pad.castShadow = true;
+                pad.receiveShadow = true;
+                groupFoundations.add(pad);
+
+                const ped = new THREE.Mesh(geomPedestal, matConcreteFooting);
+                ped.position.set(x, 0.35, z);
+                ped.castShadow = true;
+                ped.receiveShadow = true;
+                groupFoundations.add(ped);
+
+                // Bản mã chân đế thép
+                const bp = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.025, 0.40), matPlateGold);
+                bp.position.set(x, 0.56, z);
+                groupFoundations.add(bp);
+            }
+
+            // ============================================================
+            // 3. KHUNG KÈO 650x300 & CỘT I500 (15 Khung Sơn Cam)
+            // ============================================================
+            // Cột I500: Chân 350mm vát to ra 650mm ở đầu cột nối kèo
+            const colLeftPts = [
+                [-halfW, 0.55],
+                [-halfW + 0.35, 0.55],
+                [-halfW + 0.65, 8.35],
+                [-halfW, hCol]
+            ];
+            const geomColLeft = createExtrudeGeom(colLeftPts, 0.20);
+
+            const colRightPts = [
+                [halfW, 0.55],
+                [halfW, hCol],
+                [halfW - 0.65, 8.35],
+                [halfW - 0.35, 0.55]
+            ];
+            const geomColRight = createExtrudeGeom(colRightPts, 0.20);
+
+            // Kèo 650x300 (cánh 8 ly, bụng 6 ly): nách 650mm về đỉnh nóc 300mm
+            const rafterLeftPts = [
+                [-halfW, hCol],
+                [-halfW + 0.65, 8.35],
+                [0.0, hRidge - 0.30],
+                [0.0, hRidge]
+            ];
+            const geomRafterLeft = createExtrudeGeom(rafterLeftPts, 0.18);
+
+            const rafterRightPts = [
+                [0.0, hRidge],
+                [0.0, hRidge - 0.30],
+                [halfW - 0.65, 8.35],
+                [halfW, hCol]
+            ];
+            const geomRafterRight = createExtrudeGeom(rafterRightPts, 0.18);
+
+            // Bản mã nách liên kết bu lông
+            const kneePlateLeftPts = [
+                [-halfW - 0.01, hCol + 0.01],
+                [-halfW + 0.66, 8.34],
+                [-halfW + 0.64, 8.36],
+                [-halfW + 0.01, hCol + 0.03]
+            ];
+            const geomKneePlateLeft = createExtrudeGeom(kneePlateLeftPts, 0.22);
+
+            const kneePlateRightPts = [
+                [halfW + 0.01, hCol + 0.01],
+                [halfW - 0.01, hCol + 0.03],
+                [halfW - 0.64, 8.36],
+                [halfW - 0.66, 8.34]
+            ];
+            const geomKneePlateRight = createExtrudeGeom(kneePlateRightPts, 0.22);
+
+            for (let f = 0; f < numFrames; f++) {
+                const z = -halfL + f * bayL;
+                
+                // Móng cổ cột 2 bên
+                addFooting(-halfW + 0.175, z);
+                addFooting(halfW - 0.175, z);
+
+                // Khung chính sơn cam
+                const mColL = new THREE.Mesh(geomColLeft, matSteelOrange);
+                mColL.position.z = z;
+                mColL.castShadow = true;
+                groupFrames.add(mColL);
+
+                const mColR = new THREE.Mesh(geomColRight, matSteelOrange);
+                mColR.position.z = z;
+                mColR.castShadow = true;
+                groupFrames.add(mColR);
+
+                const mRafL = new THREE.Mesh(geomRafterLeft, matSteelOrange);
+                mRafL.position.z = z;
+                mRafL.castShadow = true;
+                groupFrames.add(mRafL);
+
+                const mRafR = new THREE.Mesh(geomRafterRight, matSteelOrange);
+                mRafR.position.z = z;
+                mRafR.castShadow = true;
+                groupFrames.add(mRafR);
+
+                const mKneeL = new THREE.Mesh(geomKneePlateLeft, matPlateGold);
+                mKneeL.position.z = z;
+                groupFrames.add(mKneeL);
+
+                const mKneeR = new THREE.Mesh(geomKneePlateRight, matPlateGold);
+                mKneeR.position.z = z;
+                groupFrames.add(mKneeR);
+            }
+
+            // Cột phụ đầu hồi mặt tiền (Front Gable) theo hình ảnh:
+            // Cột phụ ở x = -6.0m (với móng bê tông)
+            addFooting(-6.0, -halfL);
+            const colFrontMid1 = createBeam([-6.0, 0.55, -halfL], [-6.0, 9.50, -halfL], 0.30, 0.18, matSteelOrange);
+            if (colFrontMid1) groupFrames.add(colFrontMid1);
+
+            // Cột phụ đỉnh nóc x = 0.0m
+            addFooting(0.0, -halfL);
+            const colFrontMid2 = createBeam([0.0, 0.55, -halfL], [0.0, hRidge, -halfL], 0.30, 0.18, matSteelOrange);
+            if (colFrontMid2) groupFrames.add(colFrontMid2);
+
+            // ============================================================
+            // 4. XÀ GỒ MÁI C150 (20 đường chạy suốt 84m)
+            // ============================================================
+            const numPurlinsPerSide = 10;
+            for (let i = 0; i < numPurlinsPerSide; i++) {
+                const ratio = i / (numPurlinsPerSide - 1);
+
+                // Mái trái: từ giọt nước x = -12.0m đến xà gồ nóc trái x = -0.20m
+                const xL = -halfW + ratio * (halfW - 0.20);
+                const yL = hCol + (1.0 - Math.abs(xL) / halfW) * (hRidge - hCol) + 0.08;
+                groupPurlins.add(createBeam([xL, yL, -halfL - 0.5], [xL, yL, halfL + 0.5], 0.15, 0.06, matPurlinSilver));
+
+                // Mái phải: từ giọt nước x = +12.0m đến xà gồ nóc phải x = +0.20m
+                const xR = halfW - ratio * (halfW - 0.20);
+                const yR = hCol + (1.0 - Math.abs(xR) / halfW) * (hRidge - hCol) + 0.08;
+                groupPurlins.add(createBeam([xR, yR, -halfL - 0.5], [xR, yR, halfL + 0.5], 0.15, 0.06, matPurlinSilver));
+            }
+
+            // ============================================================
+            // 5. XÀ GỒ VÁCH C120 (4 tầng chạy dọc hông theo hình ảnh)
+            // ============================================================
+            const girtHeights = [2.2, 4.4, 6.6, 8.8];
+            girtHeights.forEach(gh => {
+                // Vách 2 bên hông (x = -12.0m & +12.0m)
+                groupWalls.add(createBeam([-halfW - 0.06, gh, -halfL], [-halfW - 0.06, gh, halfL], 0.12, 0.05, matGirtSilver));
+                groupWalls.add(createBeam([halfW + 0.06, gh, -halfL], [halfW + 0.06, gh, halfL], 0.12, 0.05, matGirtSilver));
+            });
+            // Xà gồ vách đầu hồi phía trước (khoang x = -12m đến -6m)
+            girtHeights.forEach(gh => {
+                groupWalls.add(createBeam([-halfW, gh, -halfL - 0.06], [-6.0, gh, -halfL - 0.06], 0.12, 0.05, matGirtSilver));
+            });
+
+            // ============================================================
+            // 6. GIẰNG ỐNG Ø114 x 2.5 LY & GIẰNG CHÉO CHỮ X (Theo hình ảnh)
+            // ============================================================
+            // 2 tầng ống tròn Ø114 chạy dọc:
+            const pipeHeights = [4.5, 8.95];
+            pipeHeights.forEach(lvl => {
+                groupPipe.add(createPipe([-halfW, lvl, -halfL], [-halfW, lvl, halfL], 0.057, matBraceOrange));
+                groupPipe.add(createPipe([halfW, lvl, -halfL], [halfW, lvl, halfL], 0.057, matBraceOrange));
+            });
+
+            // Giằng chéo chữ X (X-Bracing) tại các gian giằng (Gian 1, Gian 7, Gian 14)
+            // CHỈ 1 GIẰNG DUY NHẤT TRONG 1 BƯỚC GIAN (ở khoang dưới từ 0.6m đến 4.5m)
+            // Khoang trên từ 4.5m đến 8.95m (vị trí khoang đỏ) đã loại bỏ hoàn toàn theo đúng yêu cầu!
+            const braceBays = [0, 6, 13];
+            braceBays.forEach(b => {
+                const z1 = -halfL + b * bayL;
+                const z2 = z1 + bayL;
+
+                // Vách trái: 1 giằng chữ X duy nhất ở khoang dưới (0.6m -> 4.5m)
+                groupPipe.add(createPipe([-halfW, 0.6, z1], [-halfW, 4.5, z2], 0.016, matBraceOrange));
+                groupPipe.add(createPipe([-halfW, 0.6, z2], [-halfW, 4.5, z1], 0.016, matBraceOrange));
+
+                // Vách phải: 1 giằng chữ X duy nhất ở khoang dưới (0.6m -> 4.5m)
+                groupPipe.add(createPipe([halfW, 0.6, z1], [halfW, 4.5, z2], 0.016, matBraceOrange));
+                groupPipe.add(createPipe([halfW, 0.6, z2], [halfW, 4.5, z1], 0.016, matBraceOrange));
+            });
+
+            // Giằng chéo đầu hồi mặt tiền (khoang x = -12m đến -6m): CHỈ 1 GIẰNG X DUY NHẤT ở khoang dưới
+            groupPipe.add(createPipe([-halfW, 0.6, -halfL], [-6.0, 4.5, -halfL], 0.016, matBraceOrange));
+            groupPipe.add(createPipe([-6.0, 0.6, -halfL], [-halfW, 4.5, -halfL], 0.016, matBraceOrange));
+
+            // ============================================================
+            // 7. ĐƯỜNG GIÓNG KÍCH THƯỚC 3D (3D Dimension Lines)
+            // ============================================================
+            const matDimLine = new THREE.LineBasicMaterial({ color: 0x0284c7, linewidth: 2 });
+
+            function createDimLine(p1, p2, tickLen = 0.4) {
+                const geom = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(...p1),
+                    new THREE.Vector3(...p2)
+                ]);
+                return new THREE.Line(geom, matDimLine);
+            }
+
+            // Đường gióng kích thước "Rộng 24m" ở mặt tiền
+            groupDims.add(createDimLine([-halfW, 0.2, -halfL - 3.5], [halfW, 0.2, -halfL - 3.5]));
+            groupDims.add(createDimLine([-halfW, 0.2, -halfL], [-halfW, 0.2, -halfL - 4.0]));
+            groupDims.add(createDimLine([halfW, 0.2, -halfL], [halfW, 0.2, -halfL - 4.0]));
+
+            // Đường gióng kích thước "Dài 84m (14 gian x 6m)" dọc hông phải
+            groupDims.add(createDimLine([halfW + 4.0, 0.2, -halfL], [halfW + 4.0, 0.2, halfL]));
+            for (let f = 0; f < numFrames; f++) {
+                const z = -halfL + f * bayL;
+                groupDims.add(createDimLine([halfW + 3.5, 0.2, z], [halfW + 4.5, 0.2, z]));
+            }
+
+            // Đường gióng "Cao cột 9m" và "Tổng cao ~10m" bên trái
+            groupDims.add(createDimLine([-halfW - 3.5, 0, -halfL], [-halfW - 3.5, hCol, -halfL]));
+            groupDims.add(createDimLine([-halfW - 4.8, 0, -halfL], [-halfW - 4.8, hRidge, -halfL]));
+
+            scene.add(groupFrames);
+            scene.add(groupFoundations);
+            scene.add(groupPurlins);
+            scene.add(groupWalls);
+            scene.add(groupPipe);
+            scene.add(groupDims);
+        }
+
+        // ============================================================
+        // 8. TẠO NHÃN CHÚ THÍCH 3D (Leader Callout Annotations)
+        // ============================================================
+        function create3DAnnotations() {
+            const container = document.getElementById('annotation-layer');
+            const annoData = [
+                { text: "Kèo 650x300 (cánh 8 ly, bụng 6 ly)", pos: new THREE.Vector3(-6.0, 9.6, -42.0), icon: "fa-drafting-compass" },
+                { text: "Cột I500 (cánh 12 ly, bụng 8 ly) cao 9m", pos: new THREE.Vector3(12.0, 5.0, -42.0), icon: "fa-arrows-up-down" },
+                { text: "Xà gồ mái C150", pos: new THREE.Vector3(5.0, 9.8, -30.0), icon: "fa-bars" },
+                { text: "Xà gồ vách C120", pos: new THREE.Vector3(12.2, 4.4, -20.0), icon: "fa-border-all" },
+                { text: "Móng cổ cột bê tông", pos: new THREE.Vector3(12.0, 0.4, -42.0), icon: "fa-cube" },
+                { text: "Giằng ống Ø114 x 2.5 ly (2 lần)", pos: new THREE.Vector3(12.0, 4.5, -39.0), icon: "fa-circle-dot" },
+                { text: "Rộng 24m", pos: new THREE.Vector3(0.0, 0.3, -45.5), icon: "fa-arrows-left-right" },
+                { text: "Cao cột 9m", pos: new THREE.Vector3(-15.5, 4.5, -42.0), icon: "fa-ruler-vertical" },
+                { text: "Tổng cao ~10m", pos: new THREE.Vector3(-16.8, 7.5, -42.0), icon: "fa-arrows-up-down" },
+                { text: "Dài 84m (14 gian x 6m)", pos: new THREE.Vector3(16.5, 0.3, 0.0), icon: "fa-ruler-horizontal" }
+            ];
+
+            annoData.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'annotation-pin';
+                el.innerHTML = `<i class="fa-solid ${item.icon}" style="color:var(--primary-orange);"></i> <span>${item.text}</span>`;
+                container.appendChild(el);
+                labels.push({ el: el, pos: item.pos });
+            });
+        }
+
+        function updateLabels() {
+            if (!showAnnotations) return;
+            labels.forEach(item => {
+                const tempV = item.pos.clone();
+                tempV.project(camera);
+                if (tempV.z > 1.0) {
+                    item.el.style.display = 'none';
+                    return;
+                }
+                item.el.style.display = 'flex';
+                const x = (tempV.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-(tempV.y * 0.5) + 0.5) * window.innerHeight;
+                item.el.style.transform = `translate(-50%, -100%) translate(${x}px, ${y}px)`;
+            });
+        }
+
+        function toggleAnnotations() {
+            showAnnotations = !showAnnotations;
+            document.getElementById('annotation-layer').style.display = showAnnotations ? 'block' : 'none';
+            groupDims.visible = showAnnotations;
+            const btnText = document.getElementById('btn-text-anno');
+            if (btnText) btnText.textContent = showAnnotations ? 'Ẩn Chú Thích' : 'Hiện Chú Thích';
+        }
+
+        let isDarkMode = false;
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            const bgColor = isDarkMode ? 0x090d16 : 0xf8fafc;
+            scene.background.set(bgColor);
+            scene.fog.color.set(bgColor);
+            sunLight.intensity = isDarkMode ? 1.5 : 1.35;
+            ambientLight.intensity = isDarkMode ? 0.45 : 0.7;
+        }
+
+        let isSpecsOpen = true;
+        function toggleSpecsPanel() {
+            const panel = document.getElementById('panel-specs');
+            const btnFloating = document.getElementById('btn-show-specs');
+            const btnText = document.getElementById('btn-text-specs');
+
+            isSpecsOpen = !isSpecsOpen;
+            if (isSpecsOpen) {
+                panel.classList.remove('collapsed');
+                btnFloating.style.display = 'none';
+                if (btnText) btnText.textContent = 'Tắt Bảng Thông Số';
+            } else {
+                panel.classList.add('collapsed');
+                btnFloating.style.display = 'flex';
+                if (btnText) btnText.textContent = 'Hiện Bảng Thông Số';
+            }
+        }
+
+        let isZenMode = false;
+        function toggleZenMode() {
+            const panelSpecs = document.getElementById('panel-specs');
+            const panelCtrl = document.querySelector('.panel-controls');
+            const hudBottom = document.querySelector('.hud-bottom');
+            const btnFloating = document.getElementById('btn-show-specs');
+            const btnTextZen = document.getElementById('btn-text-zen');
+
+            isZenMode = !isZenMode;
+            if (isZenMode) {
+                panelSpecs.classList.add('collapsed');
+                panelCtrl.style.display = 'none';
+                hudBottom.style.display = 'none';
+                btnFloating.style.display = 'flex';
+                if (btnTextZen) btnTextZen.textContent = 'Hiện Giao Diện';
+            } else {
+                panelCtrl.style.display = 'block';
+                hudBottom.style.display = 'flex';
+                if (isSpecsOpen) {
+                    panelSpecs.classList.remove('collapsed');
+                    btnFloating.style.display = 'none';
+                }
+                if (btnTextZen) btnTextZen.textContent = 'Toàn Màn Hình';
+            }
+        }
+
+        function toggleLayer(layer) {
+            let grp, btnId;
+            if (layer === 'frames') { grp = groupFrames; btnId = 'btn-frames'; }
+            if (layer === 'foundations') { grp = groupFoundations; btnId = 'btn-foundations'; }
+            if (layer === 'purlin') { grp = groupPurlins; btnId = 'btn-purlin'; }
+            if (layer === 'walls') { grp = groupWalls; btnId = 'btn-walls'; }
+            if (layer === 'pipe') { grp = groupPipe; btnId = 'btn-pipe'; }
+
+            if (grp) {
+                grp.visible = !grp.visible;
+                const btn = document.getElementById(btnId);
+                if (grp.visible) {
+                    btn.classList.add('active');
+                    btn.querySelector('.fa-check').style.opacity = '1';
+                } else {
+                    btn.classList.remove('active');
+                    btn.querySelector('.fa-check').style.opacity = '0.2';
+                }
+            }
+        }
+
+        let isAutoRotate = false;
+        function toggleAutoRotate() {
+            isAutoRotate = !isAutoRotate;
+            controls.autoRotate = isAutoRotate;
+            controls.autoRotateSpeed = 1.0;
+            const btn = document.getElementById('btn-rotate');
+            btn.style.background = isAutoRotate ? 'var(--primary-orange)' : '';
+            btn.style.color = isAutoRotate ? '#ffffff' : '';
+        }
+
+        function flyCam(x, y, z, tx, ty, tz) {
+            const startPos = camera.position.clone();
+            const endPos = new THREE.Vector3(x, y, z);
+            const startTar = controls.target.clone();
+            const endTar = new THREE.Vector3(tx, ty, tz);
+
+            let progress = 0;
+            const duration = 40;
+
+            function animateCam() {
+                progress++;
+                const t = progress / duration;
+                const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+                camera.position.lerpVectors(startPos, endPos, ease);
+                controls.target.lerpVectors(startTar, endTar, ease);
+                controls.update();
+
+                if (progress < duration) {
+                    requestAnimationFrame(animateCam);
+                }
+            }
+            animateCam();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            updateLabels();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 't' || e.key === 'T') toggleSpecsPanel();
+            if (e.key === 'a' || e.key === 'A') toggleAnnotations();
+            if (e.key === 'c' || e.key === 'C') toggleTheme();
+            if (e.key === 'z' || e.key === 'Z') toggleZenMode();
+        });
+
+        window.onload = () => {
+            initScene();
+            animate();
+        };
+    </script>
+</body>
+</html>

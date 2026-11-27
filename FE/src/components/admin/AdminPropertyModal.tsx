@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
-import { X, Mail, Layers, Warehouse, Box, Upload } from 'lucide-react'
-import type { Property, PropertyType } from '@/types/property.types'
+import { X, Mail, Layers, Warehouse, Box, Upload, MapPin, SlidersHorizontal, Plus } from 'lucide-react'
+import type { Property, PropertyType, Category } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
 import { Button } from '@/components/common/Button'
 import { Input } from '@/components/common/Input'
-import { PROVINCES_LIST } from '@/data/mockData'
+import { PROVINCES_LIST, DISTRICTS_LIST } from '@/data/mockData'
 import { formatCurrency } from '@/utils/formatters'
 import { propertyApi } from '@/api/propertyApi'
+import { cn } from '@/utils/cn'
 
 interface AdminPropertyModalProps {
   isOpen: boolean
@@ -15,58 +16,95 @@ interface AdminPropertyModalProps {
 }
 
 export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyModalProps) {
-  const { addProperty, updateProperty, categories } = useProperties()
+  const { addProperty, updateProperty, categories, addCategory } = useProperties()
 
+  // Basic info
   const [title, setTitle] = useState('')
-  const [type, setType] = useState<PropertyType>('SALE')
+  const [type, setType] = useState<PropertyType>('BAN_KHUNG_XUONG')
   const [status, setStatus] = useState('Còn hàng')
+  const [stockStatus, setStockStatus] = useState<'IN_STOCK' | 'OUT_OF_STOCK'>('IN_STOCK')
+  const [storageLocation, setStorageLocation] = useState<'AT_YARD' | 'AT_SITE'>('AT_YARD')
   const [categoryId, setCategoryId] = useState<number | null>(null)
+
+  // Location
   const [province, setProvince] = useState('Bình Dương')
+  const [district, setDistrict] = useState('Dĩ An')
   const [kcn, setKcn] = useState('')
+
+  // Pricing & Area
   const [price, setPrice] = useState(0)
   const [unitPrice, setUnitPrice] = useState('')
   const [area, setArea] = useState('')
-  const [brokerPhone, setBrokerPhone] = useState('090 123 4567')
+
+  // 3D & Structural specifications
+  const [length, setLength] = useState<number | ''>('')
+  const [width, setWidth] = useState<number | ''>('')
+  const [structureType, setStructureType] = useState('Zamil')
+  const [hasCrane, setHasCrane] = useState(false)
+  const [craneCapacity, setCraneCapacity] = useState('10 Tấn')
+
+  // Contact & Media
+  const [brokerPhone, setBrokerPhone] = useState('0901 234 567')
   const [videoUrl, setVideoUrl] = useState('')
-  const [audioUrl, setAudioUrl] = useState('')
   const [model3dUrl, setModel3dUrl] = useState('')
+  const [drawing2DUrl, setDrawing2DUrl] = useState('')
   const [image, setImage] = useState('')
   const [desc, setDesc] = useState('')
   const [triggerEmail, setTriggerEmail] = useState(true)
   const [isUploading3D, setIsUploading3D] = useState(false)
+
+  // Inline Quick Add Category
+  const [showAddCatInput, setShowAddCatInput] = useState(false)
+  const [quickCatName, setQuickCatName] = useState('')
 
   useEffect(() => {
     if (property) {
       setTitle(property.title)
       setType(property.type)
       setStatus(property.status || 'Còn hàng')
+      setStockStatus((property.stockStatus as any) || 'IN_STOCK')
+      setStorageLocation((property.storageLocation as any) || 'AT_YARD')
       setCategoryId(property.categoryId ?? null)
-      setProvince(property.province)
+      setProvince(property.province || 'Bình Dương')
+      setDistrict(property.district || 'Dĩ An')
       setKcn(property.kcn || '')
       setPrice(property.price || 0)
       setUnitPrice(property.unitPrice || '')
       setArea(property.area || '')
-      setBrokerPhone(property.brokerPhone || '090 123 4567')
+      setLength(property.length ?? '')
+      setWidth(property.width ?? '')
+      setStructureType(property.structureType || 'Zamil')
+      setHasCrane(Boolean(property.hasCrane))
+      setCraneCapacity(property.craneCapacity || '10 Tấn')
+      setBrokerPhone(property.brokerPhone || '0901 234 567')
       setVideoUrl(property.videoUrl || '')
-      setAudioUrl(property.audioUrl || '')
       setModel3dUrl(property.model3dUrl || '')
+      setDrawing2DUrl(property.drawing2DUrl || '')
       setImage(property.image || '')
       setDesc(property.desc || '')
     } else {
       setTitle('')
-      setType('SALE')
+      setType('BAN_KHUNG_XUONG')
       setStatus('Còn hàng')
-      const defaultCat = categories.find((c) => c.code === 'SALE')
+      setStockStatus('IN_STOCK')
+      setStorageLocation('AT_YARD')
+      const defaultCat = categories.find((c) => c.code === 'BAN_KHUNG_XUONG')
       setCategoryId(defaultCat?.id ?? null)
       setProvince('Bình Dương')
-      setKcn('')
+      setDistrict('Dĩ An')
+      setKcn('Kho Bãi ICD Tân Cảng, TP. Dĩ An')
       setPrice(0)
       setUnitPrice('')
       setArea('')
-      setBrokerPhone('090 123 4567')
+      setLength('')
+      setWidth('')
+      setStructureType('Zamil')
+      setHasCrane(false)
+      setCraneCapacity('10 Tấn')
+      setBrokerPhone('0901 234 567')
       setVideoUrl('')
-      setAudioUrl('')
       setModel3dUrl('')
+      setDrawing2DUrl('')
       setImage('')
       setDesc('')
     }
@@ -74,14 +112,12 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
   if (!isOpen) return null
 
-  const isRecycledSteel = type === 'RECYCLED_STEEL'
-
   const handleModel3DUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     const lowerName = file.name.toLowerCase()
-    if (!lowerName.endsWith('.html') && !lowerName.endsWith('.htm')) {
-      alert('Mô hình 3D bắt buộc phải là file HTML (.html hoặc .htm)!')
+    if (!lowerName.endsWith('.html') && !lowerName.endsWith('.htm') && !lowerName.endsWith('.glb')) {
+      alert('Mô hình 3D yêu cầu file HTML (.html) hoặc GLB (.glb)!')
       return
     }
     setIsUploading3D(true)
@@ -95,44 +131,64 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
     }
   }
 
+  const handleQuickAddCategory = () => {
+    if (!quickCatName.trim()) return
+    const code = 'CAT_' + Date.now().toString(36).toUpperCase()
+    const newCat: Category = {
+      name: quickCatName.trim(),
+      code,
+      icon: 'Warehouse',
+      desc: 'Danh mục tùy chỉnh',
+      active: true,
+    }
+    addCategory(newCat)
+    setType(code)
+    setQuickCatName('')
+    setShowAddCatInput(false)
+  }
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
 
     const catObj = categories.find((c) => c.code === type || (categoryId && c.id === categoryId))
-    const typeDisplay = catObj
-      ? catObj.name
-      : type === 'SALE'
-      ? 'Bán Nhà Xưởng'
-      : type === 'RENT'
-      ? 'Cho Thuê Kho Bãi'
-      : type === 'RECYCLED_STEEL'
-      ? 'Sắt Thép Tái Sử Dụng'
-      : 'Khác'
-
+    const typeDisplay = catObj ? catObj.name : 'Nhà Xưởng & Sắt Thép'
     const priceDisplay = formatCurrency(price)
 
-    const defaultImage = isRecycledSteel
-      ? 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80'
-      : 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
+    const defaultImage =
+      image.trim() || 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
+
+    // Area auto-compute if length and width provided and area empty
+    const computedArea =
+      area.trim() ||
+      (length && width ? `${Number(length) * Number(width)} m²` : 'Quy cách chuẩn')
 
     const propertyPayload = {
       title: title.trim(),
       type,
       typeDisplay,
-      status: status.trim() || 'Còn hàng',
+      status: stockStatus === 'OUT_OF_STOCK' ? 'Hết hàng' : 'Còn hàng',
+      stockStatus,
+      storageLocation,
       categoryId: categoryId ?? catObj?.id ?? null,
       province,
+      city: province,
+      district,
       kcn: kcn.trim() || 'Vị trí bãi kho',
       price,
       priceDisplay,
       unitPrice: unitPrice.trim(),
-      area: area.trim(),
-      brokerPhone: brokerPhone.trim() || '090 123 4567',
+      area: computedArea,
+      length: length !== '' ? Number(length) : undefined,
+      width: width !== '' ? Number(width) : undefined,
+      structureType,
+      hasCrane,
+      craneCapacity: hasCrane ? craneCapacity : undefined,
+      brokerPhone: brokerPhone.trim() || '0901 234 567',
       videoUrl: videoUrl.trim(),
-      audioUrl: audioUrl.trim(),
       model3dUrl: model3dUrl.trim() || null,
-      image: image.trim() || defaultImage,
+      drawing2DUrl: drawing2DUrl.trim() || null,
+      image: defaultImage,
       desc: desc.trim(),
     }
 
@@ -146,214 +202,415 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative flex flex-col w-full max-w-2xl max-h-[90vh] rounded-3xl bg-white shadow-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white p-5 sm:p-7 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/70 dark:bg-slate-950/50">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-              {isRecycledSteel ? (
-                <Layers className="w-5 h-5 text-teal-600" />
-              ) : (
-                <Warehouse className="w-5 h-5 text-teal-600" />
-              )}
-              {property
-                ? 'Chỉnh Sửa Thông Tin Mặt Hàng'
-                : isRecycledSteel
-                ? 'Thêm Mới Sắt Thép Tái Sử Dụng'
-                : 'Thêm Mới & Xuất Bản Nhà Xưởng'}
-            </h3>
-            <p className="text-[11px] text-slate-400">
-              {isRecycledSteel
-                ? 'Điền thông tin vị trí bãi kho, khối lượng thép, trạng thái, giá bán và mô hình 3D HTML'
-                : 'Điền thông tin vị trí kho xưởng, diện tích, trạng thái, giá bán/thuê và mô hình 3D HTML'}
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Warehouse className="w-5 h-5 text-teal-600" />
+              <span>{property ? 'Chỉnh Sửa Bài Đăng' : 'Đăng Bài Bán Khung Xưởng & Bản Vẽ 3D'}</span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Chọn danh mục, vị trí bãi/công trình, thông số kết cấu Dài x Rộng, cẩu trục và trạng thái 2 ô vuông
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Scrollable Form Body */}
-        <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Form Body */}
+        <form noValidate onSubmit={handleSave} className="space-y-4 pt-4 text-xs sm:text-sm">
+          {/* 1. Title */}
           <Input
-            label="Tiêu đề bài đăng"
-            placeholder={
-              isRecycledSteel
-                ? 'VD: Thanh lý khung thép tiền chế Zamil 3.200m2, Lô dầm H300 tháo dỡ 85 Tấn...'
-                : 'VD: Bán 10.000m2 Nhà xưởng KCN VSIP 1, Cho thuê kho CFS 5.000m2...'
-            }
+            label="Tiêu đề bài đăng *"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder="VD: Khung Nhà Xưởng 24m x 84m Kèo Zamil Có Cẩu Trục 10T..."
             required
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Loại hình danh mục
+          {/* 2. Category & Quick Add Category */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Thể loại danh mục (Category) *
               </label>
-              <select
-                value={type}
-                onChange={(e) => {
-                  const newType = e.target.value as PropertyType
-                  setType(newType)
-                  const matchCat = categories.find((c) => c.code === newType)
-                  if (matchCat?.id) setCategoryId(matchCat.id)
-                }}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-semibold"
+              <button
+                type="button"
+                onClick={() => setShowAddCatInput(!showAddCatInput)}
+                className="text-xs font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400 inline-flex items-center gap-1"
               >
-                {categories.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                <Plus className="w-3.5 h-3.5" />
+                <span>Thêm danh mục mới</span>
+              </button>
             </div>
 
+            {/* Inline Add Category Bar */}
+            {showAddCatInput && (
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800">
+                <input
+                  type="text"
+                  placeholder="Nhập tên danh mục mới (VD: Thép Chữ H, Tôn PU...)"
+                  value={quickCatName}
+                  onChange={(e) => setQuickCatName(e.target.value)}
+                  className="flex-1 rounded-lg border border-teal-300 p-1.5 text-xs text-slate-900 dark:bg-slate-800 dark:text-white"
+                />
+                <button
+                  type="button"
+                  onClick={handleQuickAddCategory}
+                  className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-700"
+                >
+                  Tạo & Chọn
+                </button>
+              </div>
+            )}
+
+            <select
+              value={type}
+              onChange={(e) => {
+                const selectedCode = e.target.value
+                setType(selectedCode)
+                const cat = categories.find((c) => c.code === selectedCode)
+                if (cat) setCategoryId(cat.id ?? null)
+              }}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            >
+              {categories.map((cat) => (
+                <option key={cat.code} value={cat.code}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 3. DUAL SQUARE STATUS & STORAGE LOCATION (Critical Feature) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-800/40">
+            {/* Stock Status -> controls 2 green / 2 red squares */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Trạng thái bài đăng
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                <span>Trạng thái hàng (Hiển thị 2 ô vuông góc phải)</span>
+                <span className="flex items-center gap-1 font-mono text-[10px]">
+                  {stockStatus === 'IN_STOCK' ? '🟩 🟩 Còn hàng' : '🟥 🟥 Hết hàng'}
+                </span>
               </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-semibold"
-              >
-                <option value="Còn hàng">🟢 Còn hàng (Đang mở)</option>
-                <option value="Đã bán">🔴 Đã bán</option>
-                <option value="Hết hàng">⚪ Hết hàng / Tạm ngưng</option>
-                <option value="Đang giao dịch">🟡 Đang giao dịch / Đặt cọc</option>
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStockStatus('IN_STOCK')}
+                  className={cn(
+                    'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-bold transition border',
+                    stockStatus === 'IN_STOCK'
+                      ? 'bg-emerald-600 text-white border-emerald-400 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300'
+                  )}
+                >
+                  <span className="flex items-center gap-0.5">
+                    <span className="h-2 w-2 rounded-[2px] bg-emerald-400" />
+                    <span className="h-2 w-2 rounded-[2px] bg-emerald-400" />
+                  </span>
+                  <span>Còn hàng (2 Xanh)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStockStatus('OUT_OF_STOCK')}
+                  className={cn(
+                    'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-bold transition border',
+                    stockStatus === 'OUT_OF_STOCK'
+                      ? 'bg-rose-600 text-white border-rose-400 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300'
+                  )}
+                >
+                  <span className="flex items-center gap-0.5">
+                    <span className="h-2 w-2 rounded-[2px] bg-rose-400" />
+                    <span className="h-2 w-2 rounded-[2px] bg-rose-400" />
+                  </span>
+                  <span>Hết hàng (2 Đỏ)</span>
+                </button>
+              </div>
             </div>
 
+            {/* Storage Location: Ở bãi vs Ở công trình */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Nơi để hàng
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStorageLocation('AT_YARD')}
+                  className={cn(
+                    'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-bold transition border',
+                    storageLocation === 'AT_YARD'
+                      ? 'bg-teal-600 text-white border-teal-500 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300'
+                  )}
+                >
+                  <span>Ở Bãi (Tập kết sẵn)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStorageLocation('AT_SITE')}
+                  className={cn(
+                    'flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-bold transition border',
+                    storageLocation === 'AT_SITE'
+                      ? 'bg-amber-600 text-white border-amber-500 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300'
+                  )}
+                >
+                  <span>Ở Công Trình (Đang đứng)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. GEOGRAPHICAL LOCATION (Lâm Đồng, Bình Dương, Dĩ An, Bảo Lộc...) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Tỉnh / Thành Phố
+                Tỉnh / Thành phố *
               </label>
               <select
                 value={province}
                 onChange={(e) => setProvince(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
-                {PROVINCES_LIST.filter((p) => p !== 'Toàn Quốc').map((p) => (
-                  <option key={p} value={p}>
-                    {p}
+                {PROVINCES_LIST.filter((p) => p !== 'Toàn Quốc').map((prov) => (
+                  <option key={prov} value={prov}>
+                    {prov}
                   </option>
                 ))}
               </select>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Vị trí kho bãi / KCN"
-              value={kcn}
-              onChange={(e) => setKcn(e.target.value)}
-              placeholder={isRecycledSteel ? 'VD: Kho Bãi ICD Tân Cảng, Đường ĐT 743...' : 'VD: KCN VSIP 1, KCN Sóng Thần 2...'}
-              required
-            />
-            <Input
-              label={isRecycledSteel ? 'Khối lượng / Diện tích (Tấn hoặc m2)' : 'Diện tích / Khuôn viên (m2)'}
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-              placeholder={isRecycledSteel ? 'VD: 85 Tấn hoặc 3.200 m2' : 'VD: 10.000 m2 hoặc 5.000 m2'}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Giá niêm yết (VNĐ)"
-              type="number"
-              step={10000000}
-              value={price || ''}
-              onChange={(e) => setPrice(Number(e.target.value))}
-              helperText={price > 0 ? `Định dạng: ${formatCurrency(price)}` : 'Nhập giá bán hoặc thuê'}
-              required
-            />
-            <Input
-              label={isRecycledSteel ? 'Đơn giá tham chiếu (đ/kg hoặc đ/m2)' : 'Đơn giá tham chiếu (m2 / tháng)'}
-              value={unitPrice}
-              onChange={(e) => setUnitPrice(e.target.value)}
-              placeholder={isRecycledSteel ? 'VD: 14.700 đ/kg hoặc 306.000 đ/m²' : 'VD: 4.0 Triệu/m2 hoặc 70.000 đ/m2/tháng'}
-            />
-          </div>
-
-          <Input
-            label="Hotline liên hệ tư vấn"
-            value={brokerPhone}
-            onChange={(e) => setBrokerPhone(e.target.value)}
-            placeholder="VD: 090 123 4567"
-          />
-
-          {/* Mô Hình 3D HTML Section */}
-          <div className="p-4 rounded-2xl border border-teal-500/25 bg-teal-50/60 dark:bg-teal-950/20 space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-teal-900 dark:text-teal-300 flex items-center gap-1.5">
-                <Box className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                Mô hình 3D tương tác (File HTML xoay 360°)
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Quận / Huyện / TP Thuộc Tỉnh *
               </label>
-
-              <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-teal-600 text-white hover:bg-teal-700 transition shadow-xs">
-                <Upload className="w-3.5 h-3.5" />
-                <span>{isUploading3D ? 'Đang tải lên...' : 'Tải File .html 3D'}</span>
-                <input
-                  type="file"
-                  accept=".html,.htm"
-                  className="hidden"
-                  disabled={isUploading3D}
-                  onChange={handleModel3DUpload}
-                />
-              </label>
+              <input
+                type="text"
+                placeholder="VD: Dĩ An, Thuận An, Bảo Lộc, Đà Lạt..."
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Kho bãi / KCN cụ thể *
+              </label>
+              <input
+                type="text"
+                placeholder="VD: Kho Bãi ICD Tân Cảng, TP. Dĩ An"
+                value={kcn}
+                onChange={(e) => setKcn(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                required
+              />
+            </div>
+          </div>
+
+          {/* 5. 3D STRUCTURAL SPECIFICATIONS (Dài, Rộng, Kết cấu, Cẩu trục) */}
+          <div className="p-4 rounded-2xl border border-cyan-500/30 bg-cyan-950/10 dark:bg-cyan-950/20 space-y-3">
+            <h4 className="text-xs font-bold text-cyan-900 dark:text-cyan-300 flex items-center gap-1.5 uppercase tracking-wide">
+              <Box className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+              <span>Thông Số Kích Thước Kết Cấu 3D (Dài, Rộng, Kết Cấu, Cẩu Trục)</span>
+            </h4>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Chiều Rộng (m)
+                </label>
+                <input
+                  type="number"
+                  placeholder="VD: 24"
+                  value={width}
+                  onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Chiều Dài (m)
+                </label>
+                <input
+                  type="number"
+                  placeholder="VD: 84"
+                  value={length}
+                  onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Loại Kết Cấu
+                </label>
+                <select
+                  value={structureType}
+                  onChange={(e) => setStructureType(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                >
+                  <option value="Zamil">Khung Zamil</option>
+                  <option value="Thép I">Thép Hình I</option>
+                  <option value="Kèo Tiệp">Kèo Tiệp (Chữ A)</option>
+                  <option value="Khác">Kết Cấu Khác</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Cẩu Trục
+                </label>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <label className="flex items-center gap-1 cursor-pointer font-bold text-xs text-slate-700 dark:text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={hasCrane}
+                      onChange={(e) => setHasCrane(e.target.checked)}
+                      className="rounded text-teal-600 focus:ring-teal-500 h-4 w-4"
+                    />
+                    <span>Có cẩu trục</span>
+                  </label>
+                  {hasCrane && (
+                    <input
+                      type="text"
+                      placeholder="VD: 10 Tấn"
+                      value={craneCapacity}
+                      onChange={(e) => setCraneCapacity(e.target.value)}
+                      className="w-20 rounded-lg border border-slate-200 p-1 text-xs text-slate-900 dark:bg-slate-800 dark:text-white"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 3D Model URL & Upload */}
+            <div className="pt-2 border-t border-cyan-500/20 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-cyan-900 dark:text-cyan-300 flex items-center gap-1.5">
+                  <Box className="w-3.5 h-3.5 text-cyan-600" />
+                  Mô hình 3D tương tác (File HTML / GLB xoay 360°)
+                </label>
+
+                <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-cyan-600 text-white hover:bg-cyan-500 transition shadow-xs">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>{isUploading3D ? 'Đang tải...' : 'Tải File 3D (.html/.glb)'}</span>
+                  <input
+                    type="file"
+                    accept=".html,.htm,.glb"
+                    className="hidden"
+                    disabled={isUploading3D}
+                    onChange={handleModel3DUpload}
+                  />
+                </label>
+              </div>
+              <Input
+                value={model3dUrl}
+                onChange={(e) => setModel3dUrl(e.target.value)}
+                placeholder="/models3d/nha_xuong_24x84.html hoặc link file 3D"
+              />
+            </div>
+
+            {/* 2D Drawing URL */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Link Bản Vẽ 2D AutoCAD (.dxf / .step / .pdf)
+              </label>
+              <Input
+                value={drawing2DUrl}
+                onChange={(e) => setDrawing2DUrl(e.target.value)}
+                placeholder="/models3d/mat_bang_24x84.dxf hoặc link Google Drive"
+              />
+            </div>
+          </div>
+
+          {/* 6. PRICING & AREA */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Tổng giá trị (VNĐ) *
+              </label>
+              <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(Number(e.target.value))}
+                placeholder="VD: 1450000000"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 font-mono dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Đơn giá hiển thị (text)
+              </label>
+              <input
+                type="text"
+                value={unitPrice}
+                onChange={(e) => setUnitPrice(e.target.value)}
+                placeholder="VD: 719.000 đ/m² hoặc 14.500 đ/kg"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Diện tích / Khối lượng *
+              </label>
+              <input
+                type="text"
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                placeholder="VD: 2.016 m² hoặc 95 Tấn"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* 7. Broker Phone & Thumbnail Image */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
-              value={model3dUrl}
-              onChange={(e) => setModel3dUrl(e.target.value)}
-              placeholder="Nhập link file HTML mô hình 3D hoặc bấm nút 'Tải File .html 3D' ở trên"
-              helperText="File HTML 3D sẽ được nhúng trực tiếp vào modal để khách hàng xoay tương tác 360 độ"
+              label="Số điện thoại liên hệ *"
+              value={brokerPhone}
+              onChange={(e) => setBrokerPhone(e.target.value)}
+              placeholder="VD: 0901 234 567"
+            />
+
+            <Input
+              label="URL Hình ảnh Thumbnail"
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="https://images.unsplash.com/..."
             />
           </div>
 
-          <Input
-            label="URL Video Drone MP4 (Hover Autoplay)"
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-            placeholder="https://.../video.mp4"
-          />
-
-          <Input
-            label="URL Hình Ảnh Thumbnail"
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-            placeholder="https://images.unsplash.com/..."
-          />
-
+          {/* 8. Description */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              {isRecycledSteel ? 'Mô tả chi tiết lô thép / tháo dỡ / vận chuyển' : 'Mô tả chi tiết quy hoạch & hạ tầng'}
+              Mô tả chi tiết sản phẩm / tình trạng tháo dỡ / phụ kiện đi kèm
             </label>
             <textarea
               rows={3}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
-              placeholder={
-                isRecycledSteel
-                  ? 'VD: Khung dầm H400, bản mã dày, giằng xà gồ C200 đầy đủ, có cẩu trục hỗ trợ bốc xếp...'
-                  : 'Nhập chi tiết về trần cao, sàn tải trọng, đường container, bàn giao...'
-              }
+              placeholder="Nhập thông số bu lông, xà gồ Z mạ kẽm, dầm đỡ cẩu trục, tình trạng sơn phủ và hỗ trợ bốc xếp cẩu hàng..."
               className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
           </div>
 
-          {/* Real-time Automation Triggers */}
-          <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900/60 dark:bg-blue-950/40 space-y-2.5">
-            <p className="text-xs font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wide">
-              ⚡ Tự động hóa Real-time khi Xuất bản:
-            </p>
+          {/* 9. Email Broadcast Trigger */}
+          <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-900/60 dark:bg-blue-950/40">
             <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300">
               <input
                 type="checkbox"
@@ -363,11 +620,12 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               />
               <span className="flex items-center gap-1.5 font-medium">
                 <Mail className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                Gửi Email Bản Tin Real-time kèm thông số mặt hàng & báo giá
+                Gửi Email Broadcast Real-time kèm thông số hàng & báo giá tới khách hàng quan tâm
               </span>
             </label>
           </div>
 
+          {/* Action buttons */}
           <div className="pt-2 flex items-center justify-end gap-3">
             <Button variant="ghost" type="button" onClick={onClose}>
               Hủy bỏ

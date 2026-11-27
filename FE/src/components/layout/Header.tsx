@@ -9,11 +9,9 @@ import {
   ShieldCheck,
   User as UserIcon,
   PhoneCall,
-  MapPin,
-  Building2,
-  FileCheck2,
   LogIn,
   LogOut,
+  Flame,
 } from 'lucide-react'
 import { useProperties } from '@/context/PropertyContext'
 import { useAuth } from '@/hooks/useAuth'
@@ -29,9 +27,7 @@ export function Header() {
     savedPropertyIds,
     openSavedModal,
     openSubscribeModal,
-    open3DModal,
     openAdminEditModal,
-    properties,
     filterState,
     setFilterState,
   } = useProperties()
@@ -40,18 +36,17 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs dark:bg-slate-900/95 dark:border-slate-800">
-      {/* Real Estate Top Hotline & Info Strip */}
+      {/* Top Hotline Strip */}
       <div className="bg-slate-900 text-slate-300 text-[11px] py-1.5 px-4 sm:px-8 border-b border-slate-800 hidden sm:block">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 text-teal-400 font-medium">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse" />
-              Sàn Giao Dịch Nhà Xưởng & Kho Bãi Việt Nam
+              Sàn Mua Bán Khung Nhà Xưởng & Sắt Thép Miền Nam
             </span>
             <span className="text-slate-600">|</span>
-            <span className="flex items-center gap-1 text-slate-300">
-              <FileCheck2 className="w-3.5 h-3.5 text-emerald-400" />
-              100% Mặt Bằng Kiểm Duyệt Pháp Lý & Nghiệm Thu PCCC
+            <span className="text-slate-300">
+              Tổng kho: Dĩ An, Thuận An (Bình Dương) • Bảo Lộc (Lâm Đồng) • Đồng Nai
             </span>
           </div>
 
@@ -61,7 +56,7 @@ export function Header() {
               className="flex items-center gap-1.5 text-white hover:text-teal-400 transition font-semibold"
             >
               <PhoneCall className="w-3.5 h-3.5 text-teal-400" />
-              <span>Hotline Tư Vấn Dự Án: 090 123 4567</span>
+              <span>Hotline Kho Bãi: 090 123 4567</span>
             </a>
             <span className="text-slate-600">|</span>
             <button
@@ -69,41 +64,40 @@ export function Header() {
               className="hover:text-teal-400 transition text-slate-300 flex items-center gap-1"
             >
               <Mail className="w-3.5 h-3.5 text-red-400" />
-              <span>Báo Cáo Thị Trường Nhà Xưởng</span>
+              <span>Nhận Báo Giá Real-time</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo Brand: NHAXUONG.VN */}
           <Link
             to="/"
             onClick={() => {
-              setRole('user')
               setFilterState({ type: 'ALL' })
             }}
-            className="flex items-center gap-3 cursor-pointer group shrink-0"
+            className="flex items-center gap-2.5 cursor-pointer group shrink-0"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-teal-400 shadow-md border border-slate-800 group-hover:from-teal-800 group-hover:to-slate-950 group-hover:text-white transition duration-300">
-              <Factory className="h-7 w-7" />
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-teal-400 shadow-md border border-slate-800 group-hover:from-teal-800 group-hover:to-slate-950 group-hover:text-white transition duration-300">
+              <Factory className="h-5 w-5 sm:h-7 sm:w-7" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase font-sans">
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase font-sans">
                   NHAXUONG<span className="text-teal-600 dark:text-teal-400">.VN</span>
                 </span>
-                <span className="rounded-md border border-teal-500/30 bg-teal-50 px-2 py-0.5 text-[9.5px] font-bold text-teal-700 dark:border-teal-900 dark:bg-teal-950/60 dark:text-teal-300">
-                  {role === 'user' ? 'SÀN NHÀ XƯỞNG' : 'ADMIN NHÀ XƯỞNG'}
+                <span className="rounded-md border border-teal-500/30 bg-teal-50 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:border-teal-900 dark:bg-teal-950/60 dark:text-teal-300">
+                  {role === 'user' ? 'KHO BÃI & SẮT THÉP' : 'QUẢN TRỊ'}
                 </span>
               </div>
             </div>
           </Link>
 
-          {/* Navigation Items (User Mode: Nhà Xưởng) */}
+          {/* Quick Header Navigation */}
           {role === 'user' ? (
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => {
@@ -111,72 +105,77 @@ export function Header() {
                   setFilterState({ type: 'ALL' })
                 }}
                 className={cn(
-                  'px-3 py-2 rounded-xl text-xs transition',
+                  'px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1',
                   filterState.type === 'ALL'
                     ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
                     : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
                 )}
               >
-                Tất Cả Nhà Xưởng
+                <Flame className="w-3.5 h-3.5 text-amber-500" />
+                <span>Tin Mới Nhất</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => {
                   navigate('/')
-                  setFilterState({ type: 'SALE' })
+                  setFilterState({ type: 'BAN_KHUNG_XUONG' })
                 }}
                 className={cn(
-                  'px-3 py-2 rounded-xl text-xs transition',
-                  filterState.type === 'SALE'
+                  'px-3 py-1.5 rounded-xl text-xs transition',
+                  filterState.type === 'BAN_KHUNG_XUONG'
                     ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
                     : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
                 )}
               >
-                Bán Nhà Xưởng
+                Khung Nhà Xưởng
               </button>
+
               <button
                 type="button"
                 onClick={() => {
                   navigate('/')
-                  setFilterState({ type: 'RENT' })
+                  setFilterState({ type: 'THEP_HINH_I' })
                 }}
                 className={cn(
-                  'px-3 py-2 rounded-xl text-xs transition',
-                  filterState.type === 'RENT'
+                  'px-3 py-1.5 rounded-xl text-xs transition',
+                  filterState.type === 'THEP_HINH_I'
                     ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
                     : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
                 )}
               >
-                Cho Thuê Kho Bãi
+                Thép Hình I
               </button>
+
               <button
                 type="button"
                 onClick={() => {
                   navigate('/')
-                  setFilterState({ type: 'RECYCLED_STEEL' })
+                  setFilterState({ type: 'THIET_KE_3D' })
                 }}
                 className={cn(
-                  'px-3 py-2 rounded-xl text-xs transition',
-                  filterState.type === 'RECYCLED_STEEL'
-                    ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
-                    : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  'px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1',
+                  filterState.type === 'THIET_KE_3D'
+                    ? 'font-bold text-cyan-600 bg-cyan-50 dark:bg-cyan-950/50 dark:text-cyan-300'
+                    : 'font-semibold text-slate-600 hover:text-cyan-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
                 )}
               >
-                Sắt Thép Tái Sử Dụng
+                <Box className="w-3.5 h-3.5 text-cyan-500" />
+                <span>Xem Thiết Kế 3D</span>
               </button>
             </nav>
           ) : (
-            /* Navigation Items (Admin Mode) */
+            /* Admin Header Mode */
             <nav className="hidden md:flex items-center gap-1.5 text-xs font-semibold">
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border border-teal-200 dark:border-teal-900">
                 <ShieldCheck className="w-4 h-4" />
-                <span>Hệ Thống Quản Trị Sàn Nhà Xưởng</span>
+                <span>Hệ Thống Quản Trị Sàn Nhà Xưởng & 3D</span>
               </span>
             </nav>
           )}
 
           {/* Right Action CTAs */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -186,55 +185,42 @@ export function Header() {
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {role === 'user' ? (
-              <>
-                {/* Wishlist Button */}
-                <button
-                  type="button"
-                  onClick={openSavedModal}
-                  className="relative p-2.5 rounded-xl text-slate-600 hover:text-red-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-                  title="Danh sách xưởng đã lưu"
-                >
-                  <Heart className="w-5 h-5" />
-                  {savedPropertyIds.length > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-xs">
-                      {savedPropertyIds.length}
-                    </span>
-                  )}
-                </button>
+            {/* Wishlist Button */}
+            <button
+              type="button"
+              onClick={openSavedModal}
+              className="relative p-2 rounded-xl text-slate-600 hover:text-red-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+              title="Danh sách đã lưu"
+            >
+              <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
+              {savedPropertyIds.length > 0 && (
+                <span className="absolute 0 top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9.5px] font-bold text-white shadow-xs">
+                  {savedPropertyIds.length}
+                </span>
+              )}
+            </button>
 
-                {/* Nút Khách Hàng: Tư Vấn Mua / Thuê */}
-                <button
-                  type="button"
-                  onClick={openSubscribeModal}
-                  className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:bg-teal-700 transition"
-                >
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  <span>Tư Vấn Mua / Thuê</span>
-                </button>
-              </>
-            ) : (
-              /* Admin CTA */
+            {/* Admin CTA or User CTA */}
+            {role === 'admin' ? (
               <button
                 type="button"
                 onClick={() => openAdminEditModal()}
-                className="flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-teal-700 transition"
+                className="flex items-center gap-1 rounded-xl bg-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-teal-700 transition"
               >
                 <Plus className="w-4 h-4" />
-                <span>Đăng Xưởng Mới</span>
+                <span>Đăng Tin Mới</span>
               </button>
-            )}
+            ) : null}
 
-            {/* User Account or Login Button */}
+            {/* User Account / Login Button */}
             {!user ? (
               <button
                 type="button"
                 onClick={() => openAuthModal('login')}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition shadow-xs"
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition shadow-xs"
               >
                 <LogIn className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                <span className="hidden sm:inline">Đăng Nhập / Đăng Ký</span>
-                <span className="sm:hidden">Vào</span>
+                <span>Đăng Nhập</span>
               </button>
             ) : (
               <div className="flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 p-1 pl-1.5">
@@ -267,11 +253,19 @@ export function Header() {
             {/* Switch Mode Button */}
             <button
               type="button"
-              onClick={() => setRole(role === 'user' ? 'admin' : 'user')}
-              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition"
+              onClick={() => {
+                const nextRole = role === 'user' ? 'admin' : 'user'
+                setRole(nextRole)
+                if (nextRole === 'admin') {
+                  navigate('/admin')
+                } else {
+                  navigate('/')
+                }
+              }}
+              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition shrink-0"
             >
-              {role === 'user' ? <ShieldCheck className="w-4 h-4 text-amber-400" /> : <UserIcon className="w-4 h-4 text-teal-400" />}
-              <span className="hidden sm:inline">{role === 'user' ? 'Quản Trị' : 'Giao Diện Nhà Xưởng'}</span>
+              {role === 'user' ? <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> : <UserIcon className="w-3.5 h-3.5 text-teal-400" />}
+              <span className="hidden sm:inline">{role === 'user' ? 'Quản Trị' : 'Giao Diện Sàn'}</span>
             </button>
           </div>
         </div>

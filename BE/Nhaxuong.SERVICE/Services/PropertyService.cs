@@ -36,11 +36,11 @@ namespace Nhaxuong.SERVICE.Services
             {
                 var dbQuery = _context.Properties.Include(p => p.Category).AsQueryable();
 
-                // Filter Type (ALL, SALE, RENT, RECYCLED_STEEL)
+                // Filter Type / Category
                 if (!string.IsNullOrWhiteSpace(query.Type) && query.Type.ToUpper() != "ALL")
                 {
                     var targetType = query.Type.Trim().ToUpper();
-                    dbQuery = dbQuery.Where(p => p.Type.ToUpper() == targetType);
+                    dbQuery = dbQuery.Where(p => p.Type.ToUpper() == targetType || (p.Category != null && p.Category.Code.ToUpper() == targetType));
                 }
 
                 // Filter CategoryId
@@ -49,14 +49,52 @@ namespace Nhaxuong.SERVICE.Services
                     dbQuery = dbQuery.Where(p => p.CategoryId == query.CategoryId.Value);
                 }
 
-                // Filter Status
-                if (!string.IsNullOrWhiteSpace(query.Status) && query.Status.ToUpper() != "ALL")
+                // Filter StockStatus (IN_STOCK, OUT_OF_STOCK)
+                if (!string.IsNullOrWhiteSpace(query.StockStatus) && query.StockStatus.ToUpper() != "ALL")
                 {
-                    var targetStatus = query.Status.Trim();
-                    dbQuery = dbQuery.Where(p => p.Status.ToLower() == targetStatus.ToLower());
+                    var targetStock = query.StockStatus.Trim().ToUpper();
+                    dbQuery = dbQuery.Where(p => p.StockStatus.ToUpper() == targetStock);
                 }
 
-                // Keyword filter
+                // Filter StorageLocation (AT_YARD, AT_SITE)
+                if (!string.IsNullOrWhiteSpace(query.StorageLocation) && query.StorageLocation.ToUpper() != "ALL")
+                {
+                    var targetLoc = query.StorageLocation.Trim().ToUpper();
+                    dbQuery = dbQuery.Where(p => p.StorageLocation.ToUpper() == targetLoc);
+                }
+
+                // Filter StructureType (Thép I, Zamil, Kèo Tiệp)
+                if (!string.IsNullOrWhiteSpace(query.StructureType) && query.StructureType.ToUpper() != "ALL")
+                {
+                    var st = query.StructureType.Trim().ToLower();
+                    dbQuery = dbQuery.Where(p => p.StructureType != null && p.StructureType.ToLower().Contains(st));
+                }
+
+                // Filter HasCrane
+                if (query.HasCrane.HasValue)
+                {
+                    dbQuery = dbQuery.Where(p => p.HasCrane == query.HasCrane.Value);
+                }
+
+                // Dimension filters (Length, Width)
+                if (query.MinLength.HasValue && query.MinLength.Value > 0)
+                {
+                    dbQuery = dbQuery.Where(p => p.Length >= query.MinLength.Value);
+                }
+                if (query.MaxLength.HasValue && query.MaxLength.Value > 0)
+                {
+                    dbQuery = dbQuery.Where(p => p.Length <= query.MaxLength.Value);
+                }
+                if (query.MinWidth.HasValue && query.MinWidth.Value > 0)
+                {
+                    dbQuery = dbQuery.Where(p => p.Width >= query.MinWidth.Value);
+                }
+                if (query.MaxWidth.HasValue && query.MaxWidth.Value > 0)
+                {
+                    dbQuery = dbQuery.Where(p => p.Width <= query.MaxWidth.Value);
+                }
+
+                // Keyword search
                 if (!string.IsNullOrWhiteSpace(query.Keyword))
                 {
                     var kw = query.Keyword.Trim().ToLower();
@@ -64,22 +102,28 @@ namespace Nhaxuong.SERVICE.Services
                         p.Title.ToLower().Contains(kw) ||
                         p.Desc.ToLower().Contains(kw) ||
                         p.Kcn.ToLower().Contains(kw) ||
+                        (p.District != null && p.District.ToLower().Contains(kw)) ||
+                        (p.City != null && p.City.ToLower().Contains(kw)) ||
                         p.Province.ToLower().Contains(kw));
                 }
 
-                // Province filter
-                if (!string.IsNullOrWhiteSpace(query.Province) && query.Province != "Toàn Quốc")
+                // Location filters (Province, City, District)
+                if (!string.IsNullOrWhiteSpace(query.Province) && query.Province != "Toàn Quốc" && query.Province != "ALL")
                 {
-                    dbQuery = dbQuery.Where(p => p.Province.ToLower() == query.Province.Trim().ToLower());
+                    var prov = query.Province.Trim().ToLower();
+                    dbQuery = dbQuery.Where(p => p.Province.ToLower().Contains(prov) || (p.City != null && p.City.ToLower().Contains(prov)));
                 }
 
-                // KCN / Vị trí filter
-                if (!string.IsNullOrWhiteSpace(query.Kcn) &&
-                    query.Kcn != "Tất cả bãi kho" &&
-                    query.Kcn != "Tất cả KCN")
+                if (!string.IsNullOrWhiteSpace(query.City) && query.City != "ALL")
                 {
-                    var kcnTrimmed = query.Kcn.Trim().ToLower();
-                    dbQuery = dbQuery.Where(p => p.Kcn.ToLower() == kcnTrimmed);
+                    var city = query.City.Trim().ToLower();
+                    dbQuery = dbQuery.Where(p => (p.City != null && p.City.ToLower().Contains(city)) || p.Province.ToLower().Contains(city));
+                }
+
+                if (!string.IsNullOrWhiteSpace(query.District) && query.District != "ALL")
+                {
+                    var dist = query.District.Trim().ToLower();
+                    dbQuery = dbQuery.Where(p => (p.District != null && p.District.ToLower().Contains(dist)) || p.Kcn.ToLower().Contains(dist));
                 }
 
                 // Price range filter
@@ -118,24 +162,20 @@ namespace Nhaxuong.SERVICE.Services
                 return new PagedResult<PropertyDto>
                 {
                     Items = dtos,
-                    TotalCount = totalItems,
-                    PageNumber = page,
+                    Total = totalItems,
+                    Page = page,
                     PageSize = pageSize
                 };
             }
             catch (Exception)
             {
-                // Fallback seed items if DB is offline/unreachable
-                var seed = GetFallbackProperties();
-                if (!string.IsNullOrWhiteSpace(query.Type) && query.Type.ToUpper() != "ALL")
-                {
-                    seed = seed.Where(p => p.Type.Equals(query.Type, StringComparison.OrdinalIgnoreCase)).ToList();
-                }
+                // Fallback demo data
+                var fallbackList = GetFallbackProperties();
                 return new PagedResult<PropertyDto>
                 {
-                    Items = seed.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
-                    TotalCount = seed.Count,
-                    PageNumber = page,
+                    Items = fallbackList,
+                    Total = fallbackList.Count,
+                    Page = 1,
                     PageSize = pageSize
                 };
             }
@@ -143,15 +183,11 @@ namespace Nhaxuong.SERVICE.Services
 
         public async Task<PropertyDto?> GetByIdAsync(int id)
         {
-            try
-            {
-                var item = await _context.Properties.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
-                return item == null ? null : MapToDto(item);
-            }
-            catch (Exception)
-            {
-                return GetFallbackProperties().FirstOrDefault(p => p.Id == id);
-            }
+            var entity = await _context.Properties
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            return entity == null ? null : MapToDto(entity);
         }
 
         public async Task<PropertyDto?> GetByIdAsync(string id)
@@ -163,142 +199,45 @@ namespace Nhaxuong.SERVICE.Services
             return null;
         }
 
-        private static List<PropertyDto> GetFallbackProperties()
-        {
-            return new List<PropertyDto>
-            {
-                new()
-                {
-                    Id = 1,
-                    Title = "Bán 12.000m2 Nhà Xưởng Tiêu Chuẩn KCN VSIP 1, Trạm Điện 1.500kVA",
-                    Type = "SALE",
-                    TypeDisplay = "Bán Nhà Xưởng",
-                    Status = "Còn hàng",
-                    CategoryId = 3,
-                    Province = "Bình Dương",
-                    Kcn = "KCN VSIP 1",
-                    Price = 48000000000,
-                    PriceDisplay = "48 Tỷ VNĐ",
-                    UnitPrice = "4.0 Tr/m²",
-                    Area = "12.000 m2",
-                    BrokerPhone = "0901 234 567",
-                    Image = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
-                    VideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4",
-                    AudioUrl = "https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3",
-                    Model3DUrl = null,
-                    Desc = "Khuôn viên đất 12.000m2, diện tích xưởng xây dựng 8.000m2, trần cao 11m, sàn bê tông cốt thép chịu tải 5 tấn/m2, trạm biến áp riêng 1.500kVA.",
-                    EmailNotified = true,
-                    Created = "10:00 29/10/2026"
-                },
-                new()
-                {
-                    Id = 2,
-                    Title = "Cho Thuê Kho Xưởng Logistics 5.000m2 KCN Sóng Thần 2 Dĩ An",
-                    Type = "RENT",
-                    TypeDisplay = "Cho Thuê Kho Bãi",
-                    Status = "Còn hàng",
-                    CategoryId = 2,
-                    Province = "Bình Dương",
-                    Kcn = "KCN Sóng Thần 2",
-                    Price = 350000000,
-                    PriceDisplay = "350 Triệu / Tháng",
-                    UnitPrice = "70.000 đ/m²/tháng",
-                    Area = "5.000 m2",
-                    BrokerPhone = "0918 765 432",
-                    Image = "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80",
-                    VideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-forklift-moving-cargo-in-a-warehouse-42863-large.mp4",
-                    AudioUrl = "https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3",
-                    Model3DUrl = null,
-                    Desc = "Vị trí giáp ranh TP.HCM, đường xe container ra vào 24/7 không cấm tải, có sẵn 6 dock leveler xuất nhập hàng tiêu chuẩn châu Âu.",
-                    EmailNotified = true,
-                    Created = "10:30 29/10/2026"
-                },
-                new()
-                {
-                    Id = 3,
-                    Title = "Thanh Lý Khung Nhà Xưởng Thép Tiền Chế Tái Sử Dụng 3.200m2",
-                    Type = "RECYCLED_STEEL",
-                    TypeDisplay = "Sắt Thép Tái Sử Dụng",
-                    Status = "Còn hàng",
-                    CategoryId = 1,
-                    Province = "Bình Dương",
-                    Kcn = "Kho Bãi ICD Tân Cảng",
-                    Price = 980000000,
-                    PriceDisplay = "980 Triệu VNĐ",
-                    UnitPrice = "306.000 đ/m²",
-                    Area = "3.200 m2",
-                    BrokerPhone = "0912 888 999",
-                    Image = "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-                    VideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4",
-                    AudioUrl = null,
-                    Model3DUrl = null,
-                    Desc = "Khung kèo thép Zamil khẩu độ 30m vượt nhịp không cột giữa, tháo dỡ nguyên vẹn đầy đủ dầm cột H350, giằng xà gồ mạ kẽm C200.",
-                    EmailNotified = true,
-                    Created = "11:00 29/10/2026"
-                },
-                new()
-                {
-                    Id = 4,
-                    Title = "Lô Dầm Thép Hình Chữ H, I & Xà Gồ Tháo Dỡ Tái Sử Dụng 85 Tấn",
-                    Type = "RECYCLED_STEEL",
-                    TypeDisplay = "Sắt Thép Tái Sử Dụng",
-                    Status = "Còn hàng",
-                    CategoryId = 1,
-                    Province = "Đồng Nai",
-                    Kcn = "KCN Long Đức",
-                    Price = 1250000000,
-                    PriceDisplay = "1.25 Tỷ VNĐ",
-                    UnitPrice = "14.700 đ/kg",
-                    Area = "85 Tấn",
-                    BrokerPhone = "0983 777 666",
-                    Image = "https://images.unsplash.com/photo-1535813547-99c456a41d4a?w=800&q=80",
-                    VideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-forklift-moving-cargo-in-a-warehouse-42863-large.mp4",
-                    AudioUrl = null,
-                    Model3DUrl = null,
-                    Desc = "Lô thép dầm chính H400x200, H300x150, I300 tháo dỡ từ nhà máy công nghiệp nhẹ, cây dài tiêu chuẩn 6m - 12m, không cong vênh.",
-                    EmailNotified = true,
-                    Created = "11:30 29/10/2026"
-                }
-            };
-        }
-
         public async Task<PropertyDto> CreateAsync(CreatePropertyRequest request)
         {
-            var typeDisplay = ResolveTypeDisplay(request.Type, request.TypeDisplay);
-            var priceDisplay = FormatPrice(request.Price, request.Type);
-            var status = string.IsNullOrWhiteSpace(request.Status) ? "Còn hàng" : request.Status.Trim();
-            var now = DateTime.UtcNow;
-
-            int? categoryId = request.CategoryId;
-            if (!categoryId.HasValue && !string.IsNullOrWhiteSpace(request.Type))
-            {
-                var cat = await _context.Categories.FirstOrDefaultAsync(c => c.Code.ToUpper() == request.Type.ToUpper());
-                if (cat != null) categoryId = cat.Id;
-            }
+            var type = string.IsNullOrWhiteSpace(request.Type) ? "BAN_KHUNG_XUONG" : request.Type.ToUpper();
+            var typeDisplay = ResolveTypeDisplay(type, request.TypeDisplay);
+            var priceDisplay = FormatPrice(request.Price, type);
 
             var entity = new PropertyItem
             {
                 Title = request.Title,
-                Type = request.Type?.ToUpper() ?? "SALE",
+                Type = type,
                 TypeDisplay = typeDisplay,
-                Status = status,
-                CategoryId = categoryId,
-                Province = request.Province,
-                Kcn = request.Kcn ?? string.Empty,
+                Status = request.Status?.Trim() ?? "Còn hàng",
+                StockStatus = string.IsNullOrWhiteSpace(request.StockStatus) ? "IN_STOCK" : request.StockStatus.Trim().ToUpper(),
+                StorageLocation = string.IsNullOrWhiteSpace(request.StorageLocation) ? "AT_YARD" : request.StorageLocation.Trim().ToUpper(),
+                CategoryId = request.CategoryId,
+                Province = string.IsNullOrWhiteSpace(request.Province) ? (request.City ?? "Bình Dương") : request.Province,
+                City = request.City ?? request.Province,
+                District = request.District,
+                Kcn = request.Kcn ?? "Vị trí kho bãi",
                 Price = request.Price,
                 PriceDisplay = priceDisplay,
                 UnitPrice = request.UnitPrice,
-                Area = request.Area ?? string.Empty,
-                BrokerPhone = request.BrokerPhone,
+                Area = request.Area ?? "Tiêu chuẩn",
+                Length = request.Length,
+                Width = request.Width,
+                StructureType = request.StructureType,
+                HasCrane = request.HasCrane ?? false,
+                CraneCapacity = request.CraneCapacity,
+                BrokerPhone = string.IsNullOrWhiteSpace(request.BrokerPhone) ? "090 123 4567" : request.BrokerPhone,
                 Image = string.IsNullOrWhiteSpace(request.Image)
-                    ? "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80"
+                    ? "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80"
                     : request.Image,
                 VideoUrl = request.VideoUrl,
                 AudioUrl = request.AudioUrl,
                 Model3DUrl = request.Model3DUrl,
+                Drawing2DUrl = request.Drawing2DUrl,
                 Desc = request.Desc ?? string.Empty,
                 EmailNotified = request.TriggerEmail,
-                CreatedAt = now
+                CreatedAt = DateTime.UtcNow
             };
 
             await _context.Properties.AddAsync(entity);
@@ -322,16 +261,34 @@ namespace Nhaxuong.SERVICE.Services
             {
                 entity.Status = request.Status.Trim();
             }
+            if (!string.IsNullOrWhiteSpace(request.StockStatus))
+            {
+                entity.StockStatus = request.StockStatus.Trim().ToUpper();
+            }
+            if (!string.IsNullOrWhiteSpace(request.StorageLocation))
+            {
+                entity.StorageLocation = request.StorageLocation.Trim().ToUpper();
+            }
             if (request.CategoryId.HasValue)
             {
                 entity.CategoryId = request.CategoryId.Value;
             }
-            entity.Province = request.Province;
+            entity.Province = request.Province ?? entity.Province;
+            entity.City = request.City ?? entity.City;
+            entity.District = request.District ?? entity.District;
             entity.Kcn = request.Kcn ?? entity.Kcn;
             entity.Price = request.Price;
             entity.PriceDisplay = FormatPrice(request.Price, entity.Type);
             entity.UnitPrice = request.UnitPrice;
             entity.Area = request.Area ?? entity.Area;
+            entity.Length = request.Length ?? entity.Length;
+            entity.Width = request.Width ?? entity.Width;
+            entity.StructureType = request.StructureType ?? entity.StructureType;
+            if (request.HasCrane.HasValue)
+            {
+                entity.HasCrane = request.HasCrane.Value;
+            }
+            entity.CraneCapacity = request.CraneCapacity ?? entity.CraneCapacity;
             entity.BrokerPhone = request.BrokerPhone;
             if (!string.IsNullOrWhiteSpace(request.Image))
             {
@@ -340,6 +297,7 @@ namespace Nhaxuong.SERVICE.Services
             entity.VideoUrl = request.VideoUrl;
             entity.AudioUrl = request.AudioUrl;
             entity.Model3DUrl = request.Model3DUrl;
+            entity.Drawing2DUrl = request.Drawing2DUrl;
             entity.Desc = request.Desc ?? entity.Desc;
 
             await _context.SaveChangesAsync();
@@ -383,19 +341,29 @@ namespace Nhaxuong.SERVICE.Services
                 Type = item.Type,
                 TypeDisplay = item.TypeDisplay,
                 Status = item.Status ?? "Còn hàng",
+                StockStatus = string.IsNullOrWhiteSpace(item.StockStatus) ? "IN_STOCK" : item.StockStatus,
+                StorageLocation = string.IsNullOrWhiteSpace(item.StorageLocation) ? "AT_YARD" : item.StorageLocation,
                 CategoryId = item.CategoryId,
                 CategoryName = item.Category?.Name,
                 Province = item.Province,
+                City = item.City,
+                District = item.District,
                 Kcn = item.Kcn,
                 Price = item.Price,
                 PriceDisplay = item.PriceDisplay,
                 UnitPrice = item.UnitPrice,
                 Area = item.Area,
+                Length = item.Length,
+                Width = item.Width,
+                StructureType = item.StructureType,
+                HasCrane = item.HasCrane,
+                CraneCapacity = item.CraneCapacity,
                 BrokerPhone = item.BrokerPhone,
                 Image = item.Image,
                 VideoUrl = item.VideoUrl,
                 AudioUrl = item.AudioUrl,
                 Model3DUrl = item.Model3DUrl,
+                Drawing2DUrl = item.Drawing2DUrl,
                 Desc = item.Desc,
                 EmailNotified = item.EmailNotified,
                 Created = item.CreatedAt.ToString("HH:mm dd/MM/yyyy")
@@ -407,31 +375,96 @@ namespace Nhaxuong.SERVICE.Services
             if (!string.IsNullOrWhiteSpace(customDisplay)) return customDisplay;
             return (type?.ToUpper()) switch
             {
-                "SALE" => "Bán Nhà Xưởng",
-                "RENT" => "Cho Thuê Kho Bãi",
-                "RECYCLED_STEEL" => "Sắt Thép Tái Sử Dụng",
-                _ => "BĐS Công Nghiệp"
+                "BAN_KHUNG_XUONG" => "Bán Khung Nhà Xưởng",
+                "COT_KEO" => "Cột Kèo & Dầm Thép",
+                "THEP_HINH_I" => "Thép Hình I (I 200, I 300, I 500)",
+                "TON_LOP_VACH" => "Tôn Lợp & Tôn Vách",
+                "TON_SAN_DECK" => "Tôn Sàn (Decking)",
+                "ONG_PCCC" => "Ống Phòng Cháy Chữa Cháy (PCCC)",
+                "THANH_LY_XUONG" => "Thanh Lý Trọn Gói Nhà Xưởng",
+                "THIET_KE_3D" => "Xem Thiết Kế 3D Nhà Xưởng",
+                _ => "Vật Tư & Nhà Xưởng"
             };
         }
 
         private static string FormatPrice(long price, string? type)
         {
-            if (type?.ToUpper() == "RENT")
+            if (price >= 1_000_000_000)
+                return $"{(price / 1_000_000_000.0):0.##} Tỷ VNĐ";
+            if (price >= 1_000_000)
+                return $"{price / 1_000_000} Triệu VNĐ";
+            if (price > 0)
+                return $"{price:N0} đ";
+            return "Liên hệ báo giá";
+        }
+
+        private static List<PropertyDto> GetFallbackProperties()
+        {
+            return new List<PropertyDto>
             {
-                if (price >= 1_000_000_000)
-                    return $"{(price / 1_000_000_000.0):0.#} Tỷ / Tháng";
-                if (price >= 1_000_000)
-                    return $"{price / 1_000_000} Triệu / Tháng";
-                return $"{price:N0} đ/tháng";
-            }
-            else
-            {
-                if (price >= 1_000_000_000)
-                    return $"{(price / 1_000_000_000.0):0.#} Tỷ VNĐ";
-                if (price >= 1_000_000)
-                    return $"{price / 1_000_000} Triệu VNĐ";
-                return $"{price:N0} VNĐ";
-            }
+                new()
+                {
+                    Id = 1,
+                    Title = "Khung Nhà Xưởng Tiền Chế 24m x 84m (2.016 m²) Kèo Zamil Có Cẩu Trục 10T",
+                    Type = "BAN_KHUNG_XUONG",
+                    TypeDisplay = "Bán Khung Nhà Xưởng",
+                    Status = "Còn hàng",
+                    StockStatus = "IN_STOCK",
+                    StorageLocation = "AT_YARD",
+                    CategoryId = 1,
+                    Province = "Bình Dương",
+                    City = "Bình Dương",
+                    District = "Dĩ An",
+                    Kcn = "Kho Bãi ICD Tân Cảng, TP. Dĩ An",
+                    Price = 1450000000,
+                    PriceDisplay = "1.45 Tỷ VNĐ",
+                    UnitPrice = "719.000 đ/m²",
+                    Area = "2.016 m²",
+                    Length = 84,
+                    Width = 24,
+                    StructureType = "Zamil",
+                    HasCrane = true,
+                    CraneCapacity = "10 Tấn",
+                    BrokerPhone = "0901 234 567",
+                    Image = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
+                    VideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4",
+                    AudioUrl = "https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3",
+                    Model3DUrl = "/models3d/nha_xuong_24x84.html",
+                    Drawing2DUrl = "/models3d/mat_bang_24x84.dxf",
+                    Desc = "Khung nhà xưởng Zamil chuẩn xuất khẩu kích thước 24m x 84m, bước cột 6m, chiều cao giọt nước 8.5m, dầm đỡ cẩu trục 10 tấn chạy suốt chiều dài.",
+                    Created = DateTime.UtcNow.ToString("HH:mm dd/MM/yyyy")
+                },
+                new()
+                {
+                    Id = 2,
+                    Title = "Bản Vẽ & Mô Hình 3D Nhà Xưởng Thép I 66m x 136m (8.976 m²) 3 Nhịp Cột",
+                    Type = "THIET_KE_3D",
+                    TypeDisplay = "Xem Thiết Kế 3D Nhà Xưởng",
+                    Status = "Còn hàng",
+                    StockStatus = "IN_STOCK",
+                    StorageLocation = "AT_YARD",
+                    CategoryId = 8,
+                    Province = "Bình Dương",
+                    City = "Bình Dương",
+                    District = "Thuận An",
+                    Kcn = "Trung Tâm Kỹ Thuật KCN Thuận An",
+                    Price = 35000000,
+                    PriceDisplay = "35 Triệu VNĐ",
+                    UnitPrice = "Trọn gói hồ sơ",
+                    Area = "8.976 m²",
+                    Length = 136,
+                    Width = 66,
+                    StructureType = "Thép I",
+                    HasCrane = true,
+                    CraneCapacity = "15 Tấn",
+                    BrokerPhone = "0918 765 432",
+                    Image = "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80",
+                    Model3DUrl = "/models3d/nha_xuong_66x136.html",
+                    Drawing2DUrl = "/models3d/khung_keo_FR1_66m.step",
+                    Desc = "Bộ hồ sơ bản vẽ kết cấu đầy đủ (AutoCAD DXF + STEP + 3D GLB) cho nhà xưởng khẩu độ lớn 66m chia 3 nhịp 22m, dài 136m.",
+                    Created = DateTime.UtcNow.ToString("HH:mm dd/MM/yyyy")
+                }
+            };
         }
     }
 }

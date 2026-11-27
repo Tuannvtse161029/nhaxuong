@@ -10,6 +10,7 @@ namespace Nhaxuong.SERVICE.Services
     {
         Task<List<CategoryDto>> GetAllAsync();
         Task<CategoryDto> CreateAsync(CreateCategoryRequest request);
+        Task<CategoryDto> UpdateAsync(int id, CreateCategoryRequest request);
         Task<bool> DeleteAsync(string codeOrId);
         Task<bool> DeleteAsync(int id);
     }
@@ -31,6 +32,11 @@ namespace Nhaxuong.SERVICE.Services
                     .OrderBy(c => c.Id)
                     .ToListAsync();
 
+                if (categories.Count == 0)
+                {
+                    return GetDefaultCategories();
+                }
+
                 return categories.Select(c => new CategoryDto
                 {
                     Id = c.Id,
@@ -43,12 +49,7 @@ namespace Nhaxuong.SERVICE.Services
             }
             catch (Exception)
             {
-                return new List<CategoryDto>
-                {
-                    new() { Id = 1, Code = "RECYCLED_STEEL", Name = "Sắt Thép Tái Sử Dụng", Icon = "Layers", Desc = "Khung nhà xưởng tiền chế, dầm thép H, I, U và tôn tái sử dụng", Active = true },
-                    new() { Id = 2, Code = "RENT", Name = "Cho Thuê Kho Bãi", Icon = "Boxes", Desc = "Kho logistics, dock leveler, bãi trung chuyển tiêu chuẩn", Active = true },
-                    new() { Id = 3, Code = "SALE", Name = "Bán Nhà Xưởng", Icon = "Warehouse", Desc = "Xưởng sản xuất tiêu chuẩn, hoàn công đầy đủ, trạm điện riêng", Active = true }
-                };
+                return GetDefaultCategories();
             }
         }
 
@@ -88,16 +89,36 @@ namespace Nhaxuong.SERVICE.Services
             };
         }
 
+        public async Task<CategoryDto> UpdateAsync(int id, CreateCategoryRequest request)
+        {
+            var entity = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
+            if (entity == null)
+            {
+                throw new KeyNotFoundException($"Không tìm thấy danh mục với mã id {id}");
+            }
+
+            entity.Name = request.Name;
+            if (!string.IsNullOrWhiteSpace(request.Icon)) entity.Icon = request.Icon;
+            if (request.Desc != null) entity.Desc = request.Desc;
+            entity.Active = request.Active;
+
+            await _context.SaveChangesAsync();
+
+            return new CategoryDto
+            {
+                Id = entity.Id,
+                Code = entity.Code,
+                Name = entity.Name,
+                Icon = entity.Icon,
+                Desc = entity.Desc,
+                Active = entity.Active
+            };
+        }
+
         public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
             if (entity == null) return false;
-
-            var normalizedCode = entity.Code.Trim().ToUpper();
-            if (normalizedCode == "SALE" || normalizedCode == "RENT" || normalizedCode == "RECYCLED_STEEL")
-            {
-                throw new InvalidOperationException("Không thể xóa các danh mục hệ thống cốt lõi!");
-            }
 
             _context.Categories.Remove(entity);
             await _context.SaveChangesAsync();
@@ -112,17 +133,27 @@ namespace Nhaxuong.SERVICE.Services
             }
 
             var normalizedCode = codeOrId.Trim().ToUpper();
-            if (normalizedCode == "SALE" || normalizedCode == "RENT" || normalizedCode == "RECYCLED_STEEL")
-            {
-                throw new InvalidOperationException("Không thể xóa các danh mục hệ thống cốt lõi!");
-            }
-
             var entity = await _context.Categories.FirstOrDefaultAsync(c => c.Code == normalizedCode);
             if (entity == null) return false;
 
             _context.Categories.Remove(entity);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private static List<CategoryDto> GetDefaultCategories()
+        {
+            return new List<CategoryDto>
+            {
+                new() { Id = 1, Code = "BAN_KHUNG_XUONG", Name = "Bán Khung Nhà Xưởng", Icon = "Warehouse", Desc = "Khung nhà xưởng tiền chế, kết cấu Zamil khẩu độ lớn", Active = true },
+                new() { Id = 2, Code = "COT_KEO", Name = "Cột Kèo & Dầm Thép", Icon = "Layers", Desc = "Cột dầm H, I, kèo mái, hệ giằng, xà gồ Z và C mạ kẽm", Active = true },
+                new() { Id = 3, Code = "THEP_HINH_I", Name = "Thép Hình I (I 200, I 300, I 500)", Icon = "Grid", Desc = "Thép hình đúc I 200, I 300, I 500 cắt theo quy cách tiêu chuẩn", Active = true },
+                new() { Id = 4, Code = "TON_LOP_VACH", Name = "Tôn (Tôn Lợp & Tôn Vách)", Icon = "FileText", Desc = "Tôn lợp mái 5 sóng, 9 sóng, tôn chống nóng PU và tôn vách bao che", Active = true },
+                new() { Id = 5, Code = "TON_SAN_DECK", Name = "Tôn Sàn (Decking)", Icon = "LayoutGrid", Desc = "Tôn sàn Deck H50W1000 mạ kẽm cuộn đúc bê tông sàn nhà kho", Active = true },
+                new() { Id = 6, Code = "ONG_PCCC", Name = "Ống Phòng Cháy Chữa Cháy (PCCC)", Icon = "ShieldAlert", Desc = "Ống thép hàn đen, ống mạ kẽm PCCC tiêu chuẩn ASTM/BS", Active = true },
+                new() { Id = 7, Code = "THANH_LY_XUONG", Name = "Thanh Lý Trọn Gói Nhà Xưởng", Icon = "Truck", Desc = "Thu mua thanh lý và bàn giao trọn gói nhà xưởng cũ tại công trình", Active = true },
+                new() { Id = 8, Code = "THIET_KE_3D", Name = "Xem Thiết Kế 3D Nhà Xưởng", Icon = "Box", Desc = "Bản vẽ 2D AutoCAD & Mô hình 3D tương tác 360°, tra cứu theo kích thước và kết cấu", Active = true }
+            };
         }
     }
 
@@ -143,30 +174,40 @@ namespace Nhaxuong.SERVICE.Services
 
         public async Task<List<SubscriberDto>> GetAllAsync()
         {
-            var subscribers = await _context.Subscribers
-                .OrderByDescending(s => s.CreatedAt)
-                .ToListAsync();
-
-            return subscribers.Select(s => new SubscriberDto
+            try
             {
-                Id = s.Id,
-                Name = s.Name,
-                Email = s.Email,
-                Phone = s.Phone,
-                Channel = s.Channel,
-                Status = s.Status,
-                Time = s.CreatedAt.ToString("HH:mm dd/MM/yyyy")
-            }).ToList();
+                var subscribers = await _context.Subscribers
+                    .OrderByDescending(s => s.CreatedAt)
+                    .ToListAsync();
+
+                return subscribers.Select(s => new SubscriberDto
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Email = s.Email,
+                    Phone = s.Phone,
+                    Channel = s.Channel,
+                    Status = s.Status,
+                    Time = s.CreatedAt.ToString("HH:mm dd/MM/yyyy")
+                }).ToList();
+            }
+            catch (Exception)
+            {
+                return new List<SubscriberDto>
+                {
+                    new() { Id = "sub-1", Name = "Công Ty Cơ Khí & Xây Dựng Nam Phát", Email = "namphat.invest@gmail.com", Phone = "0903123456", Channel = "email", Status = "Đang Nhận Tin", Time = DateTime.UtcNow.ToString("HH:mm dd/MM/yyyy") },
+                    new() { Id = "sub-2", Name = "Đặng Minh Quân (Nhà Thầu KCN Sóng Thần)", Email = "quan.dang@logistics.vn", Phone = "0918765432", Channel = "hotline", Status = "Đang Nhận Tin", Time = DateTime.UtcNow.ToString("HH:mm dd/MM/yyyy") }
+                };
+            }
         }
 
         public async Task<SubscriberDto> CreateAsync(CreateSubscriberRequest request)
         {
             var now = DateTime.UtcNow;
-
             var entity = new Subscriber
             {
                 Id = "sub-" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                Name = string.IsNullOrWhiteSpace(request.Name) ? "Khách Hàng Mới" : request.Name,
+                Name = string.IsNullOrWhiteSpace(request.Name) ? "Khách Hàng Quan Tâm" : request.Name,
                 Email = request.Email,
                 Phone = request.Phone,
                 Channel = string.IsNullOrWhiteSpace(request.Channel) ? "email" : request.Channel,
@@ -203,7 +244,7 @@ namespace Nhaxuong.SERVICE.Services
     public class NoticeService : INoticeService
     {
         private readonly AppDbContext _context;
-        private static string _activeTicker = "Ưu đãi thuế quan mở rộng KCN VSIP 1, Long Đức. Hỗ trợ mô hình 3D HTML xoay tương tác 360° và Audio thuyết minh trực quan!";
+        private static string _activeTicker = "Tổng kho khung xưởng & sắt thép tại Dĩ An - Bình Dương & Lâm Đồng. Xem mô hình 3D kết cấu 360° trực tuyến!";
 
         public NoticeService(AppDbContext context)
         {
@@ -235,9 +276,9 @@ namespace Nhaxuong.SERVICE.Services
                     new()
                     {
                         Id = 1,
-                        Title = "Ưu đãi thuế quan mở rộng KCN VSIP 1, Long Đức.",
-                        Content = "Hỗ trợ mô hình 3D HTML xoay tương tác 360° và Audio thuyết minh trực quan!",
-                        Badge = "Thông Báo",
+                        Title = "Khai trương kho bãi khung xưởng & sắt thép tại Dĩ An - Bình Dương",
+                        Content = "Tổng kho 15.000m² tại Dĩ An sẵn sàng phục vụ cẩu tải khung thép Zamil, dầm I và tôn sàn giao ngay.",
+                        Badge = "Kho Hàng Mới",
                         Active = true,
                         CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd")
                     }

@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MÔ HÌNH 3D KẾT CẤU THÉP NHÀ XƯỞNG 66M x 136M (KHÔNG CỘT GIỮA KHOANG 44M)</title>
+    <!-- Three.js + OrbitControls + FontAwesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #080d1a;
+            --bg-card: #101827;
+            --bg-glass: rgba(16, 24, 39, 0.92);
+            --accent-cyan: #06b6d4;
+            --accent-blue: #38bdf8;
+            --accent-gold: #facc15;
+            --accent-orange: #fb923c;
+            --accent-green: #22c55e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        header {
+            background: rgba(11, 15, 26, 0.96);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-badge {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #0284c7, #06b6d4);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            box-shadow: 0 4px 18px rgba(6, 182, 212, 0.35);
+        }
+
+        .logo-text h1 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-text p {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        .project-tags {
+            display: flex;
+            gap: 8px;
+        }
+
+        .p-tag {
+            background: #1e293b;
+            color: #38bdf8;
+            border: 1px solid #334155;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .p-tag.highlight {
+            background: rgba(6, 182, 212, 0.2);
+            color: #38bdf8;
+            border-color: #06b6d4;
+        }
+
+        /* Viewport Canvas */
+        #webgl-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #three-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* UI Overlays */
+        .glass-panel {
+            position: absolute;
+            background: var(--bg-glass);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            z-index: 10;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
+        }
+
+        /* Left Info Panel */
+        .panel-info {
+            top: 20px;
+            left: 20px;
+            width: 380px;
+            padding: 18px 20px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .panel-info h2 {
+            font-size: 15px;
+            color: var(--accent-cyan);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-info .sub-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.45;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .alert-clear-span {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid #22c55e;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            color: #86efac;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .spec-table {
+            width: 100%;
+            font-size: 11.5px;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+
+        .spec-table td {
+            padding: 5px 0;
+            border-bottom: 1px dashed #1e293b;
+        }
+
+        .spec-table td:first-child {
+            color: var(--text-muted);
+        }
+
+        .spec-table td:last-child {
+            color: #f1f5f9;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* Color Badges */
+        .color-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            font-size: 11px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 10px;
+        }
+
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .color-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        /* Right Control Panel */
+        .panel-controls {
+            top: 20px;
+            right: 20px;
+            width: 250px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .ctrl-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 6px 0 2px 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-ctrl {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            padding: 8px 12px;
+            border-radius: 7px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-ctrl:hover, .btn-ctrl.active {
+            background: var(--accent-cyan);
+            color: #0b0f19;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+        }
+
+        .btn-toggle {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            padding: 8px 12px;
+            border-radius: 7px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-toggle:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .btn-toggle.toggled-off {
+            background: #334155;
+            color: #94a3b8;
+            border-color: #475569;
+        }
+
+        /* Bottom Status & Hint */
+        .bottom-hint {
+            position: absolute;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            padding: 8px 24px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 10;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.5);
+        }
+
+        .bottom-hint b {
+            color: var(--accent-cyan);
+        }
+
+        .hud-measure {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            color: #38bdf8;
+            border: 1px solid #1e293b;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="logo-box">
+            <div class="logo-badge"><i class="fa-solid fa-industry"></i></div>
+            <div class="logo-text">
+                <h1>DỰ ÁN NEW FACTORY • KẾT CẤU THÉP NHÀ XƯỞNG 66M x 136M</h1>
+                <p>Khung FR1 Nhịp Giữa 44M Thông Suốt Không Cột • 4 Hàng Cột (Y1, Y2, Y6, Y7) • 17 Bước Gian x 8m</p>
+            </div>
+        </div>
+
+        <div class="project-tags">
+            <span class="p-tag highlight"><i class="fa-solid fa-check"></i> Thông Suốt Nhịp 44m (Không Cột Giữa)</span>
+            <span class="p-tag"><i class="fa-solid fa-ruler-combined"></i> 66m x 136m (8,976 m²)</span>
+            <span class="p-tag"><i class="fa-solid fa-arrows-up-to-line"></i> Đỉnh nóc +12.500m</span>
+        </div>
+    </header>
+
+    <!-- Main 3D Viewport -->
+    <div id="webgl-container">
+        <canvas id="three-canvas"></canvas>
+
+        <!-- Left Info Card -->
+        <div class="glass-panel panel-info">
+            <h2><i class="fa-solid fa-circle-info"></i> THÔNG SỐ KHUNG KÈO FR1</h2>
+            
+            <div class="alert-clear-span">
+                <i class="fa-solid fa-circle-check"></i> <b>KHOANG GIỮA THÔNG SUỐT 44.0M:</b><br>
+                Toàn bộ lòng xưởng từ Trục Y2 đến Trục Y6 hoàn toàn <b>KHÔNG CÓ CỘT GIỮA</b> (Không có cột tại Y3, Y4, Y5). Dầm vì kèo thép vát nách H(400~1250)x300x8x10 vượt nhịp 44m tự do.
+            </div>
+
+            <div class="sub-desc">
+                Chỉ có 4 hàng cột chạy dọc 136m: Trục Y1 (biên trái), Trục Y2 (cột cao 10m), Trục Y6 (cột cao 10m), Trục Y7 (biên phải).
+            </div>
+
+            <table class="spec-table">
+                <tr><td>Khẩu độ nhà xưởng:</td><td>66.0 m (Trục Y1 - Y7)</td></tr>
+                <tr><td>Khoang giữa thông suốt:</td><td><b>44.0 m (Trục Y2 - Y6)</b></td></tr>
+                <tr><td>2 Gian biên thấp:</td><td>11.0 m mỗi bên (Y1-Y2 & Y6-Y7)</td></tr>
+                <tr><td>Chiều dài tổng thể:</td><td>136.0 m (Trục X1 - X18)</td></tr>
+                <tr><td>Bước gian dọc nhà:</td><td>17 bước gian x 8.0 m</td></tr>
+                <tr><td>Diện tích sàn xưởng:</td><td>8,976 m² (~0.9 ha)</td></tr>
+                <tr><td>Cao độ giọt nước biên:</td><td>FL+7.000m & FL+10.000m</td></tr>
+                <tr><td>Cao độ đỉnh nóc cao nhất:</td><td>FL+12.500m (Trục Y4)</td></tr>
+                <tr><td>Độ dốc mái:</td><td>10% (mái giật cấp đa tầng)</td></tr>
+                <tr><td>Dầm vì kèo vượt nhịp 44m:</td><td>H(400~1250)x300x8x10</td></tr>
+                <tr><td>Hệ xà gồ mái:</td><td>Z250 / Z200 bước 1.45m</td></tr>
+                <tr><td>Giằng cổng (Portal Bracing):</td><td>Trục Y2 & Y6 thông thủy 6.5m</td></tr>
+                <tr><td>Mái đón Canopy CA1:</td><td>Vươn 6.0m (Đầu hồi X1, X18)</td></tr>
+                <tr><td>Cột đầu hồi (Gable posts):</td><td>Chỉ nằm sát tường biên X1, X18</td></tr>
+            </table>
+
+            <div class="color-legend">
+                <div class="color-item"><span class="color-dot" style="background:#475569;"></span> 4 Hàng Cột Y1, Y2, Y6, Y7</div>
+                <div class="color-item"><span class="color-dot" style="background:#3b82f6;"></span> Kèo thép vát nách 44m</div>
+                <div class="color-item"><span class="color-dot" style="background:#eab308;"></span> Xà gồ mái Z250/Z200</div>
+                <div class="color-item"><span class="color-dot" style="background:#f97316;"></span> Xà gồ vách C200</div>
+                <div class="color-item"><span class="color-dot" style="background:#d97706;"></span> Giằng cổng Portal Bracing</div>
+                <div class="color-item"><span class="color-dot" style="background:#06b6d4;"></span> Mái đón Canopy 6m & 2m</div>
+                <div class="color-item"><span class="color-dot" style="background:#0284c7;"></span> Mái tôn lợp chống nóng</div>
+                <div class="color-item"><span class="color-dot" style="background:#64748b;"></span> Sàn bê tông thông suốt</div>
+            </div>
+        </div>
+
+        <!-- Right View Presets & Layers -->
+        <div class="glass-panel panel-controls">
+            <div class="ctrl-title"><i class="fa-solid fa-camera"></i> Góc Nhìn Cài Đặt Sẵn</div>
+            <button class="btn-ctrl" onclick="flyCam(95, 80, 140, 0, 5, 0)"><i class="fa-solid fa-globe"></i> 1. Toàn Cảnh Chim Bay</button>
+            <button class="btn-ctrl" onclick="flyCam(0, 16, 95, 0, 8, 68)"><i class="fa-solid fa-door-open"></i> 2. Đầu Hồi X1 & Canopy 6m</button>
+            <button class="btn-ctrl" onclick="flyCam(65, 12, 0, 0, 8, 0)"><i class="fa-solid fa-drafting-compass"></i> 3. Mặt Cắt Khung FR1 (Nhịp 44m)</button>
+            <button class="btn-ctrl" onclick="flyCam(-22, 9, 20, -11, 5, 0)"><i class="fa-solid fa-archway"></i> 4. Giằng Cổng Trục Y2 & Y6</button>
+            <button class="btn-ctrl" onclick="flyCam(0, 4.5, 5, 0, 6, -30)"><i class="fa-solid fa-warehouse"></i> 5. Trong Lòng Xưởng Rộng 44m</button>
+            <button class="btn-ctrl" onclick="flyCam(0, 160, 0, 0, 0, 0)"><i class="fa-solid fa-map"></i> 6. Mặt Bằng Từ Trên Xuống</button>
+
+            <div class="ctrl-title"><i class="fa-solid fa-layer-group"></i> Bóc Tách / Ẩn Hiện Lớp</div>
+            <button class="btn-toggle" id="btn-roof" onclick="toggleLayer('roof')">
+                <span><i class="fa-solid fa-sheet-plastic"></i> Mái Tôn 0.45zem</span>
+                <i class="fa-solid fa-check"></i>
+            </button>
+            <button class="btn-toggle" id="btn-purlin" onclick="toggleLayer('purlin')">
+                <span><i class="fa-solid fa-bars"></i> Hệ Xà Gồ Mái Z250</span>
+                <i class="fa-solid fa-check"></i>
+            </button>
+            <button class="btn-toggle" id="btn-walls" onclick="toggleLayer('walls')">
+                <span><i class="fa-solid fa-border-all"></i> Tường & Xà Gồ Vách</span>
+                <i class="fa-solid fa-check"></i>
+            </button>
+            <button class="btn-toggle" id="btn-canopy" onclick="toggleLayer('canopy')">
+                <span><i class="fa-solid fa-umbrella"></i> Mái Đón Canopy (6m/2m)</span>
+                <i class="fa-solid fa-check"></i>
+            </button>
+            <button class="btn-toggle" id="btn-bracing" onclick="toggleLayer('bracing')">
+                <span><i class="fa-solid fa-xmark"></i> Hệ Giằng Mái & Cổng</span>
+                <i class="fa-solid fa-check"></i>
+            </button>
+
+            <div class="ctrl-title"><i class="fa-solid fa-sun"></i> Môi Trường Ánh Sáng</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                <button class="btn-ctrl" style="text-align:center; justify-content:center;" onclick="setEnv('day')">☀️ Ban Ngày</button>
+                <button class="btn-ctrl" style="text-align:center; justify-content:center;" onclick="setEnv('sunset')">🌅 Hoàng Hôn</button>
+            </div>
+            <button class="btn-ctrl" id="btn-rotate" onclick="toggleAutoRotate()"><i class="fa-solid fa-arrows-rotate"></i> ⏯️ Tự Động Xoay</button>
+        </div>
+
+        <!-- Dimension HUD -->
+        <div class="hud-measure">
+            <i class="fa-solid fa-expand"></i> Khẩu độ: <b>66.0m</b> | Khoang giữa <b>thông suốt 44.0m</b> KHÔNG CỘT GIỮA | Chiều dài: <b>136.0m</b>
+        </div>
+
+        <!-- Bottom Controls Guide -->
+        <div class="bottom-hint">
+            <span><i class="fa-solid fa-computer-mouse"></i> <b>Chuột trái:</b> Xoay 3D 360°</span>
+            <span><i class="fa-solid fa-arrows-up-down-left-right"></i> <b>Chuột phải:</b> Trượt góc nhìn (Pan)</span>
+            <span><i class="fa-solid fa-magnifying-glass-plus"></i> <b>Cuộn chuột:</b> Phóng to / Thu nhỏ</span>
+        </div>
+    </div>
+
+    <!-- THREE.JS 3D ENGINE -->
+    <script>
+        let scene, camera, renderer, controls;
+        let sunLight, hemiLight, ambientLight;
+        let groupFrames, groupRoof, groupPurlins, groupWalls, groupCanopy, groupBracing;
+        let isRotating = true;
+
+        const layers = {
+            roof: true,
+            purlin: true,
+            walls: true,
+            canopy: true,
+            bracing: true
+        };
+
+        function init() {
+            const container = document.getElementById('webgl-container');
+            const canvas = document.getElementById('three-canvas');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+            scene.fog = new THREE.FogExp2(0x0f172a, 0.0035);
+
+            camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.5, 1000);
+            camera.position.set(95, 80, 140);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.15;
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.target.set(0, 6, 0);
+            controls.maxPolarAngle = Math.PI / 2 - 0.01;
+            controls.minDistance = 5;
+            controls.maxDistance = 500;
+
+            setupLighting();
+            buildMaterials();
+            buildFactoryModel();
+
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+        }
+
+        function setupLighting() {
+            hemiLight = new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.85);
+            scene.add(hemiLight);
+
+            sunLight = new THREE.DirectionalLight(0xfff7ed, 1.8);
+            sunLight.position.set(80, 120, 90);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 10;
+            sunLight.shadow.camera.far = 400;
+            const d = 110;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
+            sunLight.shadow.bias = -0.0004;
+            scene.add(sunLight);
+
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+            scene.add(ambientLight);
+        }
+
+        let matSteelColumn, matSteelRafter, matPurlin, matGirt, matRoof, matFloor, matWallPanel, matCanopy, matBracing, matPortal, matGablePost;
+
+        function buildMaterials() {
+            matSteelColumn = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.35, metalness: 0.85 });
+            matSteelRafter = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.35, metalness: 0.8 });
+            matPurlin = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.4, metalness: 0.7 });
+            matGirt = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.45, metalness: 0.6 });
+            matRoof = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.28, metalness: 0.75, side: THREE.DoubleSide });
+            matFloor = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.7, metalness: 0.15 });
+            matWallPanel = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.6, metalness: 0.3, side: THREE.DoubleSide, transparent: true, opacity: 0.45 });
+            matCanopy = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.3, metalness: 0.8 });
+            matBracing = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3, metalness: 0.8 });
+            matPortal = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.35, metalness: 0.85 });
+            matGablePost = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.4, metalness: 0.8 });
+        }
+
+        function buildFactoryModel() {
+            groupFrames = new THREE.Group();
+            groupRoof = new THREE.Group();
+            groupPurlins = new THREE.Group();
+            groupWalls = new THREE.Group();
+            groupCanopy = new THREE.Group();
+            groupBracing = new THREE.Group();
+
+            const bayL = 8.0;
+            const numFrames = 18; // X1 to X18
+
+            // 1. CONCRETE SLAB BASE (66m x 136m, thickness 0.3m)
+            const slabGeo = new THREE.BoxGeometry(68.0, 0.3, 138.0);
+            const slabMesh = new THREE.Mesh(slabGeo, matFloor);
+            slabMesh.position.set(0, -0.15, 0);
+            slabMesh.receiveShadow = true;
+            scene.add(slabMesh);
+
+            const gridHelper = new THREE.GridHelper(140, 28, 0x38bdf8, 0x1e293b);
+            gridHelper.position.y = 0.02;
+            scene.add(gridHelper);
+
+            function createBeam(p1, p2, depth, width, mat) {
+                const v1 = new THREE.Vector3(...p1);
+                const v2 = new THREE.Vector3(...p2);
+                const dir = new THREE.Vector3().subVectors(v2, v1);
+                const len = dir.length();
+                if (len < 0.001) return;
+
+                const beamGeo = new THREE.BoxGeometry(width, depth, len);
+                const mesh = new THREE.Mesh(beamGeo, mat);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+
+                mesh.position.addVectors(v1, v2).multiplyScalar(0.5);
+                mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir.clone().normalize());
+                return mesh;
+            }
+
+            // 2. MAIN STRUCTURAL FRAMES (18 Frames from X1 to X18)
+            // EXACT BLUEPRINT LOGIC:
+            // - Regular frames (X2 to X17): ONLY 4 COLUMNS: Y1 (-33m), Y2 (-22m), Y6 (+22m), Y7 (+33m)!
+            // - The center bay from Y2 to Y6 is 44 METERS CLEAR SPAN WITHOUT ANY COLUMNS!
+            // - End gable frames (X1 and X18): Have wind posts at the perimeter wall only.
+            for (let f = 0; f < numFrames; f++) {
+                const z = -68.0 + f * bayL;
+                const isEndFrame = (f === 0 || f === numFrames - 1); // X1 or X18
+
+                // --- 4 MAIN COLUMNS FOR EVERY FRAME ---
+                // Outer Column at Y1 (x = -33.0, height 7.0m)
+                groupFrames.add(createBeam([-33.0, 0, z], [-33.0, 7.0, z], 0.30, 0.20, matSteelColumn));
+
+                // Column at Y2 (x = -22.0, height 10.0m) - Heavy interior column carrying 44m clear span
+                groupFrames.add(createBeam([-22.0, 0, z], [-22.0, 10.0, z], 0.45, 0.30, matSteelColumn));
+
+                // Column at Y6 (x = 22.0, height 10.0m) - Heavy interior column carrying 44m clear span
+                groupFrames.add(createBeam([22.0, 0, z], [22.0, 10.0, z], 0.45, 0.30, matSteelColumn));
+
+                // Outer Column at Y7 (x = 33.0, height 7.0m)
+                groupFrames.add(createBeam([33.0, 0, z], [33.0, 7.0, z], 0.30, 0.20, matSteelColumn));
+
+                // ONLY ON END GABLE WALLS (X1 and X18): Wind posts to support wall sheeting
+                if (isEndFrame) {
+                    groupWalls.add(createBeam([-11.0, 0, z], [-11.0, 11.25, z], 0.25, 0.18, matGablePost));
+                    groupWalls.add(createBeam([0.0, 0, z], [0.0, 12.35, z], 0.25, 0.20, matGablePost));
+                    groupWalls.add(createBeam([11.0, 0, z], [11.0, 11.25, z], 0.25, 0.18, matGablePost));
+                }
+
+                // --- TAPERED BUILT-UP RAFTERS (NHỊP KHỦNG 44M) ---
+                // Left bay (Y1 to Y2): from (-33, 7.0) to (-22, 8.1)
+                groupFrames.add(createBeam([-33.0, 7.0, z], [-22.0, 8.1, z], 0.40, 0.20, matSteelRafter));
+
+                // MAIN CENTER BAY 44M CLEAR SPAN:
+                // Haunch at Y2: tapered section H(400~1250)x300x8x10
+                // Left half of 44m rafter: from (-22.0, 10.0) up to (0.0, 12.5)
+                groupFrames.add(createBeam([-22.0, 10.0, z], [-11.0, 11.25, z], 0.85, 0.30, matSteelRafter));
+                groupFrames.add(createBeam([-11.0, 11.25, z], [0.0, 12.5, z], 0.65, 0.25, matSteelRafter));
+
+                // Right half of 44m rafter: from (0.0, 12.5) down to (22.0, 10.0)
+                groupFrames.add(createBeam([0.0, 12.5, z], [11.0, 11.25, z], 0.65, 0.25, matSteelRafter));
+                groupFrames.add(createBeam([11.0, 11.25, z], [22.0, 10.0, z], 0.85, 0.30, matSteelRafter));
+
+                // Right bay (Y6 to Y7): from (22, 8.1) to (33, 7.0)
+                groupFrames.add(createBeam([22.0, 8.1, z], [33.0, 7.0, z], 0.40, 0.20, matSteelRafter));
+
+                // Clerestory vertical ties at Y2 & Y6
+                groupFrames.add(createBeam([-22.0, 8.1, z], [-22.0, 10.0, z], 0.20, 0.15, matSteelColumn));
+                groupFrames.add(createBeam([22.0, 8.1, z], [22.0, 10.0, z], 0.20, 0.15, matSteelColumn));
+            }
+
+            // 3. PURLINS (XÀ GỒ MÁI Z250 bước 1.45m)
+            // Left low roof (Y1 to Y2, width 11m -> 8 purlin lines)
+            for (let i = 0; i <= 8; i++) {
+                const ratio = i / 8;
+                const xL = -33.0 + ratio * 11.0;
+                const yL = 7.0 + ratio * 1.1 + 0.15;
+                groupPurlins.add(createBeam([xL, yL, -68.5], [xL, yL, 68.5], 0.12, 0.08, matPurlin));
+
+                const xR = 33.0 - ratio * 11.0;
+                const yR = 7.0 + ratio * 1.1 + 0.15;
+                groupPurlins.add(createBeam([xR, yR, -68.5], [xR, yR, 68.5], 0.12, 0.08, matPurlin));
+            }
+
+            // Center high roof (Y2 to Y4, width 22m -> 15 purlin lines each side)
+            for (let i = 0; i <= 15; i++) {
+                const ratio = i / 15;
+                const xCL = -22.0 + ratio * 22.0;
+                const yCL = 10.0 + ratio * 2.5 + 0.18;
+                groupPurlins.add(createBeam([xCL, yCL, -68.5], [xCL, yCL, 68.5], 0.14, 0.08, matPurlin));
+
+                const xCR = 22.0 - ratio * 22.0;
+                const yCR = 10.0 + ratio * 2.5 + 0.18;
+                groupPurlins.add(createBeam([xCR, yCR, -68.5], [xCR, yCR, 68.5], 0.14, 0.08, matPurlin));
+            }
+
+            // 4. ROOF SHEETING (MÁI TÔN MẠ MÀU 0.45zem)
+            function createRoofPanel(x1, y1, x2, y2, z1, z2) {
+                const w = Math.hypot(x2 - x1, y2 - y1);
+                const l = z2 - z1;
+                const angle = Math.atan2(y2 - y1, x2 - x1);
+                const panelGeo = new THREE.BoxGeometry(w, 0.04, l);
+                const panelMesh = new THREE.Mesh(panelGeo, matRoof);
+                panelMesh.position.set((x1 + x2) / 2, (y1 + y2) / 2 + 0.22, (z1 + z2) / 2);
+                panelMesh.rotation.z = angle;
+                panelMesh.castShadow = true;
+                return panelMesh;
+            }
+
+            groupRoof.add(createRoofPanel(-33.2, 7.0, -22.0, 8.1, -69.0, 69.0));
+            groupRoof.add(createRoofPanel(22.0, 8.1, 33.2, 7.0, -69.0, 69.0));
+            groupRoof.add(createRoofPanel(-22.2, 10.0, 0.0, 12.5, -69.0, 69.0));
+            groupRoof.add(createRoofPanel(0.0, 12.5, 22.2, 10.0, -69.0, 69.0));
+
+            // 5. WALL GIRTS & WALL CLADDING
+            [1.5, 3.0, 4.5, 6.0].forEach(gh => {
+                groupWalls.add(createBeam([-33.05, gh, -68.0], [-33.05, gh, 68.0], 0.08, 0.06, matGirt));
+                groupWalls.add(createBeam([33.05, gh, -68.0], [33.05, gh, 68.0], 0.08, 0.06, matGirt));
+            });
+
+            const sideWallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 7.0, 136.0), matWallPanel);
+            sideWallLeft.position.set(-33.05, 3.5, 0);
+            groupWalls.add(sideWallLeft);
+
+            const sideWallRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 7.0, 136.0), matWallPanel);
+            sideWallRight.position.set(33.05, 3.5, 0);
+            groupWalls.add(sideWallRight);
+
+            const clereWallL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.9, 136.0), matWallPanel);
+            clereWallL.position.set(-22.0, 9.05, 0);
+            groupWalls.add(clereWallL);
+
+            const clereWallR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.9, 136.0), matWallPanel);
+            clereWallR.position.set(22.0, 9.05, 0);
+            groupWalls.add(clereWallR);
+
+            // 6. PORTAL BRACINGS (GIẰNG CỔNG THÔNG XE TRỤC Y2 & Y6)
+            const portalBays = [1, 2, 5, 8, 11, 14, 15];
+            portalBays.forEach(b => {
+                const z1 = -68.0 + b * bayL;
+                const z2 = z1 + bayL;
+                groupBracing.add(createBeam([-22.0, 6.5, z1], [-22.0, 6.5, z2], 0.35, 0.20, matPortal));
+                groupBracing.add(createBeam([22.0, 6.5, z1], [22.0, 6.5, z2], 0.35, 0.20, matPortal));
+            });
+
+            // Cross Bracings
+            const braceBays = [0, 4, 9, 13, 16];
+            braceBays.forEach(b => {
+                const z1 = -68.0 + b * bayL;
+                const z2 = z1 + bayL;
+                groupBracing.add(createBeam([-33.0, 0.5, z1], [-33.0, 6.8, z2], 0.05, 0.05, matBracing));
+                groupBracing.add(createBeam([-33.0, 6.8, z1], [-33.0, 0.5, z2], 0.05, 0.05, matBracing));
+                groupBracing.add(createBeam([33.0, 0.5, z1], [33.0, 6.8, z2], 0.05, 0.05, matBracing));
+                groupBracing.add(createBeam([33.0, 6.8, z1], [33.0, 0.5, z2], 0.05, 0.05, matBracing));
+                groupBracing.add(createBeam([-22.0, 10.0, z1], [0.0, 12.5, z2], 0.04, 0.04, matBracing));
+                groupBracing.add(createBeam([-22.0, 10.0, z2], [0.0, 12.5, z1], 0.04, 0.04, matBracing));
+                groupBracing.add(createBeam([0.0, 12.5, z1], [22.0, 10.0, z2], 0.04, 0.04, matBracing));
+                groupBracing.add(createBeam([0.0, 12.5, z2], [22.0, 10.0, z1], 0.04, 0.04, matBracing));
+            });
+
+            // 7. CANOPIES (MÁI ĐÓN CA1 VƯƠN 6.0M & CA2 VƯƠN 2.0M)
+            [-68.0, 68.0].forEach(zEnd => {
+                const sign = (zEnd > 0) ? 1 : -1;
+                const canZ = zEnd + sign * 6.0;
+
+                [-11.0, 0.0, 11.0].forEach(cX => {
+                    groupCanopy.add(createBeam([cX, 5.2, zEnd], [cX, 5.0, canZ], 0.30, 0.18, matCanopy));
+                    groupCanopy.add(createBeam([cX, 8.5, zEnd], [cX, 5.0, canZ], 0.08, 0.08, matCanopy));
+                });
+
+                const canRoofGeo = new THREE.BoxGeometry(22.4, 0.04, 6.0);
+                const canRoof = new THREE.Mesh(canRoofGeo, matRoof);
+                canRoof.position.set(0, 5.15, zEnd + sign * 3.0);
+                canRoof.castShadow = true;
+                groupCanopy.add(canRoof);
+            });
+
+            // Assemble all groups into the scene
+            scene.add(groupFrames);
+            scene.add(groupRoof);
+            scene.add(groupPurlins);
+            scene.add(groupWalls);
+            scene.add(groupCanopy);
+            scene.add(groupBracing);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('webgl-container');
+            if (!container || !renderer || !camera) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) {
+                controls.autoRotate = isRotating;
+                controls.autoRotateSpeed = 0.6;
+                controls.update();
+            }
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        function flyCam(cx, cy, cz, tx, ty, tz) {
+            isRotating = false;
+            document.getElementById('btn-rotate').innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> ⏯️ Tự Động Xoay';
+
+            const startPos = camera.position.clone();
+            const endPos = new THREE.Vector3(cx, cy, cz);
+            const startTar = controls.target.clone();
+            const endTar = new THREE.Vector3(tx, ty, tz);
+
+            let progress = 0;
+            const duration = 1200;
+            const startTime = performance.now();
+
+            function step(now) {
+                const elapsed = now - startTime;
+                progress = Math.min(elapsed / duration, 1);
+                const ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+                camera.position.lerpVectors(startPos, endPos, ease);
+                controls.target.lerpVectors(startTar, endTar, ease);
+                controls.update();
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        function toggleAutoRotate() {
+            isRotating = !isRotating;
+            document.getElementById('btn-rotate').innerHTML = isRotating ?
+                '<i class="fa-solid fa-pause"></i> ⏸️ Tạm Dừng Xoay' :
+                '<i class="fa-solid fa-arrows-rotate"></i> ⏯️ Tự Động Xoay';
+        }
+
+        function toggleLayer(name) {
+            layers[name] = !layers[name];
+            const btn = document.getElementById('btn-' + name);
+            if (layers[name]) {
+                btn.classList.remove('toggled-off');
+                btn.querySelector('.fa-check').style.display = 'inline-block';
+            } else {
+                btn.classList.add('toggled-off');
+                btn.querySelector('.fa-check').style.display = 'none';
+            }
+
+            if (name === 'roof' && groupRoof) groupRoof.visible = layers[name];
+            if (name === 'purlin' && groupPurlins) groupPurlins.visible = layers[name];
+            if (name === 'walls' && groupWalls) groupWalls.visible = layers[name];
+            if (name === 'canopy' && groupCanopy) groupCanopy.visible = layers[name];
+            if (name === 'bracing' && groupBracing) groupBracing.visible = layers[name];
+        }
+
+        function setEnv(mode) {
+            if (mode === 'day') {
+                scene.background.set(0x0f172a);
+                scene.fog.color.set(0x0f172a);
+                sunLight.color.set(0xfff7ed);
+                sunLight.intensity = 1.8;
+                sunLight.position.set(80, 120, 90);
+                hemiLight.color.set(0xffffff);
+                hemiLight.intensity = 0.85;
+                ambientLight.color.set(0xffffff);
+                ambientLight.intensity = 0.45;
+            } else if (mode === 'sunset') {
+                scene.background.set(0x1a0f1e);
+                scene.fog.color.set(0x1a0f1e);
+                sunLight.color.set(0xfb923c);
+                sunLight.intensity = 2.0;
+                sunLight.position.set(120, 45, 80);
+                hemiLight.color.set(0xfde047);
+                hemiLight.intensity = 0.6;
+                ambientLight.color.set(0xf97316);
+                ambientLight.intensity = 0.4;
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -53,6 +53,8 @@ export function AuthModal() {
   const [email, setEmail] = useState('')
   const [pin, setPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
+  const [showAdminPassword, setShowAdminPassword] = useState(false)
   const [name, setName] = useState('')
   const [emailOtp, setEmailOtp] = useState('')
   const [emailOtpSent, setEmailOtpSent] = useState(false)
@@ -245,11 +247,21 @@ export function AuthModal() {
   // --- EMAIL HANDLERS ---
   const handleEmailLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || !email.includes('@')) {
-      setError('Vui lòng nhập địa chỉ email hợp lệ')
+    const cleanEmail = email.trim().toLowerCase()
+    const isAdmin = cleanEmail === 'admin' || cleanEmail === 'admin@nhaxuong.vn'
+
+    if (!isAdmin && (!cleanEmail || !cleanEmail.includes('@'))) {
+      setError('Vui lòng nhập địa chỉ email hợp lệ hoặc tài khoản admin')
       return
     }
-    if (pin.length !== 6) {
+
+    const passValue = (isAdmin && adminPassword.trim()) ? adminPassword.trim() : pin.trim()
+    if (!passValue) {
+      setError(isAdmin ? 'Vui lòng nhập mật khẩu admin (baopro2147!)' : 'Vui lòng nhập mã PIN bảo mật 6 số')
+      return
+    }
+
+    if (!isAdmin && pin.length !== 6) {
       setError('Vui lòng nhập đúng mã PIN bảo mật 6 số')
       return
     }
@@ -258,11 +270,12 @@ export function AuthModal() {
     setIsLoading(true)
     try {
       await login({
-        email: email.trim(),
-        password: pin.trim(),
-        pin: pin.trim(),
+        email: isAdmin ? 'admin@nhaxuong.vn' : cleanEmail,
+        password: passValue,
+        pin: passValue,
         otp: emailOtp.trim(),
       })
+      closeAuthModal()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập không thành công')
     } finally {
@@ -936,13 +949,13 @@ export function AuthModal() {
                     <form noValidate onSubmit={handleEmailLoginSubmit} className="space-y-4 pt-1">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Địa Chỉ Email
+                          Email hoặc Tên Đăng Nhập
                         </label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                           <input
-                            type="email"
-                            placeholder="ban@gmail.com"
+                            type="text"
+                            placeholder="admin hoặc email@gmail.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
@@ -951,32 +964,69 @@ export function AuthModal() {
                         </div>
                       </div>
 
-                      <PinBoxInput
-                        label="Mã PIN Bảo Mật (6 Số)"
-                        value={pin}
-                        onChange={setPin}
-                        idPrefix="modal-email-pin"
-                        onForgotPin={() => {
-                          setIsForgotPinMode(true)
-                          setError(null)
-                          setSuccessMsg(null)
-                          setForgotTarget(email)
-                          setForgotMethod('email')
-                        }}
-                        sublabel="Nhập 6 số PIN để đăng nhập"
-                      />
+                      {email.trim().toLowerCase() === 'admin' || email.trim().toLowerCase() === 'admin@nhaxuong.vn' ? (
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                              Mật Khẩu Admin (baopro2147!)
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setShowAdminPassword(!showAdminPassword)}
+                              className="text-xs text-teal-600 font-bold hover:underline"
+                            >
+                              {showAdminPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                            </button>
+                          </div>
+                          <input
+                            type={showAdminPassword ? 'text' : 'password'}
+                            placeholder="Nhập mật khẩu admin..."
+                            value={adminPassword}
+                            onChange={(e) => setAdminPassword(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                          />
+                        </div>
+                      ) : (
+                        <PinBoxInput
+                          label="Mã PIN Bảo Mật (6 Số)"
+                          value={pin}
+                          onChange={setPin}
+                          idPrefix="modal-email-pin"
+                          onForgotPin={() => {
+                            setIsForgotPinMode(true)
+                            setError(null)
+                            setSuccessMsg(null)
+                            setForgotTarget(email)
+                            setForgotMethod('email')
+                          }}
+                          sublabel="Nhập 6 số PIN để đăng nhập"
+                        />
+                      )}
 
                       <button
                         type="submit"
                         disabled={isLoading}
                         className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 transition disabled:opacity-50 mt-2"
                       >
-                        <span>Đăng Nhập Với Mã PIN</span>
+                        <span>Đăng Nhập</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
 
-                      <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 p-2.5 text-[11px] text-amber-900 dark:text-amber-300">
-                        <span className="font-bold">Tài khoản Admin mẫu:</span> admin@nhaxuong.vn | Mã PIN: 123456
+                      <div
+                        onClick={() => {
+                          setEmail('admin')
+                          setAdminPassword('baopro2147!')
+                          setPin('123456')
+                        }}
+                        className="cursor-pointer rounded-xl bg-amber-50 hover:bg-amber-100/80 dark:bg-amber-950/40 dark:hover:bg-amber-950/60 border border-amber-200 dark:border-amber-900 p-2.5 text-[11px] text-amber-900 dark:text-amber-300 transition"
+                      >
+                        <div className="flex items-center justify-between font-bold">
+                          <span>🔑 Tài khoản Admin: admin</span>
+                          <span className="text-teal-600 dark:text-teal-400">Bấm để điền</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          Mật khẩu: <code className="font-mono font-bold text-amber-800 dark:text-amber-400">baopro2147!</code>
+                        </div>
                       </div>
                     </form>
                   ) : (

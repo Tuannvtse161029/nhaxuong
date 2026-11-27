@@ -80,9 +80,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Nhà Xưởng & Sắt Thép Tái Sử Dụng API",
+        Title = "Sàn Mua Bán Khung Nhà Xưởng & Bản Vẽ 3D API",
         Version = "v1",
-        Description = "Hệ thống API RESTful quản lý Nhà Xưởng, Cho Thuê Kho Bãi, Sắt Thép Tái Sử Dụng và Xác Thực Người Dùng."
+        Description = "Hệ thống API RESTful quản lý Nhà Xưởng, Thép Hình I, Tôn Sàn, Ống PCCC, Xem Bản Vẽ 3D & Xác Thực."
     });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -120,19 +120,41 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// 7. Apply Database Migrations on Startup
+// 7. Apply Database Migrations & Ensure Schema Columns on Startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var db = services.GetRequiredService<AppDbContext>();
-        db.Database.Migrate();
-        Console.WriteLine("--> [Database] Supabase PostgreSQL migrations verified and applied.");
+        try
+        {
+            db.Database.Migrate();
+            Console.WriteLine("--> [Database] Supabase PostgreSQL migrations verified.");
+        }
+        catch (Exception mEx)
+        {
+            Console.WriteLine($"--> [Database Migration Notice] {mEx.Message}");
+        }
+
+        // Dynamically ensure new structural & marketplace columns exist
+        db.Database.ExecuteSqlRaw(@"
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""StockStatus"" VARCHAR(50) DEFAULT 'IN_STOCK';
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""StorageLocation"" VARCHAR(50) DEFAULT 'AT_YARD';
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""City"" VARCHAR(100);
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""District"" VARCHAR(100);
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""Length"" DOUBLE PRECISION;
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""Width"" DOUBLE PRECISION;
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""StructureType"" VARCHAR(100);
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""HasCrane"" BOOLEAN DEFAULT FALSE;
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""CraneCapacity"" VARCHAR(100);
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""Drawing2DUrl"" TEXT;
+        ");
+        Console.WriteLine("--> [Database] Extended columns verified and applied.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"--> [Database Warning] Migration: {ex.Message}");
+        Console.WriteLine($"--> [Database Warning] Startup check: {ex.Message}");
     }
 }
 
@@ -159,7 +181,7 @@ app.MapControllers();
 // 10. Root & Healthcheck endpoints for Render deployment monitoring
 app.MapGet("/", () => Results.Ok(new
 {
-    service = "Nhà Xưởng & Sắt Thép Tái Sử Dụng API",
+    service = "Sàn Mua Bán Khung Nhà Xưởng & Thiết Kế 3D API",
     status = "Healthy",
     environment = app.Environment.EnvironmentName,
     swagger = "/swagger",

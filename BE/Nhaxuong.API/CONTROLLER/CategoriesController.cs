@@ -37,15 +37,29 @@ namespace Nhaxuong.API.CONTROLLER
             }
         }
 
-        [HttpDelete("{code}")]
-        public async Task<IActionResult> Delete(string code)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] CreateCategoryRequest request)
         {
             try
             {
-                var success = await _categoryService.DeleteAsync(code);
+                var updated = await _categoryService.UpdateAsync(id, request);
+                return Ok(updated);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("{codeOrId}")]
+        public async Task<IActionResult> Delete(string codeOrId)
+        {
+            try
+            {
+                var success = await _categoryService.DeleteAsync(codeOrId);
                 if (!success)
                 {
-                    return NotFound(new { message = $"Không tìm thấy danh mục '{code}'" });
+                    return NotFound(new { message = $"Không tìm thấy danh mục '{codeOrId}'" });
                 }
                 return Ok(new { message = "Đã xóa danh mục thành công" });
             }

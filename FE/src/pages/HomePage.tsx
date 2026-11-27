@@ -1,307 +1,421 @@
+import { useState } from 'react'
 import {
-  Factory,
   Warehouse,
-  Mail,
+  Layers,
+  Grid,
+  FileText,
+  LayoutGrid,
+  ShieldAlert,
+  Truck,
   Box,
-  RotateCcw,
-  Sparkles,
-  ArrowRight,
-  Headphones,
-  ShieldCheck,
-  Building2,
-  TrendingUp,
-  FileCheck2,
+  Flame,
   MapPin,
+  Search,
+  Filter,
+  RotateCcw,
+  SlidersHorizontal,
+  ChevronDown,
+  Sparkles,
   PhoneCall,
-  CheckCircle2,
-  Award,
+  Check,
 } from 'lucide-react'
 import { useProperties } from '@/context/PropertyContext'
-import { PropertyFilterBar } from '@/components/search/PropertyFilterBar'
 import { PropertyCard } from '@/components/property/PropertyCard'
 import { PropertyDetailModal } from '@/components/property/PropertyDetailModal'
 import { Warehouse3DModal } from '@/components/three/Warehouse3DModal'
 import { SavedPropertiesModal } from '@/components/saved/SavedPropertiesModal'
 import { NoticeModal } from '@/components/notice/NoticeModal'
 import { SubscribeNewsletterModal } from '@/components/subscribe/SubscribeNewsletterModal'
+import { DISTRICTS_LIST } from '@/data/mockData'
+import { cn } from '@/utils/cn'
 
 export function HomePage() {
   const {
     filteredProperties,
+    properties,
+    filterState,
+    setFilterState,
     resetFilters,
     activeModal,
     selectedProperty,
     closeModal,
-    openSubscribeModal,
-    open3DModal,
-    properties,
-    setFilterState,
+    categories,
   } = useProperties()
 
-  const featuredKcnZones = [
-    {
-      name: 'KCN VSIP 1 & 2',
-      province: 'Bình Dương',
-      count: '450+ xưởng',
-      img: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80',
-      tag: 'KCN Kiểu Mẫu FDI',
-    },
-    {
-      name: 'KCN Sóng Thần 1 & 2',
-      province: 'Bình Dương',
-      count: '320+ xưởng',
-      img: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=600&q=80',
-      tag: 'Hub Logistics Phía Nam',
-    },
-    {
-      name: 'KCN Long Đức & Amata',
-      province: 'Đồng Nai',
-      count: '280+ xưởng',
-      img: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80',
-      tag: 'Gần Sân Bay Long Thành',
-    },
-    {
-      name: 'KCN Yên Phong & Quế Võ',
-      province: 'Bắc Ninh',
-      count: '390+ xưởng',
-      img: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&q=80',
-      tag: 'Trung Tâm Điện Tử FDI',
-    },
-  ]
+  const [show3DFilter, setShow3DFilter] = useState(false)
+
+  // Map category codes to icons
+  const getCategoryIcon = (code: string) => {
+    switch (code) {
+      case 'BAN_KHUNG_XUONG':
+        return <Warehouse className="w-4 h-4" />
+      case 'COT_KEO':
+        return <Layers className="w-4 h-4" />
+      case 'THEP_HINH_I':
+        return <Grid className="w-4 h-4" />
+      case 'TON_LOP_VACH':
+        return <FileText className="w-4 h-4" />
+      case 'TON_SAN_DECK':
+        return <LayoutGrid className="w-4 h-4" />
+      case 'ONG_PCCC':
+        return <ShieldAlert className="w-4 h-4" />
+      case 'THANH_LY_XUONG':
+        return <Truck className="w-4 h-4" />
+      case 'THIET_KE_3D':
+        return <Box className="w-4 h-4 text-cyan-400" />
+      default:
+        return <Warehouse className="w-4 h-4" />
+    }
+  }
+
+  const is3DCategorySelected = filterState.type === 'THIET_KE_3D'
 
   return (
-    <div className="space-y-12 pb-8">
-      {/* 1. HERO BANNER CHUẨN SÀN GIAO DỊCH NHÀ XƯỞNG */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 p-6 sm:p-10 lg:p-12 text-white shadow-2xl border border-slate-800">
-        {/* Subtle Architectural Grid Lines */}
-        <div className="pointer-events-none absolute -right-10 -bottom-10 opacity-5">
-          <Factory className="h-[450px] w-[450px] text-teal-300" />
-        </div>
-
-        <div className="relative z-10 max-w-4xl">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight font-sans">
-            Nhà Xưởng & Bãi kho
-          </h1>
-
-          {/* Real Estate Market Statistics Bar */}
-          <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 px-4 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-md text-xs">
-            <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Nguồn Cung Xưởng</span>
-              <b className="text-base sm:text-lg font-black text-white">2.500+</b>
-              <span className="text-[10px] text-teal-400 block">Đang hoạt động</span>
-            </div>
-            <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Khu Công Nghiệp</span>
-              <b className="text-base sm:text-lg font-black text-white">418+ KCN</b>
-              <span className="text-[10px] text-teal-400 block">Toàn quốc</span>
-            </div>
-            <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Pháp Lý & PCCC</span>
-              <b className="text-base sm:text-lg font-black text-emerald-400">100%</b>
-              <span className="text-[10px] text-emerald-400 block">Kiểm duyệt SKC</span>
-            </div>
-            <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Doanh Nghiệp FDI</span>
-              <b className="text-base sm:text-lg font-black text-amber-400">3.600+</b>
-              <span className="text-[10px] text-amber-400 block">Đang kết nối</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Bộ Lọc Tìm Kiếm Nhà Xưởng (Search & Filter Bar) */}
-        <div className="mt-8">
-          <PropertyFilterBar />
-        </div>
-      </div>
-
-      {/* 2. DANH SÁCH NHÀ XƯỞNG ĐANG MỞ BÁN & CHO THUÊ */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+    <div className="space-y-4 pb-12">
+      {/* 1. COMPACT TOP HEADER & QUICK SEARCH BAR (Optimized for Mobile) */}
+      <div className="rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 p-3 sm:p-5 text-white shadow-lg border border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-teal-100 text-teal-800 text-xs font-black dark:bg-teal-950 dark:text-teal-300">
-                ★
+            <h1 className="text-lg sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+              <span>Sàn Giao Dịch Khung Xưởng & Sắt Thép</span>
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-teal-500/20 border border-teal-400/30 px-2 py-0.5 text-[10px] font-bold text-teal-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse" />
+                Hàng Mới Về
               </span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                Mặt Bằng Nhà Xưởng & Kho Bãi Đang Niêm Yết
-              </h2>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Hiển thị <b className="text-slate-900 dark:text-white">{filteredProperties.length}</b> nhà xưởng phù hợp với tiêu chí của bạn
+            </h1>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Khung Zamil, Thép hình I, Tôn sàn, Ống PCCC & Mô hình 3D kết cấu tại Bình Dương, Lâm Đồng, Đồng Nai
             </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Quick Hotline */}
+            <a
+              href="tel:0901234567"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow hover:bg-teal-500 transition"
+            >
+              <PhoneCall className="w-3.5 h-3.5" />
+              <span>Hotline: 090 123 4567</span>
+            </a>
           </div>
         </div>
 
-        {/* Properties Grid */}
-        {filteredProperties.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties.map((prop) => (
-              <PropertyCard key={prop.id} property={prop} />
-            ))}
+        {/* Quick Search & Location Dropdown Filter Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+          {/* Keyword Search */}
+          <div className="sm:col-span-6 relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Tìm khung xưởng, thép I 200, I 300, I 500, tôn..."
+              value={filterState.keyword}
+              onChange={(e) => setFilterState({ keyword: e.target.value })}
+              className="w-full rounded-xl border border-slate-700 bg-slate-900/90 py-2 pl-9 pr-3 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
           </div>
-        ) : (
-          /* Empty State */
-          <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-xs dark:border-slate-800 dark:bg-slate-900">
-            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800">
-              <Warehouse className="h-8 w-8" />
-            </div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-white">
-              Không tìm thấy nhà xưởng nào trong khoảng giá hoặc khu vực này!
-            </h3>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Hãy thử nới rộng khoảng giá trên thanh trượt kép Range Slider hoặc chọn lại Khu Công Nghiệp khác.
-            </p>
+
+          {/* Location Dropdown */}
+          <div className="sm:col-span-4 relative">
+            <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-teal-400" />
+            <select
+              value={filterState.district || 'ALL'}
+              onChange={(e) => setFilterState({ district: e.target.value })}
+              className="w-full rounded-xl border border-slate-700 bg-slate-900/90 py-2 pl-9 pr-8 text-xs text-white focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none cursor-pointer"
+            >
+              {DISTRICTS_LIST.map((dist) => (
+                <option key={dist} value={dist === 'Tất cả khu vực' ? 'ALL' : dist} className="bg-slate-900 text-white">
+                  📍 {dist}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2.5 top-3 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+          </div>
+
+          {/* Stock Toggle Button */}
+          <div className="sm:col-span-2 flex items-center gap-1.5">
             <button
               type="button"
-              onClick={resetFilters}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-teal-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-teal-800"
+              onClick={() =>
+                setFilterState({
+                  stockStatus: filterState.stockStatus === 'IN_STOCK' ? 'ALL' : 'IN_STOCK',
+                })
+              }
+              className={cn(
+                'w-full py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border',
+                filterState.stockStatus === 'IN_STOCK'
+                  ? 'bg-emerald-600 text-white border-emerald-400 shadow'
+                  : 'bg-slate-800/90 text-slate-300 border-slate-700 hover:bg-slate-750'
+              )}
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Xóa Bộ Lọc & Tìm Lại</span>
+              <span className="h-2 w-2 rounded-[2px] bg-emerald-400" />
+              <span>Còn Hàng</span>
             </button>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* 3. SECTION NHÀ XƯỞNG: TOP KHU CÔNG NGHIỆP TRỌNG ĐIỂM THU HÚT ĐẦU TƯ */}
-      <div className="space-y-5 pt-6 border-t border-slate-200/80 dark:border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-teal-600" />
-              Top Khu Công Nghiệp Trọng Điểm Đang Có Nguồn Cung Xưởng Tốt
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Các cụm KCN sở hữu hạ tầng giao thông kết nối cao tốc, cảng biển nước sâu và sân bay quốc tế.
-            </p>
-          </div>
-        </div>
+      {/* 2. HORIZONTAL CATEGORY PILLS (Smooth Touch-Scrollable on Mobile) */}
+      <div className="relative">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none no-scrollbar select-none">
+          {/* 'All' / 'Tin Mới Nhất' Pill */}
+          <button
+            type="button"
+            onClick={() => setFilterState({ type: 'ALL', categoryId: undefined })}
+            className={cn(
+              'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold whitespace-nowrap transition-all shrink-0 shadow-xs border',
+              filterState.type === 'ALL'
+                ? 'bg-teal-600 text-white border-teal-500 shadow-teal-500/20'
+                : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400 hover:text-teal-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
+            )}
+          >
+            <Flame className="w-3.5 h-3.5 text-amber-400" />
+            <span>Tất Cả (Tin Mới Nhất)</span>
+          </button>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {featuredKcnZones.map((zone) => (
-            <div
-              key={zone.name}
-              onClick={() => setFilterState({ province: zone.province })}
-              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs hover:shadow-lg transition-all duration-300 cursor-pointer dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="relative aspect-[16/10] overflow-hidden">
-                <img
-                  src={zone.img}
-                  alt={zone.name}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <span className="absolute top-2.5 left-2.5 rounded-md bg-slate-950/80 px-2 py-0.5 text-[9.5px] font-bold text-teal-400 backdrop-blur-md">
-                  {zone.tag}
-                </span>
-                <span className="absolute bottom-2.5 right-2.5 rounded-md bg-teal-700/90 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-md">
-                  {zone.count}
-                </span>
-              </div>
-              <div className="p-3.5">
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-teal-600 transition">
-                  {zone.name}
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3 h-3 text-red-500" /> {zone.province}
+          {/* Categories List Pills */}
+          {categories.map((cat) => {
+            const isSelected = filterState.type === cat.code
+            return (
+              <button
+                key={cat.code}
+                type="button"
+                onClick={() => {
+                  setFilterState({ type: cat.code })
+                  if (cat.code === 'THIET_KE_3D') {
+                    setShow3DFilter(true)
+                  }
+                }}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold whitespace-nowrap transition-all shrink-0 shadow-xs border',
+                  isSelected
+                    ? cat.code === 'THIET_KE_3D'
+                      ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-500/20'
+                      : 'bg-teal-600 text-white border-teal-500 shadow-teal-500/20'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400 hover:text-teal-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
+                )}
+              >
+                {getCategoryIcon(cat.code)}
+                <span>{cat.name}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* 3. DEDICATED 3D BLUEPRINT & STRUCTURAL SEARCH BAR (Mobile-friendly Length & Width + Structure type + Crane) */}
+      {(is3DCategorySelected || show3DFilter) && (
+        <div className="rounded-2xl border-2 border-cyan-500/30 bg-cyan-950/20 p-3.5 sm:p-5 dark:bg-cyan-950/40 space-y-3.5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500 text-slate-950 font-black text-xs">
+                3D
+              </span>
+              <div>
+                <h3 className="font-bold text-xs sm:text-sm text-cyan-950 dark:text-cyan-200">
+                  Bộ Lọc Kích Thước & Kết Cấu Nhà Xưởng (Mô Hình 3D & Bản Vẽ)
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Nhập chiều rộng & chiều dài (mét) hoặc chọn kết cấu Zamil, Thép I, Kèo Tiệp
                 </p>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setFilterState({
+                  lengthMin: undefined,
+                  lengthMax: undefined,
+                  widthMin: undefined,
+                  widthMax: undefined,
+                  structureType: 'ALL',
+                  hasCrane: null,
+                })
+              }}
+              className="text-[11px] font-semibold text-slate-500 hover:text-cyan-600 flex items-center gap-1"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Xóa lọc 3D</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Length (Chiều Dài) & Width (Chiều Rộng) Inputs */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Chiều Rộng (m)
+                </label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    placeholder="VD: 24"
+                    value={filterState.widthMin || ''}
+                    onChange={(e) =>
+                      setFilterState({
+                        widthMin: e.target.value ? Number(e.target.value) : undefined,
+                      })
+                    }
+                    className="w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  />
+                  <span className="text-xs font-bold text-slate-400">m</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Chiều Dài (m)
+                </label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    placeholder="VD: 84"
+                    value={filterState.lengthMin || ''}
+                    onChange={(e) =>
+                      setFilterState({
+                        lengthMin: e.target.value ? Number(e.target.value) : undefined,
+                      })
+                    }
+                    className="w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  />
+                  <span className="text-xs font-bold text-slate-400">m</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Structure Type Selection (Thép I, Zamil, Kèo Tiệp) */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Loại Kết Cấu
+              </label>
+              <div className="flex flex-wrap gap-1">
+                {['ALL', 'Thép I', 'Zamil', 'Kèo Tiệp'].map((st) => {
+                  const active =
+                    st === 'ALL'
+                      ? !filterState.structureType || filterState.structureType === 'ALL'
+                      : filterState.structureType === st
+                  return (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setFilterState({ structureType: st })}
+                      className={cn(
+                        'rounded-lg px-2.5 py-1 text-[11px] font-bold transition border',
+                        active
+                          ? 'bg-cyan-600 text-white border-cyan-500 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                      )}
+                    >
+                      {st === 'ALL' ? 'Tất cả kết cấu' : st}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Crane Selection (Có Cẩu Trục / Không Có) */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Cẩu Trục Nhà Xưởng
+              </label>
+              <div className="flex items-center gap-1.5">
+                {[
+                  { label: 'Tất cả', val: null },
+                  { label: 'Có Cẩu Trục', val: true },
+                  { label: 'Không Cẩu', val: false },
+                ].map((item) => {
+                  const active = filterState.hasCrane === item.val
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => setFilterState({ hasCrane: item.val })}
+                      className={cn(
+                        'flex-1 rounded-lg py-1 px-1.5 text-[11px] font-bold transition border text-center',
+                        active
+                          ? 'bg-cyan-600 text-white border-cyan-500 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. FEED HEADER: COUNT & SORTING */}
+      <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5 dark:border-slate-800">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
+            Danh Sách Bài Đăng Mới Nhất
+          </span>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-black text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            {filteredProperties.length} tin
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Toggle 3D Filter Button if not in 3D category */}
+          {!is3DCategorySelected && (
+            <button
+              type="button"
+              onClick={() => setShow3DFilter(!show3DFilter)}
+              className={cn(
+                'inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition border',
+                show3DFilter
+                  ? 'bg-cyan-600 text-white border-cyan-500'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-400 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
+              )}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-500" />
+              <span className="hidden sm:inline">Lọc Kích Thước 3D</span>
+            </button>
+          )}
+
+          {/* Sort Selector */}
+          <select
+            value={filterState.sortBy}
+            onChange={(e) => setFilterState({ sortBy: e.target.value as any })}
+            className="rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 focus:outline-none"
+          >
+            <option value="newest">Mới nhất trước</option>
+            <option value="price-asc">Giá tăng dần</option>
+            <option value="price-desc">Giá giảm dần</option>
+          </select>
+        </div>
+      </div>
+
+      {/* 5. MAIN POSTS FEED (Fast responsive grid) */}
+      {filteredProperties.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {filteredProperties.map((property) => (
+            <PropertyCard key={property.id} property={property} />
           ))}
         </div>
-      </div>
-
-      {/* 4. SECTION NHÀ XƯỞNG: QUY CHUẨN GIAO DỊCH & DỊCH VỤ PHÁP LÝ NHÀ XƯỞNG */}
-      <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-teal-50/40 p-6 sm:p-10 dark:border-slate-800 dark:bg-slate-900/60 dark:from-slate-900 dark:to-slate-950">
-        <div className="max-w-3xl mb-8">
-          <span className="text-xs font-black uppercase tracking-wider text-teal-700 dark:text-teal-400">
-            Quy Trình Chuẩn Nhà Xưởng
-          </span>
-          <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
-            4 Bước Đầu Tư & Thuê Nhà Xưởng An Toàn Tại NHAXUONG.VN
+      ) : (
+        /* Empty State */
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900 space-y-3">
+          <Warehouse className="w-12 h-12 text-slate-400 mx-auto" />
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            Không tìm thấy bài đăng nào phù hợp
           </h3>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-            Chúng tôi đồng hành cùng các tập đoàn sản xuất, doanh nghiệp FDI từ bước khảo sát không gian
-            cho đến hoàn tất thủ tục pháp lý đầu tư.
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            Vui lòng thử nới rộng phạm vi tìm kiếm kích thước, chọn khu vực khác hoặc xóa bộ lọc để xem toàn bộ danh mục sản phẩm.
           </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-850">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-100 text-teal-800 font-black text-sm mb-3 dark:bg-teal-950 dark:text-teal-300">
-              01
-            </span>
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Khảo Sát 3D & Flycam</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Trải nghiệm mô hình 3D xoay 360°, nghe audio mô tả và xem video toàn cảnh trước khi đi thực địa.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-850">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-800 font-black text-sm mb-3 dark:bg-blue-950 dark:text-blue-300">
-              02
-            </span>
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Thẩm Định Pháp Lý & PCCC</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Kiểm tra chi tiết Sổ hồng SKC, hồ sơ hoàn công, thẩm duyệt thiết kế và nghiệm thu PCCC tự động.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-850">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 font-black text-sm mb-3 dark:bg-emerald-950 dark:text-emerald-300">
-              03
-            </span>
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Đàm Phán & Công Chứng</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Thương lượng đơn giá tốt nhất trực tiếp với chủ đầu tư và ký kết hợp đồng công chứng hợp pháp.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-850">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-800 font-black text-sm mb-3 dark:bg-amber-950 dark:text-amber-300">
-              04
-            </span>
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Hỗ Trợ Giấy Phép FDI</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Tư vấn cấp chứng nhận đăng ký đầu tư (IRC), đăng ký doanh nghiệp (ERC) và giấy phép môi trường.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 5. CALL TO ACTION: DÀNH CHO KHÁCH HÀNG TÌM KIẾM MUA / THUÊ KHO XƯỞNG */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 p-8 sm:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
-        <div className="space-y-2 max-w-xl">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-teal-400 block">
-            Tư Vấn Mua Bán & Thuê Mặt Bằng Sản Xuất
-          </span>
-          <h3 className="text-2xl sm:text-3xl font-black text-white">
-            Bạn Cần Tìm Mặt Bằng Nhà Xưởng Đúng Nhu Cầu?
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Liên hệ ngay với đội ngũ chuyên gia của <b>NHAXUONG.VN</b> để nhận danh sách mặt bằng trống,
-            bảng báo giá chi tiết, hồ sơ hoàn công PCCC và được hỗ trợ xe đưa đón khảo sát thực tế miễn phí.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full md:w-auto">
           <button
             type="button"
-            onClick={openSubscribeModal}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-teal-700 transition"
+            onClick={resetFilters}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white hover:bg-teal-700 transition shadow"
           >
-            <Mail className="w-4 h-4" />
-            <span>Liên Hệ Nhận Báo Giá Ngay</span>
-            <ArrowRight className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Xóa Tất Cả Bộ Lọc</span>
           </button>
-          <a
-            href="tel:0901234567"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
-          >
-            <PhoneCall className="w-4 h-4 text-teal-400" />
-            <span>Hotline: 090 123 4567</span>
-          </a>
         </div>
-      </div>
+      )}
 
       {/* Global Modals */}
       <PropertyDetailModal
