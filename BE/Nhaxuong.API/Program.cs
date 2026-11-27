@@ -6,6 +6,13 @@ using Microsoft.OpenApi.Models;
 using Nhaxuong.MODEL.Configurations;
 using Nhaxuong.SERVICE.Services;
 
+// 0. Ensure wwwroot and uploads/3d directories exist
+var rootDir = Directory.GetCurrentDirectory();
+var wwwrootDir = Path.Combine(rootDir, "wwwroot");
+if (!Directory.Exists(wwwrootDir)) Directory.CreateDirectory(wwwrootDir);
+var uploads3dDir = Path.Combine(wwwrootDir, "uploads", "3d");
+if (!Directory.Exists(uploads3dDir)) Directory.CreateDirectory(uploads3dDir);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Add Controllers

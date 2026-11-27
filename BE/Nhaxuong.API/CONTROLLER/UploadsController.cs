@@ -94,31 +94,46 @@ namespace Nhaxuong.API.CONTROLLER
         [HttpGet("/uploads/3d/{fileName}")]
         public IActionResult GetModel3D(string fileName)
         {
-            var uploadsDir = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "3d");
-            var filePath = Path.Combine(uploadsDir, fileName);
-
-            if (!System.IO.File.Exists(filePath))
+            try
             {
-                var altPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "3d", fileName);
-                if (System.IO.File.Exists(altPath))
+                var baseDir = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var filePath = Path.GetFullPath(Path.Combine(baseDir, "uploads", "3d", fileName));
+
+                if (!System.IO.File.Exists(filePath))
                 {
-                    filePath = altPath;
+                    var altPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "3d", fileName));
+                    if (System.IO.File.Exists(altPath))
+                    {
+                        filePath = altPath;
+                    }
+                    else
+                    {
+                        var appDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads", "3d", fileName));
+                        if (System.IO.File.Exists(appDir))
+                        {
+                            filePath = appDir;
+                        }
+                        else
+                        {
+                            return NotFound(new { message = "Không tìm thấy file 3D: " + fileName });
+                        }
+                    }
                 }
-                else
+
+                var ext = Path.GetExtension(fileName).ToLowerInvariant();
+                var contentType = ext switch
                 {
-                    return NotFound(new { message = "Không tìm thấy file 3D: " + fileName });
-                }
+                    ".html" or ".htm" => "text/html; charset=utf-8",
+                    ".glb" => "model/gltf-binary",
+                    _ => "application/octet-stream"
+                };
+
+                return PhysicalFile(filePath, contentType);
             }
-
-            var ext = Path.GetExtension(fileName).ToLowerInvariant();
-            var contentType = ext switch
+            catch (Exception ex)
             {
-                ".html" or ".htm" => "text/html; charset=utf-8",
-                ".glb" => "model/gltf-binary",
-                _ => "application/octet-stream"
-            };
-
-            return PhysicalFile(filePath, contentType);
+                return StatusCode(500, new { message = "Lỗi đọc file 3D: " + ex.Message });
+            }
         }
 
         /// <summary>
@@ -141,18 +156,30 @@ namespace Nhaxuong.API.CONTROLLER
 
             try
             {
-                var uploadsDir = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "3d");
+                var baseDir = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var uploadsDir = Path.Combine(baseDir, "uploads", "3d");
                 if (!Directory.Exists(uploadsDir))
                 {
                     Directory.CreateDirectory(uploadsDir);
                 }
 
                 var fileName = $"{Guid.NewGuid():N}_{Path.GetFileName(file.FileName)}";
-                var filePath = Path.Combine(uploadsDir, fileName);
+                var filePath = Path.GetFullPath(Path.Combine(uploadsDir, fileName));
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
+                }
+
+                var altDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "3d");
+                if (altDir != uploadsDir)
+                {
+                    try
+                    {
+                        if (!Directory.Exists(altDir)) Directory.CreateDirectory(altDir);
+                        System.IO.File.Copy(filePath, Path.Combine(altDir, fileName), true);
+                    }
+                    catch { }
                 }
 
                 var url = $"/uploads/3d/{fileName}";
