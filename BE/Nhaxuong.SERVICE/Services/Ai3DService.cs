@@ -21,7 +21,6 @@ namespace Nhaxuong.SERVICE.Services
         public bool Success { get; set; }
         public string FileName { get; set; } = string.Empty;
         public string Model3DUrl { get; set; } = string.Empty;
-        public string Model3dUrl => Model3DUrl; // Lowercase alias for frontend compatibility
         public string Title { get; set; } = string.Empty;
         public string SpecsSummary { get; set; } = string.Empty;
         public string AiMessage { get; set; } = string.Empty;
