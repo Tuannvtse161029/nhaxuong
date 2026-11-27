@@ -189,9 +189,9 @@ export function PropertyFilterBar() {
         <button
           type="button"
           onClick={resetFilters}
-          className="ml-auto text-xs font-semibold text-slate-400 hover:text-red-500 transition cursor-pointer"
+          className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border-2 border-red-500 bg-red-50/90 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-300 dark:border-red-500 font-extrabold text-xs shadow-xs active:scale-95 transition cursor-pointer"
         >
-          Đặt lại bộ lọc
+          Xóa hết bộ lọc
         </button>
       </div>
     </div>

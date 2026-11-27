@@ -448,10 +448,11 @@ export function HomePage() {
                 <button
                   type="button"
                   onClick={handleResetSearch}
-                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-red-500 bg-red-50/90 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-300 dark:border-red-500 px-4 py-2.5 text-xs font-extrabold transition active:scale-95 shadow-xs cursor-pointer"
+                  title="Xóa toàn bộ tiêu chí lọc"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Xóa Lọc / Đặt Lại</span>
+                  <RotateCcw className="w-3.5 h-3.5 stroke-[2.5] text-red-600 dark:text-red-400" />
+                  <span>Xóa hết / Đặt lại</span>
                 </button>
 
                 <button
@@ -579,12 +580,15 @@ export function HomePage() {
             </span>
           )}
 
+          {/* Nút Xóa Hết viền đỏ nổi bật */}
           <button
             type="button"
             onClick={handleResetSearch}
-            className="text-[11px] font-bold text-red-500 hover:underline ml-auto"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-red-500 bg-red-50/90 hover:bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-300 dark:border-red-500 font-extrabold text-xs shadow-xs active:scale-95 transition-all ml-auto cursor-pointer"
+            title="Bấm để xóa toàn bộ các bộ lọc đang chọn"
           >
-            Xóa hết
+            <RotateCcw className="w-3.5 h-3.5 stroke-[2.5] text-red-600 dark:text-red-400" />
+            <span>Xóa hết</span>
           </button>
         </div>
       )}
