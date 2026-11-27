@@ -104,22 +104,22 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   })
 
   const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = storage.getItem<Category[]>('nhaxuong_categories_v4', INITIAL_CATEGORIES)
+    const saved = storage.getItem<Category[]>('nhaxuong_categories_v6', INITIAL_CATEGORIES)
     const initialCodes = new Set(INITIAL_CATEGORIES.map((c) => c.code))
     const userCreated = saved.filter((c) => !initialCodes.has(c.code))
     const merged = [...INITIAL_CATEGORIES, ...userCreated]
-    storage.setItem('nhaxuong_categories_v4', merged)
+    storage.setItem('nhaxuong_categories_v6', merged)
     return merged
   })
 
   const [notices, setNotices] = useState<Notice[]>(() =>
-    storage.getItem('nhaxuong_notices_v4', INITIAL_NOTICES)
+    storage.getItem('nhaxuong_notices_v6', INITIAL_NOTICES)
   )
   const [subscribers, setSubscribers] = useState<Subscriber[]>(() =>
-    storage.getItem('nhaxuong_subscribers_v4', INITIAL_SUBSCRIBERS)
+    storage.getItem('nhaxuong_subscribers_v6', INITIAL_SUBSCRIBERS)
   )
   const [savedPropertyIds, setSavedPropertyIds] = useState<(string | number)[]>(() =>
-    storage.getItem('nhaxuong_saved_ids_v4', ['prop-kx-1'])
+    storage.getItem('nhaxuong_saved_ids_v6', ['prop-kx-1'])
   )
   const [role, setRoleState] = useState<'user' | 'admin'>('user')
   const [activeNoticeText, setActiveNoticeText] = useState(
@@ -131,15 +131,19 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
   const [toasts, setToasts] = useState<ToastItem[]>([])
 
-  // Load from backend on mount if not in pure mock mode
+  // Load from backend on mount if not in pure mock mode, but ALWAYS preserve INITIAL_PROPERTIES & INITIAL_CATEGORIES
   useEffect(() => {
     if (!ENV.USE_MOCK_API) {
       propertyApi
         .getCategories()
         .then((cats) => {
           if (Array.isArray(cats) && cats.length > 0) {
-            setCategories(cats)
-            storage.setItem('nhaxuong_categories_v3', cats)
+            // Keep all 8 core categories and append any new ones
+            const initialCodes = new Set(INITIAL_CATEGORIES.map((c) => c.code))
+            const newBackendCats = cats.filter((c) => !initialCodes.has(c.code))
+            const merged = [...INITIAL_CATEGORIES, ...newBackendCats]
+            setCategories(merged)
+            storage.setItem('nhaxuong_categories_v6', merged)
           }
         })
         .catch(() => {})
@@ -148,8 +152,15 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         .getProperties()
         .then((props) => {
           if (Array.isArray(props) && props.length > 0) {
-            setProperties(props)
-            storage.setItem('nhaxuong_properties_v3', props)
+            // Merge backend items with all 24 initial items so no category data is lost
+            const apiIds = new Set(props.map((p) => p.id))
+            const missingProps = INITIAL_PROPERTIES.filter((p) => !apiIds.has(p.id))
+            const merged = [...props, ...missingProps]
+            setProperties(merged)
+            storage.setItem('nhaxuong_properties_v6', merged)
+          } else {
+            setProperties(INITIAL_PROPERTIES)
+            storage.setItem('nhaxuong_properties_v6', INITIAL_PROPERTIES)
           }
         })
         .catch(() => {})
@@ -158,19 +169,19 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 
   // Sync to localStorage
   useEffect(() => {
-    storage.setItem('nhaxuong_properties_v3', properties)
+    storage.setItem('nhaxuong_properties_v6', properties)
   }, [properties])
 
   useEffect(() => {
-    storage.setItem('nhaxuong_categories_v3', categories)
+    storage.setItem('nhaxuong_categories_v6', categories)
   }, [categories])
 
   useEffect(() => {
-    storage.setItem('nhaxuong_notices_v3', notices)
+    storage.setItem('nhaxuong_notices_v6', notices)
   }, [notices])
 
   useEffect(() => {
-    storage.setItem('nhaxuong_subscribers_v3', subscribers)
+    storage.setItem('nhaxuong_subscribers_v6', subscribers)
   }, [subscribers])
 
   useEffect(() => {
