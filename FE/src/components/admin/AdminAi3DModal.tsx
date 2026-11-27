@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, X, ExternalLink, Copy, Check, ArrowRight, Loader2, User, Sparkles } from 'lucide-react'
+import { Bot, Send, X, ExternalLink, Copy, Check, ArrowRight, Loader2, User, Sparkles, Download } from 'lucide-react'
 import { propertyApi } from '@/api/propertyApi'
 import { ENV } from '@/config/env.config'
 import { cn } from '@/utils/cn'
@@ -123,6 +123,29 @@ export function AdminAi3DModal({ isOpen, onClose, onSelectModelUrl }: AdminAi3DM
     setTimeout(() => setCopiedId(null), 2500)
   }
 
+  const handleDownloadHtml = (htmlContent?: string, fileName?: string, modelUrl?: string) => {
+    const finalName = fileName || 'nha_xuong_3d.html'
+    if (htmlContent) {
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = finalName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } else if (modelUrl) {
+      const a = document.createElement('a')
+      a.href = getFullUrl(modelUrl)
+      a.download = finalName
+      a.target = '_blank'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    }
+  }
+
   const handleApplyToPost = (url: string, title?: string) => {
     if (onSelectModelUrl) {
       onSelectModelUrl(url, title)
@@ -218,17 +241,37 @@ export function AdminAi3DModal({ isOpen, onClose, onSelectModelUrl }: AdminAi3DM
 
                     {/* Action Buttons for this 3D model */}
                     <div className="flex flex-wrap items-center gap-2 pt-1">
+                      {/* Nút 1: Tải File HTML Về Máy / Điện Thoại */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDownloadHtml(
+                            msg.modelResult!.htmlContent,
+                            msg.modelResult!.fileName,
+                            msg.modelResult!.model3dUrl
+                          )
+                        }
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition cursor-pointer"
+                        title="Tải file HTML về máy để mở offline hoặc tự upload lên bài đăng"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Tải file HTML về máy</span>
+                      </button>
+
+                      {/* Nút 2: Gán thẳng vào bài đăng ngay */}
                       {onSelectModelUrl && (
                         <button
                           type="button"
                           onClick={() => handleApplyToPost(msg.modelResult!.model3dUrl, msg.modelResult!.title)}
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
+                          title="Gán trực tiếp mô hình này vào bài đăng đang mở"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          <span>Gán vào bài đăng mới</span>
+                          <span>Gán thẳng vào bài đăng</span>
                         </button>
                       )}
 
+                      {/* Nút 3: Chép link */}
                       <button
                         type="button"
                         onClick={() => handleCopyLink(msg.modelResult!.model3dUrl, msg.id)}
@@ -242,6 +285,7 @@ export function AdminAi3DModal({ isOpen, onClose, onSelectModelUrl }: AdminAi3DM
                         <span>{copiedId === msg.id ? 'Đã chép link!' : 'Chép link 3D'}</span>
                       </button>
 
+                      {/* Nút 4: Mở toàn màn hình */}
                       <a
                         href={getFullUrl(msg.modelResult.model3dUrl)}
                         target="_blank"

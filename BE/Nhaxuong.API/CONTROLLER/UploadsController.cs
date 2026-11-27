@@ -134,9 +134,9 @@ namespace Nhaxuong.API.CONTROLLER
             }
 
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (ext != ".html" && ext != ".htm")
+            if (ext != ".html" && ext != ".htm" && ext != ".glb")
             {
-                return BadRequest(new { message = "Định dạng file không được hỗ trợ! Mô hình 3D phải là file HTML (.html hoặc .htm)." });
+                return BadRequest(new { message = "Định dạng file không được hỗ trợ! Mô hình 3D phải là file HTML (.html hoặc .htm) hoặc GLB (.glb)." });
             }
 
             try

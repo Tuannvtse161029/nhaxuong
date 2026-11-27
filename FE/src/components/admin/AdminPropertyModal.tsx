@@ -745,6 +745,38 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                 onChange={(e) => setModel3dUrl(e.target.value)}
                 placeholder="/models3d/nha_xuong_24x84.html hoặc link file 3D"
               />
+              {model3dUrl && (
+                <div className="flex items-center justify-between p-2 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-xs">
+                  <div className="flex items-center gap-1.5 text-teal-800 dark:text-teal-300 font-semibold truncate">
+                    <Box className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                    <span className="truncate">✅ Đã gắn: {model3dUrl}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a
+                      href={
+                        model3dUrl.startsWith('http')
+                          ? model3dUrl
+                          : `${ENV.API_BASE_URL.replace(/\/api\/?$/, '')}${model3dUrl}`
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-teal-700 dark:text-teal-300 font-bold hover:underline"
+                    >
+                      Xem thử 3D ↗
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setModel3dUrl('')}
+                      className="text-xs text-red-600 dark:text-red-400 hover:underline font-bold cursor-pointer"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              )}
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                💡 <b>Mẹo:</b> Bấm <b>Gemini AI Dựng 3D</b> để xem trước & tải file .html về máy, hoặc bấm <b>Gán thẳng vào bài</b>. Bạn cũng có thể bấm <b>Tải File 3D</b> để chọn file .html từ điện thoại.
+              </p>
             </div>
 
             {/* 2D Drawing URL */}
