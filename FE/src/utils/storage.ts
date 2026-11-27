@@ -46,7 +46,15 @@ export const storage = {
     try {
       localStorage.setItem(key, JSON.stringify(value))
     } catch (e) {
-      console.error(`Failed to save ${key} to localStorage`, e)
+      console.warn(`Failed to save ${key} to localStorage, attempting storage pruning:`, e)
+      try {
+        if (Array.isArray(value) && value.length > 8) {
+          // Keep newest 8 items in local cache to respect 5MB limit
+          localStorage.setItem(key, JSON.stringify(value.slice(0, 8)))
+        }
+      } catch (innerErr) {
+        console.warn('LocalStorage pruning fallback failed silently:', innerErr)
+      }
     }
   },
 

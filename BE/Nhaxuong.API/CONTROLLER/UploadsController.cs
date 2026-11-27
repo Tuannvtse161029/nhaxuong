@@ -51,6 +51,77 @@ namespace Nhaxuong.API.CONTROLLER
         }
 
         /// <summary>
+        /// Xem / tải hình ảnh đã upload
+        /// </summary>
+        [HttpGet("{fileName}")]
+        [HttpGet("/uploads/{fileName}")]
+        public IActionResult GetImage(string fileName)
+        {
+            var uploadsDir = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads");
+            var filePath = Path.Combine(uploadsDir, fileName);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                var altPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", fileName);
+                if (System.IO.File.Exists(altPath))
+                {
+                    filePath = altPath;
+                }
+                else
+                {
+                    return NotFound(new { message = "Không tìm thấy file: " + fileName });
+                }
+            }
+
+            var ext = Path.GetExtension(fileName).ToLowerInvariant();
+            var contentType = ext switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                ".gif" => "image/gif",
+                ".svg" => "image/svg+xml",
+                _ => "application/octet-stream"
+            };
+
+            return PhysicalFile(filePath, contentType);
+        }
+
+        /// <summary>
+        /// Xem / nhúng mô hình 3D tương tác
+        /// </summary>
+        [HttpGet("3d/{fileName}")]
+        [HttpGet("/uploads/3d/{fileName}")]
+        public IActionResult GetModel3D(string fileName)
+        {
+            var uploadsDir = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "3d");
+            var filePath = Path.Combine(uploadsDir, fileName);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                var altPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "3d", fileName);
+                if (System.IO.File.Exists(altPath))
+                {
+                    filePath = altPath;
+                }
+                else
+                {
+                    return NotFound(new { message = "Không tìm thấy file 3D: " + fileName });
+                }
+            }
+
+            var ext = Path.GetExtension(fileName).ToLowerInvariant();
+            var contentType = ext switch
+            {
+                ".html" or ".htm" => "text/html; charset=utf-8",
+                ".glb" => "model/gltf-binary",
+                _ => "application/octet-stream"
+            };
+
+            return PhysicalFile(filePath, contentType);
+        }
+
+        /// <summary>
         /// Tải lên mô hình 3D tương tác (File HTML)
         /// </summary>
         [HttpPost("model3d")]

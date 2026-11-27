@@ -95,23 +95,22 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       
       const up = property.unitPrice || ''
       setUnitPrice(up)
+      const digits = up.replace(/\D/g, '')
+      if (digits) {
+        setUnitPriceVal(parseInt(digits, 10).toLocaleString('vi-VN'))
+      } else {
+        setUnitPriceVal('')
+      }
       if (up.includes('đ/kg')) {
         setUnitPriceUnit('đ/kg')
-        setUnitPriceVal(up.replace('đ/kg', '').trim())
       } else if (up.includes('đ/m²') || up.includes('đ/m2')) {
         setUnitPriceUnit('đ/m²')
-        setUnitPriceVal(up.replace(/đ\/m[²2]/, '').trim())
       } else if (up.includes('Tr/m²') || up.includes('Tr/m2')) {
         setUnitPriceUnit('Tr/m²')
-        setUnitPriceVal(up.replace(/Tr\/m[²2]/, '').trim())
       } else if (up.includes('Tr/Tấn') || up.includes('Tr/tấn')) {
         setUnitPriceUnit('Tr/Tấn')
-        setUnitPriceVal(up.replace(/Tr\/[Tt]ấn/, '').trim())
       } else if (up.includes('đ/cây')) {
         setUnitPriceUnit('đ/cây')
-        setUnitPriceVal(up.replace('đ/cây', '').trim())
-      } else {
-        setUnitPriceVal(up)
       }
 
       setArea(property.area || '')
@@ -210,12 +209,28 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   }
 
   const handleUnitPriceValChange = (val: string) => {
-    setUnitPriceVal(val)
-    if (val.trim()) {
-      setUnitPrice(`${val.trim()} ${unitPriceUnit}`)
-    } else {
+    // Tự động định dạng số đơn giá có dấu chấm hàng nghìn (VD: 380000 -> 380.000)
+    const rawDigits = val.replace(/\D/g, '')
+    if (!rawDigits) {
+      setUnitPriceVal('')
       setUnitPrice('')
+      return
     }
+    const num = parseInt(rawDigits, 10)
+    const formatted = num.toLocaleString('vi-VN')
+    setUnitPriceVal(formatted)
+    setUnitPrice(`${formatted} ${unitPriceUnit}`)
+  }
+
+  const addPricePreset = (amount: number) => {
+    const newPrice = (price || 0) + amount
+    setPrice(newPrice)
+    setPriceFormatted(newPrice > 0 ? newPrice.toLocaleString('vi-VN') : '')
+  }
+
+  const setExactPrice = (amount: number) => {
+    setPrice(amount)
+    setPriceFormatted(amount > 0 ? amount.toLocaleString('vi-VN') : '')
   }
 
   const handleAddImagesFromInput = () => {
@@ -234,7 +249,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
     setImagesList((prev) => prev.filter((_, idx) => idx !== index))
   }
 
-  // Tải nhiều ảnh trực tiếp từ máy / điện thoại có nén canvas siêu nhẹ
+  // Tải nhiều ảnh trực tiếp từ máy / điện thoại: Nén canvas và lưu thẳng DataURL vào Database
   const handleMultipleImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
@@ -247,31 +262,19 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
     for (let i = 0; i < filesArr.length; i++) {
       const file = filesArr[i]
-      setUploadProgress(`Đang nén & tải ảnh ${i + 1}/${filesArr.length} (${file.name})...`)
+      setUploadProgress(`Đang nén & lưu ảnh ${i + 1}/${filesArr.length} (${file.name})...`)
 
       try {
-        // 1. Luôn nén ảnh qua HTML5 Canvas (giảm từ 10MB xuống ~80KB, resize max 1200px)
-        const { file: compressedFile, dataUrl } = await compressImage(file, 1200, 0.75)
+        // 1. Tự động nén ảnh qua HTML5 Canvas: Giảm từ 5-15MB xuống ~40-60KB (max 1000px, JPEG 0.72)
+        const { dataUrl, file: compressedFile } = await compressImage(file, 1000, 0.72)
 
-        // 2. Thử tải lên backend với timeout race 3.5s (tránh bị treo nếu Render cold-start)
-        let finalUrl = dataUrl
-        try {
-          const uploadPromise = propertyApi.uploadImage(compressedFile)
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Backend timeout 3.5s')), 3500)
-          )
-          const res: any = await Promise.race([uploadPromise, timeoutPromise])
-          if (res && res.url) {
-            finalUrl = res.url.startsWith('http')
-              ? res.url
-              : `${(ENV.API_BASE_URL || '').replace(/\/api\/?$/, '')}${res.url}`
-          }
-        } catch {
-          // Backend bận hoặc timeout -> dùng DataURL nén cực nhẹ (~80KB), hiển thị tức thì
-        }
+        if (dataUrl) {
+          // Lưu trực tiếp DataURL đã nén siêu nhẹ vào danh sách ảnh
+          // Ảnh này hiển thị tức thì, 100% là ảnh thật vừa chọn, không bao giờ bị 404 hay đè ảnh Unsplash!
+          newUploadedUrls.push(dataUrl)
 
-        if (finalUrl) {
-          newUploadedUrls.push(finalUrl)
+          // Background upload lên backend để lưu trữ thêm (nếu backend đang online)
+          propertyApi.uploadImage(compressedFile).catch(() => {})
         }
       } catch (compressErr) {
         console.error('Lỗi nén ảnh:', compressErr)
@@ -758,6 +761,44 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                   className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 font-mono font-bold dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   required
                 />
+                {/* Nút bấm chọn nhanh giá tiền */}
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => addPricePreset(50_000_000)}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                  >
+                    + 50 Tr
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addPricePreset(100_000_000)}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                  >
+                    + 100 Tr
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExactPrice(500_000_000)}
+                    className="px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900 border border-teal-300 dark:border-teal-700 text-[10px] font-bold text-teal-700 dark:text-teal-300 cursor-pointer"
+                  >
+                    500 Triệu
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExactPrice(1_000_000_000)}
+                    className="px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900 border border-teal-300 dark:border-teal-700 text-[10px] font-bold text-teal-700 dark:text-teal-300 cursor-pointer"
+                  >
+                    1 Tỷ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExactPrice(0)}
+                    className="px-2 py-0.5 rounded-md bg-red-50 hover:bg-red-100 dark:bg-red-950/60 text-[10px] font-bold text-red-600 dark:text-red-400 cursor-pointer"
+                  >
+                    Xóa
+                  </button>
+                </div>
                 {price > 0 && (
                   <div className="mt-1.5 p-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-[11px] text-teal-800 dark:text-teal-300 font-bold flex items-center gap-1 flex-wrap">
                     <span>💰 Đọc giá:</span>
@@ -817,12 +858,25 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                     type="text"
                     value={unitPriceVal}
                     onChange={(e) => handleUnitPriceValChange(e.target.value)}
-                    placeholder="VD: 15.000"
+                    placeholder="VD: 380.000"
                     className="flex-1 rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                   <span className="px-3 py-2 rounded-xl bg-teal-100 dark:bg-teal-950/60 font-bold text-xs text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700">
                     {unitPriceUnit}
                   </span>
+                </div>
+                {/* Gợi ý đơn giá nhanh */}
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {(['15.000', '25.000', '380.000', '719.000'] as const).map((pVal) => (
+                    <button
+                      key={pVal}
+                      type="button"
+                      onClick={() => handleUnitPriceValChange(pVal)}
+                      className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                    >
+                      {pVal}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -938,10 +992,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                         src={url}
                         alt={`Ảnh ${idx + 1}`}
                         className="h-full w-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
-                        }}
+                        loading="lazy"
                       />
                       {idx === 0 && (
                         <span className="absolute bottom-1 left-1 rounded bg-teal-600/90 px-1 py-0.5 text-[8.5px] font-bold text-white shadow-xs">
