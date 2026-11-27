@@ -164,13 +164,13 @@ export function AdminAi3DModal({ isOpen, onClose, onSelectModelUrl }: AdminAi3DM
             </span>
             <div>
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                <span>Trợ Lý Gemini AI Dựng Mô Hình 3D</span>
+                <span>Trợ Lý Kỹ Sư AI Dựng Mô Hình 3D</span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/80 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
                   Chat Tùy Biến 24/7
                 </span>
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Nhập câu lệnh bất kỳ để AI tự động tính kết cấu và sinh mô hình 3D xoay 360° trực tiếp
+                Nhập câu lệnh bất kỳ để tự động tính kết cấu và sinh mô hình 3D xoay 360° trực tiếp
               </p>
             </div>
           </div>
@@ -319,7 +319,7 @@ export function AdminAi3DModal({ isOpen, onClose, onSelectModelUrl }: AdminAi3DM
               </div>
               <div className="rounded-2xl rounded-tl-none p-3.5 bg-slate-100 dark:bg-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
-                <span>Gemini AI đang phân tích yêu cầu, tính toán kết cấu & sinh mô hình 3D...</span>
+                <span>Hệ thống đang phân tích yêu cầu, tính toán kết cấu & sinh mô hình 3D...</span>
               </div>
             </div>
           )}

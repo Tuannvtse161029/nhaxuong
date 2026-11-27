@@ -722,10 +722,10 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                     type="button"
                     onClick={() => setShowAi3DModal(true)}
                     className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition shadow-xs"
-                    title="Dùng Gemini AI tự động sinh mã mô hình 3D"
+                    title="Tự động tính toán kết cấu & sinh file mô hình 3D"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Gemini AI Dựng 3D</span>
+                    <span>AI Dựng 3D</span>
                   </button>
 
                   <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-cyan-600 text-white hover:bg-cyan-500 transition shadow-xs">
@@ -776,7 +776,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                 </div>
               )}
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                💡 <b>Mẹo:</b> Bấm <b>Gemini AI Dựng 3D</b> để xem trước & tải file .html về máy, hoặc bấm <b>Gán thẳng vào bài</b>. Bạn cũng có thể bấm <b>Tải File 3D</b> để chọn file .html từ điện thoại.
+                💡 <b>Mẹo:</b> Bấm <b>AI Dựng 3D</b> để xem trước & tải file .html về máy, hoặc bấm <b>Gán thẳng vào bài</b>. Bạn cũng có thể bấm <b>Tải File 3D</b> để chọn file .html từ điện thoại.
               </p>
             </div>
 

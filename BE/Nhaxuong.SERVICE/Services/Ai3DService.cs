@@ -330,12 +330,20 @@ namespace Nhaxuong.SERVICE.Services
         .action-btns {{ display: flex; gap: 6px; pointer-events: auto; }}
         .icon-btn {{
             background: var(--bg-card); border: 1px solid var(--border);
-            color: var(--text-main); width: 34px; height: 34px;
+            color: var(--text-main); height: 34px; padding: 0 10px;
             border-radius: 10px; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; font-size: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06); transition: all 0.2s;
+            align-items: center; justify-content: center; gap: 5px; font-size: 11px;
+            font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.06); transition: all 0.2s;
         }}
         .icon-btn:hover {{ border-color: var(--primary-orange); color: var(--primary-orange); transform: translateY(-1px); }}
+        .icon-btn.active {{ background: #ea580c; color: #ffffff; border-color: #ea580c; }}
+        .icon-btn span {{ font-size: 11px; }}
+        @media (max-width: 640px) {{
+            .brand-badge h1 {{ font-size: 11px; }}
+            .brand-badge p {{ font-size: 9.5px; }}
+            .icon-btn {{ padding: 0 7px; height: 30px; font-size: 11px; }}
+            .icon-btn span {{ display: none; }}
+        }}
         .panel-specs {{
             position: absolute; top: 72px; left: 14px; width: 310px; max-height: calc(100vh - 140px);
             overflow-y: auto; z-index: 10; background: var(--bg-card);
@@ -381,10 +389,12 @@ namespace Nhaxuong.SERVICE.Services
     <div class=""header-bar"">
         <div class=""brand-badge"">
             <h1><i class=""fa-solid fa-cube text-orange-600""></i> {title}</h1>
-            <p>Mô hình 3D xoay 360° | Gemini AI Engine</p>
+            <p>Mô hình 3D xoay 360° | Kết Cấu Thép Chuẩn Tiền Chế</p>
         </div>
         <div class=""action-btns"">
-            <button class=""icon-btn"" id=""btn-roof"" title=""Ẩn / Hiện mái tôn""><i class=""fa-solid fa-shield-halved""></i></button>
+            <button class=""icon-btn active"" id=""btn-roof"" title=""Ẩn / Hiện Mái Tôn""><i class=""fa-solid fa-shield-halved""></i> <span>Mái</span></button>
+            <button class=""icon-btn active"" id=""btn-wall"" title=""Ẩn / Hiện Tôn Vách""><i class=""fa-solid fa-building""></i> <span>Vách</span></button>
+            <button class=""icon-btn active"" id=""btn-purlin"" title=""Ẩn / Hiện Hệ Xà Gồ""><i class=""fa-solid fa-bars""></i> <span>Xà Gồ</span></button>
             <button class=""icon-btn"" id=""btn-reset"" title=""Đặt lại góc nhìn""><i class=""fa-solid fa-arrows-rotate""></i></button>
         </div>
     </div>
@@ -405,11 +415,15 @@ namespace Nhaxuong.SERVICE.Services
             <tr><td>Số bước gian:</td><td><b>{bayCount} gian ({baySpacing}m/gian)</b></td></tr>
             <tr><td>Hệ khung kết cấu:</td><td><b>{structureType}</b></td></tr>
             {craneHtml}
-            <tr><td>Hệ xà gồ C/Z:</td><td>Mạ kẽm Z275 cường độ cao</td></tr>
-            <tr><td>Hệ giằng chống xoắn:</td><td>Giằng chữ X + 2 tầng giằng ống Ø114</td></tr>
+            <tr><td>Hệ xà gồ mái:</td><td>Thép Z200 mạ kẽm Z275 (~1.3m/thanh)</td></tr>
+            <tr><td>Hệ xà gồ vách:</td><td>Thép C150 mạ kẽm Z275 (~1.3m/thanh)</td></tr>
+            <tr><td>Tôn vách bao che:</td><td>Tôn sóng vuông 0.45mm cao cấp</td></tr>
+            <tr><td>Chân tường bao:</td><td>Tường xây gạch cao 1.2m chống ẩm</td></tr>
+            <tr><td>Cửa chính xưởng:</td><td>Cửa cuốn CN + Mái đón Canopy</td></tr>
+            <tr><td>Hệ giằng chống xoắn:</td><td>Giằng chữ X + giằng ống Ø114</td></tr>
         </table>
         <div class=""ai-badge"">
-            <b><i class=""fa-solid fa-wand-magic-sparkles text-blue-600""></i> Đánh giá kỹ sư AI:</b><br>
+            <b><i class=""fa-solid fa-calculator text-blue-600""></i> Tư vấn giải pháp kỹ thuật:</b><br>
             {aiNote}
         </div>
     </div>
@@ -498,19 +512,27 @@ namespace Nhaxuong.SERVICE.Services
 
         // Vật liệu kết cấu
         const matSteelZamil = new THREE.MeshStandardMaterial({{ color: 0xea580c, roughness: 0.35, metalness: 0.65 }});
-        const matPurlin = new THREE.MeshStandardMaterial({{ color: 0x64748b, roughness: 0.45, metalness: 0.7 }});
+        const matPurlin = new THREE.MeshStandardMaterial({{ color: 0x94a3b8, roughness: 0.4, metalness: 0.8 }});
         const matFooting = new THREE.MeshStandardMaterial({{ color: 0x94a3b8, roughness: 0.85, metalness: 0.1 }});
         const matCrane = new THREE.MeshStandardMaterial({{ color: 0xf59e0b, roughness: 0.35, metalness: 0.8 }});
         const matBrace = new THREE.MeshStandardMaterial({{ color: 0xc2410c, roughness: 0.4, metalness: 0.7 }});
         const matRoofBlue = new THREE.MeshStandardMaterial({{ color: 0x0284c7, roughness: 0.4, metalness: 0.2, side: THREE.DoubleSide, transparent: true, opacity: 0.88 }});
+        const matWallSheet = new THREE.MeshStandardMaterial({{ color: 0x64748b, roughness: 0.5, metalness: 0.3, side: THREE.DoubleSide, transparent: true, opacity: 0.82 }});
+        const matBrick = new THREE.MeshStandardMaterial({{ color: 0x475569, roughness: 0.85, metalness: 0.1 }});
+        const matDoor = new THREE.MeshStandardMaterial({{ color: 0x1e293b, roughness: 0.4, metalness: 0.7, side: THREE.DoubleSide }});
+        const matCanopy = new THREE.MeshStandardMaterial({{ color: 0xea580c, roughness: 0.35, metalness: 0.65 }});
 
         const factoryGroup = new THREE.Group();
+        const purlinGroup = new THREE.Group();
+        const wallGroup = new THREE.Group();
         const roofGroup = new THREE.Group();
 
         const halfW = W / 2;
         const halfL = L / 2;
+        const rafterLen = Math.sqrt(Math.pow(halfW, 2) + Math.pow(RIDGE_H - H, 2));
+        const rafterAngle = Math.atan2(RIDGE_H - H, halfW);
 
-        // Dựng các khung Zamil dọc theo bước gian
+        // 1. Dựng các khung Zamil chính dọc theo bước gian
         for (let i = 0; i <= BAYS; i++) {{
             const z = -halfL + i * BAY_S;
 
@@ -537,9 +559,6 @@ namespace Nhaxuong.SERVICE.Services
             factoryGroup.add(footR);
 
             // Kèo Zamil vát tiết diện
-            const rafterLen = Math.sqrt(Math.pow(halfW, 2) + Math.pow(RIDGE_H - H, 2));
-            const rafterAngle = Math.atan2(RIDGE_H - H, halfW);
-
             const rafterGeo = new THREE.BoxGeometry(rafterLen, 0.4, 0.32);
 
             const rafterL = new THREE.Mesh(rafterGeo, matSteelZamil);
@@ -554,6 +573,164 @@ namespace Nhaxuong.SERVICE.Services
             rafterR.castShadow = true;
             factoryGroup.add(rafterR);
         }}
+
+        // Cột chống gió đầu hồi sau
+        if (W >= 18) {{
+            const gablePostGeo = new THREE.BoxGeometry(0.35, H, 0.35);
+            const pBackL = new THREE.Mesh(gablePostGeo, matSteelZamil);
+            pBackL.position.set(-halfW / 2, H / 2, -halfL);
+            factoryGroup.add(pBackL);
+
+            const pBackR = new THREE.Mesh(gablePostGeo, matSteelZamil);
+            pBackR.position.set(halfW / 2, H / 2, -halfL);
+            factoryGroup.add(pBackR);
+        }}
+
+        // 2. HỆ XÀ GỒ MÁI (Roof Purlins C/Z)
+        const numRoofPurlins = Math.max(3, Math.round(rafterLen / 1.35));
+        const roofPurlinGeo = new THREE.BoxGeometry(0.12, 0.18, L + 0.4);
+
+        for (let p = 0; p <= numRoofPurlins; p++) {{
+            const d = (p / numRoofPurlins) * rafterLen;
+
+            // Xà gồ mái trái
+            const purlinL = new THREE.Mesh(roofPurlinGeo, matPurlin);
+            const xL = -halfW + d * Math.cos(rafterAngle);
+            const yL = H + d * Math.sin(rafterAngle) + 0.12;
+            purlinL.position.set(xL, yL, 0);
+            purlinL.rotation.z = rafterAngle;
+            purlinL.castShadow = true;
+            purlinGroup.add(purlinL);
+
+            // Xà gồ mái phải
+            const purlinR = new THREE.Mesh(roofPurlinGeo, matPurlin);
+            const xR = halfW - d * Math.cos(rafterAngle);
+            const yR = H + d * Math.sin(rafterAngle) + 0.12;
+            purlinR.position.set(xR, yR, 0);
+            purlinR.rotation.z = -rafterAngle;
+            purlinR.castShadow = true;
+            purlinGroup.add(purlinR);
+        }}
+
+        // 3. HỆ XÀ GỒ VÁCH (Wall Girts C/Z)
+        const numWallGirts = Math.max(2, Math.round((H - 1.4) / 1.3));
+        const sideGirtGeo = new THREE.BoxGeometry(0.12, 0.16, L + 0.4);
+
+        for (let g = 0; g <= numWallGirts; g++) {{
+            const yG = 1.3 + (g / numWallGirts) * (H - 1.5);
+
+            // Xà gồ vách trái
+            const girtL = new THREE.Mesh(sideGirtGeo, matPurlin);
+            girtL.position.set(-halfW - 0.08, yG, 0);
+            purlinGroup.add(girtL);
+
+            // Xà gồ vách phải
+            const girtR = new THREE.Mesh(sideGirtGeo, matPurlin);
+            girtR.position.set(halfW + 0.08, yG, 0);
+            purlinGroup.add(girtR);
+
+            // Xà gồ vách đầu hồi sau
+            const backGirtGeo = new THREE.BoxGeometry(W + 0.3, 0.16, 0.12);
+            const girtBack = new THREE.Mesh(backGirtGeo, matPurlin);
+            girtBack.position.set(0, yG, -halfL - 0.08);
+            purlinGroup.add(girtBack);
+        }}
+
+        // 4. TƯỜNG GẠCH CHÂN CỘT (Brick Skirting 1.2m)
+        const brickH = 1.2;
+        const brickSideGeo = new THREE.BoxGeometry(0.24, brickH, L);
+        const brickL = new THREE.Mesh(brickSideGeo, matBrick);
+        brickL.position.set(-halfW, brickH / 2, 0);
+        wallGroup.add(brickL);
+
+        const brickR = new THREE.Mesh(brickSideGeo, matBrick);
+        brickR.position.set(halfW, brickH / 2, 0);
+        wallGroup.add(brickR);
+
+        const brickBackGeo = new THREE.BoxGeometry(W, brickH, 0.24);
+        const brickBack = new THREE.Mesh(brickBackGeo, matBrick);
+        brickBack.position.set(0, brickH / 2, -halfL);
+        wallGroup.add(brickBack);
+
+        // Kích thước cửa chính xưởng
+        const doorW = Math.min(W * 0.32, 6.0);
+        const doorH = Math.min(H * 0.52, 4.6);
+        const frontBrickSegW = (W - doorW) / 2;
+
+        const brickFrontSegGeo = new THREE.BoxGeometry(frontBrickSegW, brickH, 0.24);
+        const brickFrontL = new THREE.Mesh(brickFrontSegGeo, matBrick);
+        brickFrontL.position.set(-halfW + frontBrickSegW / 2, brickH / 2, halfL);
+        wallGroup.add(brickFrontL);
+
+        const brickFrontR = new THREE.Mesh(brickFrontSegGeo, matBrick);
+        brickFrontR.position.set(halfW - frontBrickSegW / 2, brickH / 2, halfL);
+        wallGroup.add(brickFrontR);
+
+        // 5. TÔN VÁCH BAO CHE (Wall Cladding Sheets)
+        const wallH = H - brickH;
+        const wallSidePlaneGeo = new THREE.PlaneGeometry(L, wallH);
+
+        const wallL = new THREE.Mesh(wallSidePlaneGeo, matWallSheet);
+        wallL.position.set(-halfW - 0.15, brickH + wallH / 2, 0);
+        wallL.rotation.y = Math.PI / 2;
+        wallGroup.add(wallL);
+
+        const wallR = new THREE.Mesh(wallSidePlaneGeo, matWallSheet);
+        wallR.position.set(halfW + 0.15, brickH + wallH / 2, 0);
+        wallR.rotation.y = -Math.PI / 2;
+        wallGroup.add(wallR);
+
+        // Tôn đầu hồi sau
+        const wallBackPlaneGeo = new THREE.PlaneGeometry(W, wallH);
+        const wallBack = new THREE.Mesh(wallBackPlaneGeo, matWallSheet);
+        wallBack.position.set(0, brickH + wallH / 2, -halfL - 0.15);
+        wallGroup.add(wallBack);
+
+        // Tam giác tôn đầu hồi đỉnh nóc (Gable roof triangle)
+        const gableShape = new THREE.Shape();
+        gableShape.moveTo(-halfW, H);
+        gableShape.lineTo(0, RIDGE_H);
+        gableShape.lineTo(halfW, H);
+        gableShape.closePath();
+
+        const gableGeo = new THREE.ShapeGeometry(gableShape);
+        const gableBack = new THREE.Mesh(gableGeo, matWallSheet);
+        gableBack.position.set(0, 0, -halfL - 0.15);
+        wallGroup.add(gableBack);
+
+        const gableFront = new THREE.Mesh(gableGeo, matWallSheet);
+        gableFront.position.set(0, 0, halfL + 0.15);
+        wallGroup.add(gableFront);
+
+        // Tôn đầu hồi trước
+        const frontWallSegGeo = new THREE.PlaneGeometry(frontBrickSegW, wallH);
+        const frontWallL = new THREE.Mesh(frontWallSegGeo, matWallSheet);
+        frontWallL.position.set(-halfW + frontBrickSegW / 2, brickH + wallH / 2, halfL + 0.15);
+        wallGroup.add(frontWallL);
+
+        const frontWallR = new THREE.Mesh(frontWallSegGeo, matWallSheet);
+        frontWallR.position.set(halfW - frontBrickSegW / 2, brickH + wallH / 2, halfL + 0.15);
+        wallGroup.add(frontWallR);
+
+        if (H > doorH) {{
+            const aboveDoorH = H - doorH;
+            const frontWallTopGeo = new THREE.PlaneGeometry(doorW, aboveDoorH);
+            const frontWallTop = new THREE.Mesh(frontWallTopGeo, matWallSheet);
+            frontWallTop.position.set(0, doorH + aboveDoorH / 2, halfL + 0.15);
+            wallGroup.add(frontWallTop);
+        }}
+
+        // 6. CỬA CUỐN CÔNG NGHIỆP & MÁI ĐÓN CANOPY
+        const doorGeo = new THREE.PlaneGeometry(doorW, doorH);
+        const doorMesh = new THREE.Mesh(doorGeo, matDoor);
+        doorMesh.position.set(0, doorH / 2, halfL + 0.16);
+        factoryGroup.add(doorMesh);
+
+        // Mái đón canopy
+        const canopyGeo = new THREE.BoxGeometry(doorW + 1.2, 0.12, 1.8);
+        const canopy = new THREE.Mesh(canopyGeo, matCanopy);
+        canopy.position.set(0, doorH + 0.25, halfL + 0.9);
+        factoryGroup.add(canopy);
 
         // Dầm cẩu trục và ray nếu có
         if (HAS_CRANE) {{
@@ -603,32 +780,63 @@ namespace Nhaxuong.SERVICE.Services
         addXBrace(-halfW + 0.25, halfL - BAY_S, halfL, 0.6, H * 0.5);
         addXBrace(halfW - 0.25, halfL - BAY_S, halfL, 0.6, H * 0.5);
 
-        // Mái tôn màu xanh công nghiệp
-        const rafterLen = Math.sqrt(Math.pow(halfW, 2) + Math.pow(RIDGE_H - H, 2));
-        const rafterAngle = Math.atan2(RIDGE_H - H, halfW);
-
+        // 7. MÁI TÔN & DIỀM NÓC GIÓ
         const roofPlaneGeo = new THREE.PlaneGeometry(rafterLen + 0.8, L + 1.0);
         const roofL = new THREE.Mesh(roofPlaneGeo, matRoofBlue);
-        roofL.position.set(-halfW / 2, H + (RIDGE_H - H) / 2 + 0.18, 0);
+        roofL.position.set(-halfW / 2, H + (RIDGE_H - H) / 2 + 0.22, 0);
         roofL.rotation.x = Math.PI / 2;
         roofL.rotation.y = rafterAngle;
         roofGroup.add(roofL);
 
         const roofR = new THREE.Mesh(roofPlaneGeo, matRoofBlue);
-        roofR.position.set(halfW / 2, H + (RIDGE_H - H) / 2 + 0.18, 0);
+        roofR.position.set(halfW / 2, H + (RIDGE_H - H) / 2 + 0.22, 0);
         roofR.rotation.x = Math.PI / 2;
         roofR.rotation.y = -rafterAngle;
         roofGroup.add(roofR);
 
+        // Nóc gió / diềm nóc
+        const ridgeCapGeo = new THREE.BoxGeometry(1.2, 0.25, L + 1.2);
+        const ridgeCap = new THREE.Mesh(ridgeCapGeo, matCanopy);
+        ridgeCap.position.set(0, RIDGE_H + 0.25, 0);
+        roofGroup.add(ridgeCap);
+
+        // Thêm tất cả vào Scene
         scene.add(factoryGroup);
+        scene.add(purlinGroup);
+        scene.add(wallGroup);
         scene.add(roofGroup);
 
-        // Ẩn / Hiện mái tôn
+        // Ẩn / Hiện các thành phần kết cấu qua nút bấm
         let showRoof = true;
-        document.getElementById('btn-roof').addEventListener('click', function() {{
-            showRoof = !showRoof;
-            roofGroup.visible = showRoof;
-        }});
+        let showWall = true;
+        let showPurlin = true;
+
+        const btnRoof = document.getElementById('btn-roof');
+        if (btnRoof) {{
+            btnRoof.addEventListener('click', function() {{
+                showRoof = !showRoof;
+                roofGroup.visible = showRoof;
+                btnRoof.classList.toggle('active', showRoof);
+            }});
+        }}
+
+        const btnWall = document.getElementById('btn-wall');
+        if (btnWall) {{
+            btnWall.addEventListener('click', function() {{
+                showWall = !showWall;
+                wallGroup.visible = showWall;
+                btnWall.classList.toggle('active', showWall);
+            }});
+        }}
+
+        const btnPurlin = document.getElementById('btn-purlin');
+        if (btnPurlin) {{
+            btnPurlin.addEventListener('click', function() {{
+                showPurlin = !showPurlin;
+                purlinGroup.visible = showPurlin;
+                btnPurlin.classList.toggle('active', showPurlin);
+            }});
+        }}
 
         // Đặt lại góc nhìn
         document.getElementById('btn-reset').addEventListener('click', function() {{

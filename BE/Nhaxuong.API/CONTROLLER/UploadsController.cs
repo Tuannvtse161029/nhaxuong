@@ -109,6 +109,18 @@ namespace Nhaxuong.API.CONTROLLER
                     if (ext == ".html" || ext == ".htm")
                     {
                         var html = await System.IO.File.ReadAllTextAsync(filePath);
+                        if (html.Contains("Gemini AI Engine") || !html.Contains("purlinGroup"))
+                        {
+                            double w = 24; double l = 84;
+                            var dimMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"(\d{1,3})x(\d{1,3})");
+                            if (dimMatch.Success)
+                            {
+                                if (double.TryParse(dimMatch.Groups[1].Value, out var pw)) w = pw;
+                                if (double.TryParse(dimMatch.Groups[2].Value, out var pl)) l = pl;
+                            }
+                            html = Nhaxuong.SERVICE.Services.Ai3DService.GenerateFallbackThreeJsHtml(w, l);
+                            try { await System.IO.File.WriteAllTextAsync(filePath, html, System.Text.Encoding.UTF8); } catch {}
+                        }
                         return Content(html, "text/html; charset=utf-8");
                     }
                     return PhysicalFile(filePath, ext == ".glb" ? "model/gltf-binary" : "application/octet-stream");

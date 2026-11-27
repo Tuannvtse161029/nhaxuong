@@ -183,7 +183,7 @@ export function AdminPortalPage() {
       <div className="flex items-center gap-1.5 overflow-x-auto border-b border-slate-200/80 pb-2 dark:border-slate-800 text-xs font-bold">
         {[
           { key: 'crud', label: 'Quản Lý Bài Đăng & 3D', icon: <Boxes className="w-4 h-4" /> },
-          { key: 'ai3d', label: '🤖 Gemini AI Dựng 3D', icon: <Sparkles className="w-4 h-4 text-orange-400" /> },
+          { key: 'ai3d', label: '🤖 AI Dựng Mô Hình 3D', icon: <Sparkles className="w-4 h-4 text-orange-400" /> },
           { key: 'categories', label: 'Quản Lý Danh Mục', icon: <Tags className="w-4 h-4" /> },
           { key: 'subscribers', label: 'Khách Đăng Ký Nhận Tin', icon: <Users className="w-4 h-4" /> },
           { key: 'notices', label: 'Bản Tin & Ticker', icon: <Megaphone className="w-4 h-4" /> },
