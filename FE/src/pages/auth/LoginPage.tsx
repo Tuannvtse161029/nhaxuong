@@ -540,7 +540,7 @@ export function LoginPage() {
                 )}
                 <input
                   type={forgotMethod === 'email' ? 'email' : 'tel'}
-                  placeholder={forgotMethod === 'email' ? 'VD: ban@gmail.com' : 'VD: 090 123 4567'}
+                  placeholder={forgotMethod === 'email' ? 'VD: ban@gmail.com' : 'VD: 0965 985 468'}
                   value={forgotTarget}
                   onChange={(e) => setForgotTarget(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
@@ -813,7 +813,7 @@ export function LoginPage() {
                   <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <input
                     type="tel"
-                    placeholder="VD: 090 123 4567"
+                    placeholder="VD: 0965 985 468"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
@@ -859,7 +859,7 @@ export function LoginPage() {
                     <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                     <input
                       type="tel"
-                      placeholder="VD: 090 123 4567"
+                      placeholder="VD: 0965 985 468"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"

@@ -12,6 +12,9 @@ import {
   ArrowLeft,
   ShieldCheck,
   Send,
+  Eye,
+  EyeOff,
+  Lock,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { GoogleLoginButton } from './GoogleLoginButton'
@@ -34,33 +37,37 @@ export function AuthModal() {
     forgotPinReset,
   } = useAuth()
 
-  // Form Modes
-  const [method, setMethod] = useState<'phone' | 'email'>('phone')
+  // General States
   const [regStep, setRegStep] = useState<1 | 2>(1)
   const [isForgotPinMode, setIsForgotPinMode] = useState(false)
+  const [regMethod, setRegMethod] = useState<'phone' | 'email'>('phone')
 
-  // Phone Form States
+  // UNIFIED LOGIN FORM STATES
+  const [loginIdentifier, setLoginIdentifier] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
+  const [useSmsOtpLogin, setUseSmsOtpLogin] = useState(false)
+  const [loginOtp, setLoginOtp] = useState('')
+  const [loginOtpSent, setLoginOtpSent] = useState(false)
+  const [loginOtpCountdown, setLoginOtpCountdown] = useState(0)
+
+  // PHONE REGISTRATION FORM STATES
   const [phone, setPhone] = useState('')
   const [phoneName, setPhoneName] = useState('')
   const [phonePin, setPhonePin] = useState('')
   const [phoneConfirmPin, setPhoneConfirmPin] = useState('')
-  const [phoneUseOtpLogin, setPhoneUseOtpLogin] = useState(false)
-  const [otp, setOtp] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
-  const [otpCountdown, setOtpCountdown] = useState(0)
+  const [phoneOtp, setPhoneOtp] = useState('')
+  const [phoneOtpCountdown, setPhoneOtpCountdown] = useState(0)
 
-  // Email & PIN Form States
+  // EMAIL REGISTRATION FORM STATES
   const [email, setEmail] = useState('')
-  const [pin, setPin] = useState('')
-  const [confirmPin, setConfirmPin] = useState('')
-  const [adminPassword, setAdminPassword] = useState('')
-  const [showAdminPassword, setShowAdminPassword] = useState(false)
   const [name, setName] = useState('')
+  const [emailPin, setEmailPin] = useState('')
+  const [emailConfirmPin, setEmailConfirmPin] = useState('')
   const [emailOtp, setEmailOtp] = useState('')
-  const [emailOtpSent, setEmailOtpSent] = useState(false)
   const [emailOtpCountdown, setEmailOtpCountdown] = useState(0)
 
-  // Forgot PIN states
+  // FORGOT PIN STATES
   const [forgotMethod, setForgotMethod] = useState<'email' | 'phone'>('email')
   const [forgotTarget, setForgotTarget] = useState('')
   const [forgotOtp, setForgotOtp] = useState('')
@@ -69,7 +76,7 @@ export function AuthModal() {
   const [forgotNewPin, setForgotNewPin] = useState('')
   const [forgotConfirmPin, setForgotConfirmPin] = useState('')
 
-  // General States
+  // Feedback States
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -85,81 +92,120 @@ export function AuthModal() {
     setSuccessMsg(null)
   }
 
-  const handleMethodSwitch = (newMethod: 'phone' | 'email') => {
-    setMethod(newMethod)
-    setRegStep(1)
-    setError(null)
-    setSuccessMsg(null)
-  }
-
-  const handleGoogleAuth = async () => {
-    setError(null)
-    setIsLoading(true)
-    try {
-      await loginWithGoogle()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đăng nhập Google thất bại')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // --- PHONE HANDLERS ---
-  const handlePhoneLoginSubmit = async (e: React.FormEvent) => {
+  // --- UNIFIED LOGIN SUBMIT (Handles 'admin', email, or phone) ---
+  const handleUnifiedLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const cleaned = phone.replace(/\D/g, '')
-    if (!cleaned || (cleaned.length !== 10 && cleaned.length !== 11)) {
-      setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
+    const id = loginIdentifier.trim()
+    const pass = loginPassword.trim()
+
+    if (!id) {
+      setError('Vui lòng nhập tên tài khoản, địa chỉ email hoặc số điện thoại của bạn.')
       return
     }
 
-    if (phoneUseOtpLogin) {
-      if (!otpSent) {
-        setError('Vui lòng bấm nút "Gửi Mã OTP" để nhận mã đăng nhập qua tin nhắn SMS.')
+    // If using SMS OTP login mode for phone
+    if (useSmsOtpLogin) {
+      const cleanedPhone = id.replace(/\D/g, '')
+      if (cleanedPhone.length < 9) {
+        setError('Vui lòng nhập số điện thoại hợp lệ để nhận mã OTP SMS.')
         return
       }
-      if (otp.length !== 6) {
-        setError('Vui lòng nhập đầy đủ mã OTP 6 số từ tin nhắn SMS.')
+      if (!loginOtpSent) {
+        setError('Vui lòng nhấn nút "Gửi Mã OTP" để nhận mã xác thực đăng nhập qua tin nhắn SMS.')
         return
       }
-    } else {
-      if (phonePin.length !== 6) {
-        setError('Vui lòng nhập đúng mã PIN bảo mật 6 số của bạn.')
+      if (loginOtp.length !== 6) {
+        setError('Vui lòng nhập đủ mã OTP 6 số từ tin nhắn SMS.')
         return
       }
+
+      setError(null)
+      setIsLoading(true)
+      try {
+        await loginWithPhone(cleanedPhone, loginOtp.trim())
+        closeAuthModal()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Đăng nhập bằng mã OTP thất bại')
+      } finally {
+        setIsLoading(false)
+      }
+      return
+    }
+
+    if (!pass) {
+      setError('Vui lòng nhập mật khẩu hoặc mã PIN 6 số.')
+      return
     }
 
     setError(null)
     setIsLoading(true)
     try {
-      if (phoneUseOtpLogin) {
-        await loginWithPhone(phone.trim(), otp.trim())
+      const isEmailLike = id.includes('@')
+      const isPurePhone = /^[0-9+ ]+$/.test(id) && id.replace(/\D/g, '').length >= 9
+      const isAdmin = id.toLowerCase() === 'admin'
+
+      if (isAdmin) {
+        await login({
+          email: 'admin@nhaxuong.vn',
+          password: pass,
+          pin: pass,
+        })
+      } else if (isPurePhone) {
+        const cleanPhone = id.replace(/\D/g, '')
+        await loginWithPhone(cleanPhone, undefined, undefined, pass)
       } else {
-        await loginWithPhone(phone.trim(), undefined, undefined, phonePin.trim())
+        await login({
+          email: isEmailLike ? id.toLowerCase() : `${id}@nhaxuong.vn`,
+          password: pass,
+          pin: pass,
+        })
       }
+      closeAuthModal()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đăng nhập số điện thoại thất bại')
+      setError(err instanceof Error ? err.message : 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin!')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSendPhoneLoginOtp = async () => {
-    const cleaned = phone.replace(/\D/g, '')
-    if (!cleaned || (cleaned.length !== 10 && cleaned.length !== 11)) {
-      setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
+  // Quick 1-Click Admin Login
+  const handleQuickAdminLogin = async () => {
+    setLoginIdentifier('admin')
+    setLoginPassword('baopro2147!')
+    setUseSmsOtpLogin(false)
+    setError(null)
+    setIsLoading(true)
+    try {
+      await login({
+        email: 'admin@nhaxuong.vn',
+        password: 'baopro2147!',
+        pin: 'baopro2147!',
+      })
+      closeAuthModal()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đăng nhập Admin thất bại')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Send SMS OTP for Login
+  const handleSendLoginOtp = async () => {
+    const cleaned = loginIdentifier.replace(/\D/g, '')
+    if (cleaned.length < 10) {
+      setError('Số điện thoại không hợp lệ! Vui lòng nhập đúng 10 hoặc 11 chữ số.')
       return
     }
     setError(null)
     setIsLoading(true)
     try {
-      await sendOtp(phone.trim(), 'login')
-      setOtpSent(true)
-      setOtp('')
-      setSuccessMsg(`Mã OTP đã được gửi qua tin nhắn SMS tới số ${phone.trim()}. Vui lòng kiểm tra điện thoại của bạn và nhập mã vào ô bên dưới!`)
-      setOtpCountdown(60)
+      await sendOtp(cleaned, 'login')
+      setLoginOtpSent(true)
+      setLoginOtp('')
+      setSuccessMsg(`Mã OTP đã được gửi qua SMS tới số ${cleaned}. Vui lòng kiểm tra tin nhắn!`)
+      setLoginOtpCountdown(60)
       const timer = setInterval(() => {
-        setOtpCountdown((prev) => {
+        setLoginOtpCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer)
             return 0
@@ -167,18 +213,18 @@ export function AuthModal() {
           return prev - 1
         })
       }, 1000)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP. Vui lòng thử lại sau.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP SMS.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // PHONE REGISTER STEP 1: Validate + PIN -> send OTP -> go to Step 2
+  // --- PHONE REGISTRATION STEP 1 ---
   const handlePhoneRegisterStep1 = async (e: React.FormEvent) => {
     e.preventDefault()
     const cleaned = phone.replace(/\D/g, '')
-    if (!cleaned || (cleaned.length !== 10 && cleaned.length !== 11)) {
+    if (cleaned.length < 10 || cleaned.length > 11) {
       setError('Số điện thoại không hợp lệ! Bắt buộc phải có đúng 10 hoặc 11 chữ số.')
       return
     }
@@ -198,14 +244,13 @@ export function AuthModal() {
     setError(null)
     setIsLoading(true)
     try {
-      await sendOtp(phone.trim(), 'register')
-      setOtpSent(true)
-      setOtp('')
-      setSuccessMsg(`Mã OTP 6 số đã được gửi qua SMS tới ${phone.trim()}. Vui lòng kiểm tra tin nhắn và nhập mã để hoàn tất đăng ký!`)
-      setOtpCountdown(60)
+      await sendOtp(cleaned, 'register')
+      setPhoneOtp('')
+      setSuccessMsg(`Mã xác thực OTP 6 số đã được gửi qua tin nhắn SMS tới ${cleaned}. Vui lòng kiểm tra điện thoại!`)
+      setPhoneOtpCountdown(60)
       setRegStep(2)
       const timer = setInterval(() => {
-        setOtpCountdown((prev) => {
+        setPhoneOtpCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer)
             return 0
@@ -213,77 +258,38 @@ export function AuthModal() {
           return prev - 1
         })
       }, 1000)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP xác thực.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể gửi mã OTP qua tin nhắn SMS.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // PHONE REGISTER STEP 2: Verify OTP and create user
+  // PHONE REGISTRATION STEP 2 (Verify OTP)
   const handlePhoneRegisterStep2 = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (otp.length !== 6) {
-      setError('Vui lòng nhập đầy đủ mã OTP 6 số từ tin nhắn SMS.')
+    if (phoneOtp.length !== 6) {
+      setError('Vui lòng nhập đầy đủ mã xác thực OTP 6 số từ tin nhắn SMS.')
       return
     }
-
     setError(null)
     setIsLoading(true)
     try {
       await registerWithPhone(
-        phone.trim(),
+        phone.replace(/\D/g, '').trim(),
         phoneName.trim() || `Khách Hàng (${phone.slice(-4)})`,
-        otp.trim(),
+        phoneOtp.trim(),
         phonePin.trim()
       )
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Xác thực OTP thất bại')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // --- EMAIL HANDLERS ---
-  const handleEmailLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const cleanEmail = email.trim().toLowerCase()
-    const isAdmin = cleanEmail === 'admin' || cleanEmail === 'admin@nhaxuong.vn'
-
-    if (!isAdmin && (!cleanEmail || !cleanEmail.includes('@'))) {
-      setError('Vui lòng nhập địa chỉ email hợp lệ hoặc tài khoản admin')
-      return
-    }
-
-    const passValue = (isAdmin && adminPassword.trim()) ? adminPassword.trim() : pin.trim()
-    if (!passValue) {
-      setError(isAdmin ? 'Vui lòng nhập mật khẩu admin (baopro2147!)' : 'Vui lòng nhập mã PIN bảo mật 6 số')
-      return
-    }
-
-    if (!isAdmin && pin.length !== 6) {
-      setError('Vui lòng nhập đúng mã PIN bảo mật 6 số')
-      return
-    }
-
-    setError(null)
-    setIsLoading(true)
-    try {
-      await login({
-        email: isAdmin ? 'admin@nhaxuong.vn' : cleanEmail,
-        password: passValue,
-        pin: passValue,
-        otp: emailOtp.trim(),
-      })
       closeAuthModal()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đăng nhập không thành công')
+      setError(err instanceof Error ? err.message : 'Xác thực mã OTP thất bại')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // EMAIL REGISTER STEP 1: Validate + PIN -> send OTP -> go to Step 2
+  // --- EMAIL REGISTRATION STEP 1 ---
   const handleEmailRegisterStep1 = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
@@ -294,12 +300,12 @@ export function AuthModal() {
       setError('Vui lòng nhập địa chỉ email hợp lệ.')
       return
     }
-    if (pin.length !== 6) {
+    if (emailPin.length !== 6) {
       setError('Mã PIN bảo mật bắt buộc phải có đúng 6 chữ số.')
       return
     }
-    if (pin !== confirmPin) {
-      setError('Mã PIN xác nhận không trùng khớp!')
+    if (emailPin !== emailConfirmPin) {
+      setError('Mã PIN và Xác nhận mã PIN không trùng khớp!')
       return
     }
 
@@ -307,9 +313,8 @@ export function AuthModal() {
     setIsLoading(true)
     try {
       await sendEmailOtp(email.trim(), 'register')
-      setEmailOtpSent(true)
       setEmailOtp('')
-      setSuccessMsg(`Mã xác thực OTP đã được gửi về hòm thư ${email.trim()}. Vui lòng kiểm tra hộp thư đến (hoặc spam) và nhập mã vào ô bên dưới!`)
+      setSuccessMsg(`Mã xác thực OTP 6 số đã được gửi tới hòm thư ${email.trim()}. Vui lòng kiểm tra hộp thư đến (hoặc spam)!`)
       setEmailOtpCountdown(60)
       setRegStep(2)
       const timer = setInterval(() => {
@@ -321,52 +326,53 @@ export function AuthModal() {
           return prev - 1
         })
       }, 1000)
-    } catch (err: unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể gửi mã xác thực qua email.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // EMAIL REGISTER STEP 2: Verify OTP and create user
+  // EMAIL REGISTRATION STEP 2 (Verify OTP)
   const handleEmailRegisterStep2 = async (e: React.FormEvent) => {
     e.preventDefault()
     if (emailOtp.length !== 6) {
       setError('Vui lòng nhập đầy đủ mã xác thực OTP 6 số từ email của bạn.')
       return
     }
-
     setError(null)
     setIsLoading(true)
     try {
       await register({
         email: email.trim(),
-        password: pin.trim(),
-        pin: pin.trim(),
+        password: emailPin.trim(),
+        pin: emailPin.trim(),
         name: name.trim() || email.split('@')[0],
         otp: emailOtp.trim(),
       })
+      closeAuthModal()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Xác thực OTP thất bại')
+      setError(err instanceof Error ? err.message : 'Xác thực OTP qua email thất bại')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Resend Register OTP in Step 2
+  // Resend OTP in Step 2
   const handleResendRegisterOtp = async () => {
     setError(null)
     setIsLoading(true)
     try {
-      if (method === 'phone') {
-        await sendOtp(phone.trim(), 'register')
-        setOtp('')
-        setSuccessMsg(`Mã OTP mới đã được gửi qua SMS tới ${phone.trim()}! Vui lòng kiểm tra tin nhắn.`)
-        setOtpCountdown(60)
+      if (regMethod === 'phone') {
+        const cleaned = phone.replace(/\D/g, '')
+        await sendOtp(cleaned, 'register')
+        setPhoneOtp('')
+        setSuccessMsg(`Mã OTP mới đã được gửi qua SMS tới ${cleaned}!`)
+        setPhoneOtpCountdown(60)
       } else {
         await sendEmailOtp(email.trim(), 'register')
         setEmailOtp('')
-        setSuccessMsg(`Mã OTP mới đã được gửi về hòm thư ${email.trim()}! Vui lòng kiểm tra email.`)
+        setSuccessMsg(`Mã OTP mới đã được gửi tới hòm thư ${email.trim()}!`)
         setEmailOtpCountdown(60)
       }
     } catch (err) {
@@ -442,15 +448,8 @@ export function AuthModal() {
       setTimeout(() => {
         setIsForgotPinMode(false)
         openAuthModal('login')
-        setPin(forgotNewPin.trim())
-        setPhonePin(forgotNewPin.trim())
-        if (forgotMethod === 'email') {
-          setEmail(forgotTarget.trim())
-          setMethod('email')
-        } else {
-          setPhone(forgotTarget.trim())
-          setMethod('phone')
-        }
+        setLoginIdentifier(forgotTarget.trim())
+        setLoginPassword(forgotNewPin.trim())
       }, 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đặt lại mã PIN không thành công')
@@ -460,7 +459,7 @@ export function AuthModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
       <div
         className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -468,14 +467,14 @@ export function AuthModal() {
         {/* Close Button */}
         <button
           onClick={closeAuthModal}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition z-10"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition z-10 cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="p-6 sm:p-8">
           {/* Header */}
-          <div className="mb-5">
+          <div className="mb-4">
             {isForgotPinMode ? (
               <div>
                 <button
@@ -485,7 +484,7 @@ export function AuthModal() {
                     setError(null)
                     setSuccessMsg(null)
                   }}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white mb-2 transition"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white mb-2 transition cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Quay lại Đăng Nhập</span>
@@ -497,7 +496,7 @@ export function AuthModal() {
                   </h3>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Nhận mã OTP qua Email hoặc Số điện thoại để tạo mã PIN 6 số mới.
+                  Nhận mã OTP qua Email hoặc Số điện thoại để đặt lại mã PIN 6 số.
                 </p>
               </div>
             ) : !isLogin && regStep === 2 ? (
@@ -508,7 +507,7 @@ export function AuthModal() {
                     setRegStep(1)
                     setError(null)
                   }}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white mb-2 transition"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white mb-2 transition cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Quay lại chỉnh sửa</span>
@@ -520,7 +519,7 @@ export function AuthModal() {
                   </h3>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Mã OTP 6 số đã được gửi tới: <b>{method === 'phone' ? phone : email}</b>
+                  Mã OTP 6 số đã được gửi tới: <b>{regMethod === 'phone' ? phone : email}</b>
                 </p>
               </div>
             ) : (
@@ -533,8 +532,8 @@ export function AuthModal() {
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {isLogin
-                    ? 'Đăng nhập nhanh bằng Mã PIN 6 số bảo mật chuẩn ngân hàng.'
-                    : 'Điền thông tin và tạo Mã PIN 6 số bảo mật để tạo tài khoản.'}
+                    ? 'Nhập tài khoản admin, email hoặc số điện thoại để tiếp tục.'
+                    : 'Điền thông tin và tạo mã PIN 6 số để đăng ký tài khoản.'}
                 </p>
               </div>
             )}
@@ -555,7 +554,7 @@ export function AuthModal() {
             </div>
           )}
 
-          {/* IF FORGOT PIN MODE */}
+          {/* ================= VIEW 1: FORGOT PIN MODE ================= */}
           {isForgotPinMode ? (
             <div>
               <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-4">
@@ -565,7 +564,7 @@ export function AuthModal() {
                     setForgotMethod('email')
                     setError(null)
                   }}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                     forgotMethod === 'email'
                       ? 'bg-white text-teal-800 shadow-xs dark:bg-slate-700 dark:text-teal-300'
                       : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
@@ -580,7 +579,7 @@ export function AuthModal() {
                     setForgotMethod('phone')
                     setError(null)
                   }}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                     forgotMethod === 'phone'
                       ? 'bg-white text-teal-800 shadow-xs dark:bg-slate-700 dark:text-teal-300'
                       : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
@@ -594,7 +593,7 @@ export function AuthModal() {
               <form noValidate onSubmit={handleForgotPinResetSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {forgotMethod === 'email' ? 'Địa Chỉ Email Đăng Ký' : 'Số Điện Thoại Đăng Ký (+84)'}
+                    {forgotMethod === 'email' ? 'Địa Chỉ Email Đăng Ký' : 'Số Điện Thoại Đăng Ký'}
                   </label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
@@ -604,19 +603,18 @@ export function AuthModal() {
                         <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                       )}
                       <input
-                        type={forgotMethod === 'email' ? 'email' : 'tel'}
-                        placeholder={forgotMethod === 'email' ? 'ban@gmail.com' : '090 123 4567'}
+                        type="text"
+                        placeholder={forgotMethod === 'email' ? 'VD: ban@gmail.com' : 'VD: 0965 985 468'}
                         value={forgotTarget}
                         onChange={(e) => setForgotTarget(e.target.value)}
                         className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
-                        required
                       />
                     </div>
                     <button
                       type="button"
                       onClick={handleForgotPinSendOtp}
                       disabled={isLoading || forgotOtpCountdown > 0}
-                      className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
+                      className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0 cursor-pointer"
                     >
                       {forgotOtpCountdown > 0 ? `${forgotOtpCountdown}s` : forgotOtpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
                     </button>
@@ -630,7 +628,7 @@ export function AuthModal() {
                     onChange={setForgotOtp}
                     isOtp={true}
                     idPrefix="modal-forgot-otp"
-                    sublabel="Nhập 6 số OTP từ hòm thư / điện thoại"
+                    sublabel="Nhập 6 số OTP từ hòm thư / tin nhắn"
                   />
                 )}
 
@@ -639,7 +637,7 @@ export function AuthModal() {
                   value={forgotNewPin}
                   onChange={setForgotNewPin}
                   idPrefix="modal-forgot-new-pin"
-                  sublabel="Nhập 6 số PIN mới bạn muốn đặt"
+                  sublabel="Thiết lập 6 số PIN mới"
                 />
 
                 <PinBoxInput
@@ -653,7 +651,7 @@ export function AuthModal() {
                 <button
                   type="submit"
                   disabled={isLoading || !forgotOtpSent}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-700 transition disabled:opacity-50 mt-2"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-700 transition disabled:opacity-50 mt-2 cursor-pointer"
                 >
                   <span>Xác Nhận & Đổi Mã PIN</span>
                   <ArrowRight className="w-4 h-4" />
@@ -661,12 +659,16 @@ export function AuthModal() {
               </form>
             </div>
           ) : !isLogin && regStep === 2 ? (
-            /* REGISTRATION STEP 2 (VERIFY OTP) */
-            <form noValidate onSubmit={method === 'phone' ? handlePhoneRegisterStep2 : handleEmailRegisterStep2} className="space-y-5">
+            /* ================= VIEW 2: REGISTRATION STEP 2 (VERIFY OTP) ================= */
+            <form
+              noValidate
+              onSubmit={regMethod === 'phone' ? handlePhoneRegisterStep2 : handleEmailRegisterStep2}
+              className="space-y-5"
+            >
               <PinBoxInput
                 label="Nhập 6 Số Mã OTP"
-                value={method === 'phone' ? otp : emailOtp}
-                onChange={method === 'phone' ? setOtp : setEmailOtp}
+                value={regMethod === 'phone' ? phoneOtp : emailOtp}
+                onChange={regMethod === 'phone' ? setPhoneOtp : setEmailOtp}
                 isOtp={true}
                 autoFocus={true}
                 idPrefix="modal-reg-step2-otp"
@@ -674,11 +676,11 @@ export function AuthModal() {
               />
 
               <div className="text-center text-xs text-slate-500 dark:text-slate-400">
-                {(method === 'phone' ? otpCountdown : emailOtpCountdown) > 0 ? (
+                {(regMethod === 'phone' ? phoneOtpCountdown : emailOtpCountdown) > 0 ? (
                   <p>
                     Gửi lại mã OTP sau{' '}
                     <span className="font-bold text-teal-600 dark:text-teal-400">
-                      {method === 'phone' ? otpCountdown : emailOtpCountdown}s
+                      {regMethod === 'phone' ? phoneOtpCountdown : emailOtpCountdown}s
                     </span>
                   </p>
                 ) : (
@@ -686,7 +688,7 @@ export function AuthModal() {
                     type="button"
                     onClick={handleResendRegisterOtp}
                     disabled={isLoading}
-                    className="font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400 hover:underline transition"
+                    className="font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400 hover:underline transition cursor-pointer"
                   >
                     Gửi lại mã OTP ngay
                   </button>
@@ -696,21 +698,21 @@ export function AuthModal() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-700 transition disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-700 transition disabled:opacity-50 cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4" />
                 <span>Xác Nhận & Hoàn Tất Đăng Ký</span>
               </button>
             </form>
           ) : (
-            /* NORMAL LOGIN OR REGISTRATION STEP 1 */
+            /* ================= VIEW 3: LOGIN OR REGISTRATION STEP 1 ================= */
             <div>
-              {/* Login / Register Tab switcher */}
+              {/* Primary Switcher: [Đăng Nhập] vs [Đăng Ký Mới] */}
               <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-4">
                 <button
                   type="button"
                   onClick={() => handleTabSwitch('login')}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition ${
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition cursor-pointer ${
                     isLogin
                       ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
                       : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
@@ -721,7 +723,7 @@ export function AuthModal() {
                 <button
                   type="button"
                   onClick={() => handleTabSwitch('register')}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition ${
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition cursor-pointer ${
                     !isLogin
                       ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
                       : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
@@ -731,7 +733,7 @@ export function AuthModal() {
                 </button>
               </div>
 
-              {/* 1. GOOGLE LOGIN */}
+              {/* Google 1-Tap Login */}
               <GoogleLoginButton
                 text={isLogin ? 'continue_with' : 'signup_with'}
                 onSuccess={closeAuthModal}
@@ -739,7 +741,6 @@ export function AuthModal() {
                 className="mb-4"
               />
 
-              {/* Divider */}
               <div className="relative flex items-center justify-center py-1 mb-3">
                 <div className="w-full border-t border-slate-200 dark:border-slate-800" />
                 <span className="absolute bg-white dark:bg-slate-900 px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -747,137 +748,176 @@ export function AuthModal() {
                 </span>
               </div>
 
-              {/* 2. METHOD SWITCHER (PHONE / EMAIL) */}
-              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-4">
-                <button
-                  type="button"
-                  onClick={() => handleMethodSwitch('phone')}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                    method === 'phone'
-                      ? 'bg-white text-teal-800 shadow-xs dark:bg-slate-700 dark:text-teal-300'
-                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
-                  }`}
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>Số Điện Thoại</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleMethodSwitch('email')}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                    method === 'email'
-                      ? 'bg-white text-teal-800 shadow-xs dark:bg-slate-700 dark:text-teal-300'
-                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
-                  }`}
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Email & Mã PIN</span>
-                </button>
-              </div>
+              {/* 3A. UNIFIED FOOLPROOF LOGIN FORM (NO confusing sub-tabs) */}
+              {isLogin ? (
+                <form noValidate onSubmit={handleUnifiedLoginSubmit} className="space-y-4 pt-1">
+                  {/* Field 1: Identifier (admin, email, or phone) */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Tài Khoản / Email / Số Điện Thoại
+                    </label>
+                    <div className="relative">
+                      <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="admin, email hoặc số điện thoại..."
+                        value={loginIdentifier}
+                        onChange={(e) => setLoginIdentifier(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
+                        autoComplete="username"
+                      />
+                    </div>
+                  </div>
 
-              {/* 3. PHONE FORM */}
-              {method === 'phone' && (
-                <>
-                  {isLogin ? (
-                    /* PHONE LOGIN FORM */
-                    <form noValidate onSubmit={handlePhoneLoginSubmit} className="space-y-4 pt-1">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Số Điện Thoại (+84)
+                  {/* Field 2: Password or PIN */}
+                  {!useSmsOtpLogin ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          Mật Khẩu hoặc Mã PIN 6 Số
                         </label>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                            <input
-                              type="tel"
-                              placeholder="VD: 090 123 4567"
-                              value={phone}
-                              onChange={(e) => setPhone(e.target.value)}
-                              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
-                              required
-                            />
-                          </div>
-                          {phoneUseOtpLogin && (
-                            <button
-                              type="button"
-                              onClick={handleSendPhoneLoginOtp}
-                              disabled={isLoading || otpCountdown > 0}
-                              className="rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50 transition shrink-0"
-                            >
-                              {otpCountdown > 0 ? `${otpCountdown}s` : otpSent ? 'Gửi Lại OTP' : 'Gửi Mã OTP'}
-                            </button>
-                          )}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsForgotPinMode(true)
+                            setError(null)
+                            setSuccessMsg(null)
+                            setForgotTarget(loginIdentifier)
+                          }}
+                          className="text-[11px] font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400 cursor-pointer"
+                        >
+                          Quên mật khẩu / PIN?
+                        </button>
                       </div>
-
-                      {!phoneUseOtpLogin ? (
-                        <>
-                          <PinBoxInput
-                            label="Mã PIN Bảo Mật (6 Số)"
-                            value={phonePin}
-                            onChange={setPhonePin}
-                            idPrefix="modal-phone-login-pin"
-                            onForgotPin={() => {
-                              setIsForgotPinMode(true)
-                              setError(null)
-                              setSuccessMsg(null)
-                              setForgotTarget(phone)
-                              setForgotMethod('phone')
-                            }}
-                            sublabel="Nhập 6 số PIN để đăng nhập"
-                          />
-                          <div className="text-right">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPhoneUseOtpLogin(true)
-                                setError(null)
-                              }}
-                              className="text-[11px] text-teal-600 hover:text-teal-700 dark:text-teal-400 font-semibold"
-                            >
-                              ⚡ Đăng nhập bằng SMS OTP thay vì PIN
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          {otpSent && (
-                            <PinBoxInput
-                              label="Mã Xác Thực SMS (6 Số)"
-                              value={otp}
-                              onChange={setOtp}
-                              isOtp={true}
-                              idPrefix="modal-phone-login-otp"
-                              sublabel="Nhập 6 số từ tin nhắn SMS"
-                            />
-                          )}
-                          <div className="text-right">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPhoneUseOtpLogin(false)
-                                setError(null)
-                              }}
-                              className="text-[11px] text-teal-600 hover:text-teal-700 dark:text-teal-400 font-semibold"
-                            >
-                              🔑 Đăng nhập bằng Mã PIN 6 số
-                            </button>
-                          </div>
-                        </>
-                      )}
-
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-800 transition disabled:opacity-50"
-                      >
-                        <span>Đăng Nhập Số Điện Thoại</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </form>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <input
+                          type={showLoginPassword ? 'text' : 'password'}
+                          placeholder="Nhập mật khẩu (VD: baopro2147!) hoặc mã PIN..."
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-10 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
+                          autoComplete="current-password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowLoginPassword(!showLoginPassword)}
+                          className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                        >
+                          {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
                   ) : (
-                    /* PHONE REGISTER STEP 1 (NO OTP BUTTON, CREATES PIN) */
-                    <form noValidate onSubmit={handlePhoneRegisterStep1} className="space-y-4 pt-1">
+                    /* Optional SMS OTP Login */
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          Mã OTP SMS Đăng Nhập
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleSendLoginOtp}
+                          disabled={isLoading || loginOtpCountdown > 0}
+                          className="text-[11px] font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400 cursor-pointer disabled:opacity-50"
+                        >
+                          {loginOtpCountdown > 0 ? `Gửi lại sau ${loginOtpCountdown}s` : loginOtpSent ? 'Gửi lại OTP' : 'Gửi mã OTP qua SMS'}
+                        </button>
+                      </div>
+                      <PinBoxInput
+                        label=""
+                        value={loginOtp}
+                        onChange={setLoginOtp}
+                        isOtp={true}
+                        idPrefix="modal-login-sms-otp"
+                        sublabel="Nhập 6 số từ tin nhắn SMS"
+                      />
+                    </div>
+                  )}
+
+                  {/* Mode Toggle: Password/PIN vs SMS OTP */}
+                  <div className="flex items-center justify-between text-[11px] pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUseSmsOtpLogin(!useSmsOtpLogin)
+                        setError(null)
+                      }}
+                      className="text-teal-600 hover:text-teal-700 dark:text-teal-400 font-semibold cursor-pointer"
+                    >
+                      {useSmsOtpLogin ? '🔑 Đăng nhập bằng Mật khẩu / Mã PIN' : '⚡ Hoặc đăng nhập nhanh bằng SMS OTP'}
+                    </button>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md active:scale-95 transition cursor-pointer disabled:opacity-50"
+                  >
+                    <span>ĐĂNG NHẬP</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  {/* 1-Click Quick Admin Login Card */}
+                  <div
+                    onClick={handleQuickAdminLogin}
+                    className="cursor-pointer rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 p-3 hover:border-amber-400 dark:hover:border-amber-700 transition shadow-xs"
+                    title="Bấm để đăng nhập ngay tài khoản Quản Trị Viên"
+                  >
+                    <div className="flex items-center justify-between font-bold text-xs text-amber-900 dark:text-amber-300">
+                      <div className="flex items-center gap-1.5">
+                        <KeyRound className="w-4 h-4 text-amber-600" />
+                        <span>🔑 Đăng nhập nhanh Admin</span>
+                      </div>
+                      <span className="text-[10px] bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 border border-amber-300 px-2 py-0.5 rounded-lg shadow-2xs">
+                        Bấm 1 Chạm
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                      Tài khoản: <code className="font-mono font-bold text-amber-900 dark:text-amber-300">admin</code> • Mật khẩu: <code className="font-mono font-bold text-amber-900 dark:text-amber-300">baopro2147!</code>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                /* 3B. REGISTRATION STEP 1 (Phone or Email) */
+                <div>
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-3.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRegMethod('phone')
+                        setError(null)
+                      }}
+                      className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        regMethod === 'phone'
+                          ? 'bg-white text-teal-800 shadow-xs dark:bg-slate-700 dark:text-teal-300'
+                          : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
+                      }`}
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>Qua Số Điện Thoại</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRegMethod('email')
+                        setError(null)
+                      }}
+                      className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        regMethod === 'email'
+                          ? 'bg-white text-teal-800 shadow-xs dark:bg-slate-700 dark:text-teal-300'
+                          : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
+                      }`}
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>Qua Hòm Thư Email</span>
+                    </button>
+                  </div>
+
+                  {regMethod === 'phone' ? (
+                    /* PHONE REGISTRATION FORM */
+                    <form noValidate onSubmit={handlePhoneRegisterStep1} className="space-y-3.5 pt-0.5">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                           Họ và Tên
@@ -890,7 +930,6 @@ export function AuthModal() {
                             value={phoneName}
                             onChange={(e) => setPhoneName(e.target.value)}
                             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                            required
                           />
                         </div>
                       </div>
@@ -902,12 +941,11 @@ export function AuthModal() {
                         <div className="relative">
                           <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                           <input
-                            type="tel"
-                            placeholder="VD: 090 123 4567"
+                            type="text"
+                            placeholder="VD: 0965 985 468"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
-                            required
                           />
                         </div>
                       </div>
@@ -931,107 +969,15 @@ export function AuthModal() {
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-700 transition disabled:opacity-50 mt-2"
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md active:scale-95 transition disabled:opacity-50 mt-2 cursor-pointer"
                       >
                         <span>Tạo Tài Khoản & Gửi OTP</span>
                         <Send className="w-4 h-4" />
                       </button>
                     </form>
-                  )}
-                </>
-              )}
-
-              {/* 4. EMAIL FORM */}
-              {method === 'email' && (
-                <>
-                  {isLogin ? (
-                    /* EMAIL LOGIN FORM */
-                    <form noValidate onSubmit={handleEmailLoginSubmit} className="space-y-4 pt-1">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Email hoặc Tên Đăng Nhập
-                        </label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                          <input
-                            type="text"
-                            placeholder="admin hoặc email@gmail.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      {email.trim().toLowerCase() === 'admin' || email.trim().toLowerCase() === 'admin@nhaxuong.vn' ? (
-                        <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                              Mật Khẩu Admin (baopro2147!)
-                            </label>
-                            <button
-                              type="button"
-                              onClick={() => setShowAdminPassword(!showAdminPassword)}
-                              className="text-xs text-teal-600 font-bold hover:underline"
-                            >
-                              {showAdminPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                            </button>
-                          </div>
-                          <input
-                            type={showAdminPassword ? 'text' : 'password'}
-                            placeholder="Nhập mật khẩu admin..."
-                            value={adminPassword}
-                            onChange={(e) => setAdminPassword(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                          />
-                        </div>
-                      ) : (
-                        <PinBoxInput
-                          label="Mã PIN Bảo Mật (6 Số)"
-                          value={pin}
-                          onChange={setPin}
-                          idPrefix="modal-email-pin"
-                          onForgotPin={() => {
-                            setIsForgotPinMode(true)
-                            setError(null)
-                            setSuccessMsg(null)
-                            setForgotTarget(email)
-                            setForgotMethod('email')
-                          }}
-                          sublabel="Nhập 6 số PIN để đăng nhập"
-                        />
-                      )}
-
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 transition disabled:opacity-50 mt-2"
-                      >
-                        <span>Đăng Nhập</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-
-                      <div
-                        onClick={() => {
-                          setEmail('admin')
-                          setAdminPassword('baopro2147!')
-                          setPin('123456')
-                        }}
-                        className="cursor-pointer rounded-xl bg-amber-50 hover:bg-amber-100/80 dark:bg-amber-950/40 dark:hover:bg-amber-950/60 border border-amber-200 dark:border-amber-900 p-2.5 text-[11px] text-amber-900 dark:text-amber-300 transition"
-                      >
-                        <div className="flex items-center justify-between font-bold">
-                          <span>🔑 Tài khoản Admin: admin</span>
-                          <span className="text-teal-600 dark:text-teal-400">Bấm để điền</span>
-                        </div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                          Mật khẩu: <code className="font-mono font-bold text-amber-800 dark:text-amber-400">baopro2147!</code>
-                        </div>
-                      </div>
-                    </form>
                   ) : (
-                    /* EMAIL REGISTER STEP 1 (NO OTP BUTTON, CREATES PIN) */
-                    <form noValidate onSubmit={handleEmailRegisterStep1} className="space-y-4 pt-1">
+                    /* EMAIL REGISTRATION FORM */
+                    <form noValidate onSubmit={handleEmailRegisterStep1} className="space-y-3.5 pt-0.5">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                           Họ và Tên
@@ -1044,7 +990,6 @@ export function AuthModal() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                            required
                           />
                         </div>
                       </div>
@@ -1056,28 +1001,27 @@ export function AuthModal() {
                         <div className="relative">
                           <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                           <input
-                            type="email"
-                            placeholder="ban@gmail.com"
+                            type="text"
+                            placeholder="VD: ban@gmail.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
-                            required
                           />
                         </div>
                       </div>
 
                       <PinBoxInput
                         label="Tạo Mã PIN Bảo Mật (6 Số)"
-                        value={pin}
-                        onChange={setPin}
+                        value={emailPin}
+                        onChange={setEmailPin}
                         idPrefix="modal-email-reg-pin"
                         sublabel="Thiết lập 6 số PIN để đăng nhập"
                       />
 
                       <PinBoxInput
                         label="Nhập Lại Mã PIN (6 Số)"
-                        value={confirmPin}
-                        onChange={setConfirmPin}
+                        value={emailConfirmPin}
+                        onChange={setEmailConfirmPin}
                         idPrefix="modal-email-reg-confirm-pin"
                         sublabel="Xác nhận đúng 6 số PIN ở trên"
                       />
@@ -1085,18 +1029,18 @@ export function AuthModal() {
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-teal-700 transition disabled:opacity-50 mt-2"
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md active:scale-95 transition disabled:opacity-50 mt-2 cursor-pointer"
                       >
                         <span>Tạo Tài Khoản & Gửi OTP</span>
                         <Send className="w-4 h-4" />
                       </button>
                     </form>
                   )}
-                </>
+                </div>
               )}
 
-              {/* Privacy & Terms */}
-              <p className="text-[10px] text-center text-slate-400 leading-relaxed pt-2">
+              {/* Terms & Privacy */}
+              <p className="text-[10px] text-center text-slate-400 leading-relaxed pt-3">
                 Bằng việc tiếp tục, bạn đồng ý với <b>Quy chế hoạt động sàn</b> và <b>Chính sách bảo mật</b> của NHAXUONG.VN.
               </p>
             </div>

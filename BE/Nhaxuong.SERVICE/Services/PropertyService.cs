@@ -227,7 +227,7 @@ namespace Nhaxuong.SERVICE.Services
                 StructureType = request.StructureType,
                 HasCrane = request.HasCrane ?? false,
                 CraneCapacity = request.CraneCapacity,
-                BrokerPhone = string.IsNullOrWhiteSpace(request.BrokerPhone) ? "090 123 4567" : request.BrokerPhone,
+                BrokerPhone = string.IsNullOrWhiteSpace(request.BrokerPhone) ? "0965 985 468" : request.BrokerPhone,
                 Image = string.IsNullOrWhiteSpace(request.Image)
                     ? "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80"
                     : request.Image,
@@ -425,7 +425,7 @@ namespace Nhaxuong.SERVICE.Services
                     StructureType = "Zamil",
                     HasCrane = true,
                     CraneCapacity = "10 Tấn",
-                    BrokerPhone = "0901 234 567",
+                    BrokerPhone = "0965 985 468",
                     Image = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
                     VideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4",
                     AudioUrl = "https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3",

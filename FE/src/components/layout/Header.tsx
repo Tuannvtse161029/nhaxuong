@@ -22,8 +22,6 @@ import { cn } from '@/utils/cn'
 export function Header() {
   const { user, openAuthModal, logout } = useAuth()
   const {
-    role,
-    setRole,
     savedPropertyIds,
     openSavedModal,
     openSubscribeModal,
@@ -33,6 +31,8 @@ export function Header() {
   } = useProperties()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+
+  const isAdmin = user?.role === 'admin'
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs dark:bg-slate-900/95 dark:border-slate-800">
@@ -52,16 +52,16 @@ export function Header() {
 
           <div className="flex items-center gap-4">
             <a
-              href="tel:0901234567"
+              href="tel:0965985468"
               className="flex items-center gap-1.5 text-white hover:text-teal-400 transition font-semibold"
             >
               <PhoneCall className="w-3.5 h-3.5 text-teal-400" />
-              <span>Hotline Kho Bãi: 090 123 4567</span>
+              <span>Hotline Kho Bãi: 0965 985 468</span>
             </a>
             <span className="text-slate-600">|</span>
             <button
               onClick={openSubscribeModal}
-              className="hover:text-teal-400 transition text-slate-300 flex items-center gap-1"
+              className="hover:text-teal-400 transition text-slate-300 flex items-center gap-1 cursor-pointer"
             >
               <Mail className="w-3.5 h-3.5 text-red-400" />
               <span>Nhận Báo Giá Real-time</span>
@@ -89,97 +89,87 @@ export function Header() {
                   NHAXUONG<span className="text-teal-600 dark:text-teal-400">.VN</span>
                 </span>
                 <span className="rounded-md border border-teal-500/30 bg-teal-50 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:border-teal-900 dark:bg-teal-950/60 dark:text-teal-300">
-                  {role === 'user' ? 'KHO BÃI & SẮT THÉP' : 'QUẢN TRỊ'}
+                  KHO BÃI & SẮT THÉP
                 </span>
               </div>
             </div>
           </Link>
 
           {/* Quick Header Navigation */}
-          {role === 'user' ? (
-            <nav className="hidden md:flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => {
-                  navigate('/')
-                  setFilterState({ type: 'ALL' })
-                }}
-                className={cn(
-                  'px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1',
-                  filterState.type === 'ALL'
-                    ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
-                    : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                )}
-              >
-                <Flame className="w-3.5 h-3.5 text-amber-500" />
-                <span>Tin Mới Nhất</span>
-              </button>
+          <nav className="hidden md:flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/')
+                setFilterState({ type: 'ALL' })
+              }}
+              className={cn(
+                'px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 cursor-pointer',
+                filterState.type === 'ALL'
+                  ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
+                  : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+              )}
+            >
+              <Flame className="w-3.5 h-3.5 text-amber-500" />
+              <span>Tin Mới Nhất</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  navigate('/')
-                  setFilterState({ type: 'BAN_KHUNG_XUONG' })
-                }}
-                className={cn(
-                  'px-3 py-1.5 rounded-xl text-xs transition',
-                  filterState.type === 'BAN_KHUNG_XUONG'
-                    ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
-                    : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                )}
-              >
-                Khung Nhà Xưởng
-              </button>
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/')
+                setFilterState({ type: 'BAN_KHUNG_XUONG' })
+              }}
+              className={cn(
+                'px-3 py-1.5 rounded-xl text-xs transition cursor-pointer',
+                filterState.type === 'BAN_KHUNG_XUONG'
+                  ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
+                  : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+              )}
+            >
+              Khung Nhà Xưởng
+            </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  navigate('/')
-                  setFilterState({ type: 'THEP_HINH_I' })
-                }}
-                className={cn(
-                  'px-3 py-1.5 rounded-xl text-xs transition',
-                  filterState.type === 'THEP_HINH_I'
-                    ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
-                    : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                )}
-              >
-                Thép Hình I
-              </button>
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/')
+                setFilterState({ type: 'THEP_HINH_I' })
+              }}
+              className={cn(
+                'px-3 py-1.5 rounded-xl text-xs transition cursor-pointer',
+                filterState.type === 'THEP_HINH_I'
+                  ? 'font-bold text-slate-900 bg-slate-100 dark:bg-slate-800 dark:text-white'
+                  : 'font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+              )}
+            >
+              Thép Hình I
+            </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  navigate('/')
-                  setFilterState({ type: 'THIET_KE_3D' })
-                }}
-                className={cn(
-                  'px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1',
-                  filterState.type === 'THIET_KE_3D'
-                    ? 'font-bold text-cyan-600 bg-cyan-50 dark:bg-cyan-950/50 dark:text-cyan-300'
-                    : 'font-semibold text-slate-600 hover:text-cyan-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                )}
-              >
-                <Box className="w-3.5 h-3.5 text-cyan-500" />
-                <span>Xem Thiết Kế 3D</span>
-              </button>
-            </nav>
-          ) : (
-            /* Admin Header Mode */
-            <nav className="hidden md:flex items-center gap-1.5 text-xs font-semibold">
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border border-teal-200 dark:border-teal-900">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Hệ Thống Quản Trị Sàn Nhà Xưởng & 3D</span>
-              </span>
-            </nav>
-          )}
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/')
+                setFilterState({ type: 'THIET_KE_3D' })
+              }}
+              className={cn(
+                'px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 cursor-pointer',
+                filterState.type === 'THIET_KE_3D'
+                  ? 'font-bold text-cyan-600 bg-cyan-50 dark:bg-cyan-950/50 dark:text-cyan-300'
+                  : 'font-semibold text-slate-600 hover:text-cyan-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+              )}
+            >
+              <Box className="w-3.5 h-3.5 text-cyan-500" />
+              <span>Xem Thiết Kế 3D</span>
+            </button>
+          </nav>
 
           {/* Right Action CTAs */}
           <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition"
+              className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition cursor-pointer"
               title="Đổi giao diện Sáng / Tối"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
@@ -189,35 +179,45 @@ export function Header() {
             <button
               type="button"
               onClick={openSavedModal}
-              className="relative p-2 rounded-xl text-slate-600 hover:text-red-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+              className="relative p-2 rounded-xl text-slate-600 hover:text-red-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition cursor-pointer"
               title="Danh sách đã lưu"
             >
               <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
               {savedPropertyIds.length > 0 && (
-                <span className="absolute 0 top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9.5px] font-bold text-white shadow-xs">
+                <span className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9.5px] font-bold text-white shadow-xs">
                   {savedPropertyIds.length}
                 </span>
               )}
             </button>
 
-            {/* Admin CTA or User CTA */}
-            {role === 'admin' ? (
-              <button
-                type="button"
-                onClick={() => openAdminEditModal()}
-                className="flex items-center gap-1 rounded-xl bg-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-teal-700 transition"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Đăng Tin Mới</span>
-              </button>
-            ) : null}
+            {/* Only shown for authenticated Admin users */}
+            {isAdmin && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => openAdminEditModal()}
+                  className="flex items-center gap-1 rounded-xl bg-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-teal-700 transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Đăng Tin Mới</span>
+                </button>
+
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-amber-400 border border-amber-500/30 shadow-sm hover:bg-slate-800 transition shrink-0"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Quản Trị</span>
+                </Link>
+              </div>
+            )}
 
             {/* User Account / Login Button */}
             {!user ? (
               <button
                 type="button"
                 onClick={() => openAuthModal('login')}
-                className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition shadow-xs"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 sm:py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition shadow-xs cursor-pointer"
               >
                 <LogIn className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                 <span>Đăng Nhập</span>
@@ -242,31 +242,13 @@ export function Header() {
                 <button
                   type="button"
                   onClick={() => logout()}
-                  className="p-1 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                  className="p-1 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
                   title="Đăng xuất"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
-
-            {/* Switch Mode Button */}
-            <button
-              type="button"
-              onClick={() => {
-                const nextRole = role === 'user' ? 'admin' : 'user'
-                setRole(nextRole)
-                if (nextRole === 'admin') {
-                  navigate('/admin')
-                } else {
-                  navigate('/')
-                }
-              }}
-              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition shrink-0"
-            >
-              {role === 'user' ? <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> : <UserIcon className="w-3.5 h-3.5 text-teal-400" />}
-              <span className="hidden sm:inline">{role === 'user' ? 'Quản Trị' : 'Giao Diện Sàn'}</span>
-            </button>
           </div>
         </div>
       </div>

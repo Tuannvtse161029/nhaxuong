@@ -95,7 +95,7 @@ namespace Nhaxuong.SERVICE.Services
         </div>
         <div class=""footer"">
             Đây là email tự động từ Hệ Thống Nhà Xưởng.<br>
-            Hotline: 0901 234 567 | Website: <a href=""https://nhaxuong-fe.vercel.app"">nhaxuong-fe.vercel.app</a><br>
+            Hotline: 0965 985 468 | Website: <a href=""https://nhaxuong-fe.vercel.app"">nhaxuong-fe.vercel.app</a><br>
             © 2026 Hệ Thống Nhà Xưởng. All rights reserved.
         </div>
     </div>

@@ -119,7 +119,7 @@ export function SubscribeNewsletterModal({ isOpen, onClose }: SubscribeNewslette
             {channel === 'hotline' ? (
               <Input
                 label="Số điện thoại di động"
-                placeholder="VD: 0901234567"
+                placeholder="VD: 0965985468"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required

@@ -195,7 +195,7 @@ namespace Nhaxuong.API.CONTROLLER
                     Name = "Quản Trị Viên (Admin)",
                     Email = "admin@nhaxuong.vn",
                     Role = "admin",
-                    Phone = "0901234567",
+                    Phone = "0965985468",
                     Avatar = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=128&auto=format&fit=crop&q=80",
                     AuthProvider = "email",
                     CreatedAt = "2026-01-01"

@@ -52,7 +52,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
     property.storageLocation === 'AT_SITE' ||
     property.status?.toLowerCase().includes('công trình')
 
-  const rawPhone = (property.brokerPhone || '0901234567').replace(/\D/g, '')
+  const rawPhone = (property.brokerPhone || '0965985468').replace(/\D/g, '')
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">

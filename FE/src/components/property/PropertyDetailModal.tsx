@@ -42,10 +42,20 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative flex flex-col w-full max-w-4xl max-h-[92vh] rounded-3xl bg-white shadow-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+      {/* Floating Close Button for Mobile */}
+      <button
+        type="button"
+        onClick={onClose}
+        className="sm:hidden fixed top-2.5 right-2.5 z-[9999] flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-900/90 text-white font-bold text-xs shadow-xl border border-white/30 backdrop-blur-md cursor-pointer active:scale-95"
+      >
+        <X className="w-4 h-4" />
+        <span>Đóng ✕</span>
+      </button>
+
+      <div className="relative flex flex-col w-full h-[100dvh] sm:h-auto sm:max-h-[92vh] max-w-4xl rounded-none sm:rounded-3xl bg-white shadow-2xl border-0 sm:border border-slate-200 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/70 dark:bg-slate-950/60">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/70 dark:bg-slate-950/60 pr-20 sm:pr-6">
           <div className="flex items-center gap-2.5 min-w-0 pr-4 flex-wrap">
             <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase text-teal-800 dark:bg-teal-950 dark:text-teal-300">
               {property.typeDisplay}
@@ -200,7 +210,7 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
               </span>
               <p className="text-sm font-bold text-teal-700 dark:text-teal-400 flex items-center gap-1">
                 <Phone className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                <span>{property.brokerPhone || '090 123 4567'}</span>
+                <span>{property.brokerPhone || '0965 985 468'}</span>
               </p>
             </div>
           </div>
@@ -266,11 +276,11 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
 
             {/* Hotline Call CTA */}
             <a
-              href={`tel:${(property.brokerPhone || '0901234567').replace(/\s+/g, '')}`}
+              href={`tel:${(property.brokerPhone || '0965985468').replace(/\s+/g, '')}`}
               className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-teal-800 transition"
             >
               <Phone className="w-4 h-4" />
-              <span>Gọi {property.brokerPhone || '090 123 4567'}</span>
+              <span>Gọi {property.brokerPhone || '0965 985 468'}</span>
             </a>
           </div>
         </div>

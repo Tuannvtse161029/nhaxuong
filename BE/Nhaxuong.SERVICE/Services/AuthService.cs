@@ -67,7 +67,7 @@ namespace Nhaxuong.SERVICE.Services
                     Name = "Quản Trị Viên (Admin)",
                     Email = "admin@nhaxuong.vn",
                     Role = "admin",
-                    Phone = "0901234567",
+                    Phone = "0965985468",
                     EmailVerified = true
                 };
 
@@ -82,7 +82,8 @@ namespace Nhaxuong.SERVICE.Services
             User? user = null;
             try
             {
-                user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == identifier);
+                var cleanId = identifier.Replace(" ", "").Replace("+84", "0");
+                user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == identifier || u.Phone == identifier || (u.Phone != null && u.Phone.Replace(" ", "").Replace("+84", "0") == cleanId));
             }
             catch (Exception)
             {
@@ -91,7 +92,7 @@ namespace Nhaxuong.SERVICE.Services
 
             if (user == null)
             {
-                throw new Exception("Email hoặc mã PIN không chính xác!");
+                throw new Exception("Tài khoản hoặc mã PIN không chính xác!");
             }
 
             bool isPinValid = false;
@@ -742,7 +743,7 @@ namespace Nhaxuong.SERVICE.Services
                     Name = "Quản Trị Viên (Admin)",
                     Email = "admin@nhaxuong.vn",
                     Role = "admin",
-                    Phone = "0901234567",
+                    Phone = "0965985468",
                     EmailVerified = true,
                     CreatedAt = "2026-01-01"
                 };

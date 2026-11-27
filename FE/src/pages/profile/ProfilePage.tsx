@@ -83,7 +83,7 @@ export function ProfilePage() {
               label="Số điện thoại"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="0901234567"
+              placeholder="0965985468"
               leftIcon={<Phone className="w-4 h-4" />}
             />
 

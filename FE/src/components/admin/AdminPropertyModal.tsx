@@ -44,7 +44,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   const [craneCapacity, setCraneCapacity] = useState('10 Tấn')
 
   // Contact & Media
-  const [brokerPhone, setBrokerPhone] = useState('0901 234 567')
+  const [brokerPhone, setBrokerPhone] = useState('0965 985 468')
   const [videoUrl, setVideoUrl] = useState('')
   const [model3dUrl, setModel3dUrl] = useState('')
   const [drawing2DUrl, setDrawing2DUrl] = useState('')
@@ -76,7 +76,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setStructureType(property.structureType || 'Zamil')
       setHasCrane(Boolean(property.hasCrane))
       setCraneCapacity(property.craneCapacity || '10 Tấn')
-      setBrokerPhone(property.brokerPhone || '0901 234 567')
+      setBrokerPhone(property.brokerPhone || '0965 985 468')
       setVideoUrl(property.videoUrl || '')
       setModel3dUrl(property.model3dUrl || '')
       setDrawing2DUrl(property.drawing2DUrl || '')
@@ -101,7 +101,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setStructureType('Zamil')
       setHasCrane(false)
       setCraneCapacity('10 Tấn')
-      setBrokerPhone('0901 234 567')
+      setBrokerPhone('0965 985 468')
       setVideoUrl('')
       setModel3dUrl('')
       setDrawing2DUrl('')
@@ -184,7 +184,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       structureType,
       hasCrane,
       craneCapacity: hasCrane ? craneCapacity : undefined,
-      brokerPhone: brokerPhone.trim() || '0901 234 567',
+      brokerPhone: brokerPhone.trim() || '0965 985 468',
       videoUrl: videoUrl.trim(),
       model3dUrl: model3dUrl.trim() || null,
       drawing2DUrl: drawing2DUrl.trim() || null,
@@ -584,7 +584,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
               label="Số điện thoại liên hệ *"
               value={brokerPhone}
               onChange={(e) => setBrokerPhone(e.target.value)}
-              placeholder="VD: 0901 234 567"
+              placeholder="VD: 0965 985 468"
             />
 
             <Input

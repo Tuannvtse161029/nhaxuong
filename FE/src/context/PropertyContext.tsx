@@ -92,38 +92,38 @@ const DEFAULT_FILTER: PropertyFilterState = {
 
 export function PropertyProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[]>(() => {
-    const saved = storage.getItem<Property[]>('nhaxuong_properties_v3', INITIAL_PROPERTIES)
+    const saved = storage.getItem<Property[]>('nhaxuong_properties_v4', INITIAL_PROPERTIES)
     const existingIds = new Set(saved.map((p) => p.id))
     const missing = INITIAL_PROPERTIES.filter((p) => !existingIds.has(p.id))
     if (missing.length > 0) {
       const merged = [...missing, ...saved]
-      storage.setItem('nhaxuong_properties_v3', merged)
+      storage.setItem('nhaxuong_properties_v4', merged)
       return merged
     }
     return saved
   })
 
   const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = storage.getItem<Category[]>('nhaxuong_categories_v3', INITIAL_CATEGORIES)
+    const saved = storage.getItem<Category[]>('nhaxuong_categories_v4', INITIAL_CATEGORIES)
     const initialCodes = new Set(INITIAL_CATEGORIES.map((c) => c.code))
     const userCreated = saved.filter((c) => !initialCodes.has(c.code))
     const merged = [...INITIAL_CATEGORIES, ...userCreated]
-    storage.setItem('nhaxuong_categories_v3', merged)
+    storage.setItem('nhaxuong_categories_v4', merged)
     return merged
   })
 
   const [notices, setNotices] = useState<Notice[]>(() =>
-    storage.getItem('nhaxuong_notices_v3', INITIAL_NOTICES)
+    storage.getItem('nhaxuong_notices_v4', INITIAL_NOTICES)
   )
   const [subscribers, setSubscribers] = useState<Subscriber[]>(() =>
-    storage.getItem('nhaxuong_subscribers_v3', INITIAL_SUBSCRIBERS)
+    storage.getItem('nhaxuong_subscribers_v4', INITIAL_SUBSCRIBERS)
   )
   const [savedPropertyIds, setSavedPropertyIds] = useState<(string | number)[]>(() =>
-    storage.getItem('nhaxuong_saved_ids_v3', ['prop-1'])
+    storage.getItem('nhaxuong_saved_ids_v4', ['prop-kx-1'])
   )
   const [role, setRoleState] = useState<'user' | 'admin'>('user')
   const [activeNoticeText, setActiveNoticeText] = useState(
-    'Tổng kho khung xưởng & sắt thép tại Dĩ An - Bình Dương & Lâm Đồng. Xem mô hình 3D kết cấu 360° trực tuyến!'
+    'Tổng kho khung xưởng & sắt thép tại Dĩ An - Bình Dương & Lâm Đồng. Hotline: 0965 985 468!'
   )
 
   const [filterState, setFilterStateInternal] = useState<PropertyFilterState>(DEFAULT_FILTER)

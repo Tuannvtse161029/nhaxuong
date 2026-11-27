@@ -49,8 +49,7 @@ export function Footer() {
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                 <PhoneCall className="w-4 h-4 text-teal-600 shrink-0" />
                 <span>
-                  Hotline Hỗ Trợ 24/7: <b className="text-teal-600 dark:text-teal-400">090 123 4567</b> /{' '}
-                  <b>(028) 3888 9999</b>
+                  Hotline Hỗ Trợ 24/7: <b className="text-teal-600 dark:text-teal-400">0965 985 468</b>
                 </span>
               </div>
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">

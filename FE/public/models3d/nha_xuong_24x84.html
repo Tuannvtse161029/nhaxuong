@@ -421,6 +421,59 @@
             color: var(--primary-orange);
             font-weight: 700;
         }
+
+        @media (max-width: 768px) {
+            .header-bar {
+                top: 8px;
+                left: 8px;
+                right: 8px;
+                padding: 6px 12px;
+                border-radius: 10px;
+            }
+            .header-bar h1 {
+                font-size: 11.5px;
+            }
+            .header-bar p {
+                display: none;
+            }
+            .header-bar .logo-icon {
+                font-size: 16px;
+            }
+            .header-actions .btn-action span {
+                display: none;
+            }
+            .header-actions .btn-action {
+                padding: 6px 8px;
+            }
+            .panel-specs {
+                width: calc(100vw - 20px);
+                max-width: 360px;
+                left: 10px;
+                top: 56px;
+                max-height: 50vh;
+                padding: 12px;
+            }
+            .panel-specs.collapsed {
+                transform: translateY(-200%);
+            }
+            .btn-floating-open {
+                top: 56px;
+                left: 10px;
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+            .panel-controls {
+                display: none;
+            }
+            .hud-bottom {
+                bottom: 8px;
+                padding: 4px 10px;
+                font-size: 9.5px;
+                width: 95vw;
+                justify-content: center;
+                gap: 6px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1018,6 +1071,15 @@
                 btnFloating.style.display = 'flex';
                 if (btnText) btnText.textContent = 'Hiện Bảng Thông Số';
             }
+        }
+
+        // On mobile portrait, collapse specs by default so the 3D model is immediately visible and interactable
+        if (window.innerWidth < 768) {
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    if (isSpecsOpen) toggleSpecsPanel();
+                }, 200);
+            });
         }
 
         let isZenMode = false;

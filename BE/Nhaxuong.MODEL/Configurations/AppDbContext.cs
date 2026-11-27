@@ -116,7 +116,7 @@ namespace Nhaxuong.MODEL.Configurations
                     Email = "admin@nhaxuong.vn",
                     PasswordHash = "$2a$11$q9oWw1K0kC759yR7uLcqne5vTf.yU/9N1aG1qD6c8G1yHjFmKn0ea", // Hash of "baopro2147!"
                     Role = "admin",
-                    Phone = "0901234567",
+                    Phone = "0965985468",
                     AuthProvider = "email",
                     EmailVerified = true
                 }
@@ -147,7 +147,7 @@ namespace Nhaxuong.MODEL.Configurations
                     StructureType = "Zamil",
                     HasCrane = true,
                     CraneCapacity = "10 Tấn",
-                    BrokerPhone = "0901 234 567",
+                    BrokerPhone = "0965 985 468",
                     Image = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
                     VideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-drone-view-of-a-large-factory-or-warehouse-42861-large.mp4",
                     AudioUrl = "https://cdn.freesound.org/previews/612/612610_5674468-lq.mp3",
@@ -266,7 +266,7 @@ namespace Nhaxuong.MODEL.Configurations
                     PriceDisplay = "620 Triệu VNĐ",
                     UnitPrice = "138.000 đ/m",
                     Area = "4.500 Mét",
-                    BrokerPhone = "0901 234 567",
+                    BrokerPhone = "0965 985 468",
                     Image = "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80",
                     VideoUrl = null,
                     AudioUrl = null,
