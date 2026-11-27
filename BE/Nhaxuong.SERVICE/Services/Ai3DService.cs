@@ -327,42 +327,83 @@ namespace Nhaxuong.SERVICE.Services
         }}
         .brand-badge h1 {{ font-size: 13px; font-weight: 800; color: var(--primary-orange); display: flex; align-items: center; gap: 6px; }}
         .brand-badge p {{ font-size: 10.5px; color: var(--text-muted); font-weight: 600; margin-top: 1px; }}
-        .action-btns {{ display: flex; gap: 6px; pointer-events: auto; }}
-        .icon-btn {{
+
+        .btn-head-quick {{
             background: var(--bg-card); border: 1px solid var(--border);
             color: var(--text-main); height: 34px; padding: 0 10px;
             border-radius: 10px; cursor: pointer; display: flex;
             align-items: center; justify-content: center; gap: 5px; font-size: 11px;
             font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.06); transition: all 0.2s;
         }}
-        .icon-btn:hover {{ border-color: var(--primary-orange); color: var(--primary-orange); transform: translateY(-1px); }}
-        .icon-btn.active {{ background: #ea580c; color: #ffffff; border-color: #ea580c; }}
-        .icon-btn span {{ font-size: 11px; }}
-        @media (max-width: 640px) {{
-            .brand-badge h1 {{ font-size: 11px; }}
-            .brand-badge p {{ font-size: 9.5px; }}
-            .icon-btn {{ padding: 0 7px; height: 30px; font-size: 11px; }}
-            .icon-btn span {{ display: none; }}
-        }}
+        .btn-head-quick:hover {{ border-color: var(--primary-orange); color: var(--primary-orange); transform: translateY(-1px); }}
+
+        /* BẢNG CHÚ THÍCH KẾT CẤU BÊN TRÁI */
         .panel-specs {{
-            position: absolute; top: 72px; left: 14px; width: 310px; max-height: calc(100vh - 140px);
-            overflow-y: auto; z-index: 10; background: var(--bg-card);
+            position: absolute; top: 68px; left: 14px; width: 310px; max-height: calc(100vh - 130px);
+            overflow-y: auto; z-index: 20; background: var(--bg-card);
             backdrop-filter: blur(14px); border: 1px solid var(--border);
             border-radius: 16px; padding: 14px; box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }}
-        .panel-specs.collapsed {{ transform: translateX(-340px); opacity: 0; pointer-events: none; }}
-        .spec-title {{ font-size: 11.5px; font-weight: 800; color: var(--primary-orange); margin-bottom: 6px; text-transform: uppercase; }}
-        .spec-table {{ width: 100%; border-collapse: collapse; font-size: 11px; }}
+        .panel-specs.collapsed {{ transform: translateX(-350px); opacity: 0; pointer-events: none; }}
+        .spec-title {{ font-size: 11.5px; font-weight: 800; color: var(--primary-orange); text-transform: uppercase; }}
+        .spec-table {{ width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 4px; }}
         .spec-table td {{ padding: 4.5px 2px; border-bottom: 1px solid rgba(0,0,0,0.05); }}
-        .spec-table td:first-child {{ color: var(--text-muted); width: 46%; }}
+        .spec-table td:first-child {{ color: var(--text-muted); width: 44%; }}
         .spec-table td:last-child {{ font-weight: 700; text-align: right; }}
-        .btn-toggle-panel {{
-            position: absolute; top: 72px; left: 14px; z-index: 9;
+
+        .btn-toggle-specs {{
+            position: absolute; top: 68px; left: 14px; z-index: 15;
             background: var(--bg-card); border: 1px solid var(--primary-orange);
-            color: var(--primary-orange); padding: 7px 12px; border-radius: 20px;
-            font-size: 11px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(234,88,12,0.2);
+            color: var(--primary-orange); padding: 7px 14px; border-radius: 20px;
+            font-size: 11.5px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(234,88,12,0.22); backdrop-filter: blur(10px);
+            display: flex; align-items: center; gap: 6px;
         }}
+
+        /* BẢNG ĐIỀU KHIỂN BẬT / TẮT KẾT CẤU BÊN PHẢI */
+        .panel-layers {{
+            position: absolute; top: 68px; right: 14px; width: 235px; max-height: calc(100vh - 130px);
+            overflow-y: auto; z-index: 20; background: var(--bg-card);
+            backdrop-filter: blur(14px); border: 1px solid var(--border);
+            border-radius: 16px; padding: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }}
+        .panel-layers.collapsed {{ transform: translateX(270px); opacity: 0; pointer-events: none; }}
+        .layers-title {{ font-size: 11.5px; font-weight: 800; color: var(--primary-orange); text-transform: uppercase; }}
+
+        .btn-toggle-layers {{
+            position: absolute; top: 68px; right: 14px; z-index: 15;
+            background: var(--bg-card); border: 1px solid var(--primary-orange);
+            color: var(--primary-orange); padding: 7px 14px; border-radius: 20px;
+            font-size: 11.5px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(234,88,12,0.22); backdrop-filter: blur(10px);
+            display: flex; align-items: center; gap: 6px;
+        }}
+
+        .layer-btn {{
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; padding: 7.5px 10px; margin-bottom: 5px;
+            background: #ffffff; border: 1px solid var(--border);
+            border-radius: 10px; font-size: 11.5px; font-weight: 700;
+            color: var(--text-main); cursor: pointer; transition: all 0.2s;
+            text-align: left;
+        }}
+        .layer-btn:hover {{ border-color: var(--primary-orange); background: #fff7ed; transform: translateY(-1px); }}
+        .layer-btn.active {{ border-color: var(--primary-orange); background: rgba(234,88,12,0.06); }}
+        .layer-btn-title {{ display: flex; align-items: center; gap: 6px; }}
+        .layer-badge {{
+            padding: 2px 7px; border-radius: 8px; font-size: 9.5px; font-weight: 800;
+        }}
+        .layer-badge.on {{ background: #16a34a; color: #ffffff; }}
+        .layer-badge.off {{ background: #64748b; color: #ffffff; }}
+
+        .btn-close-panel {{
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 13px; font-weight: 700; padding: 2px 6px;
+        }}
+        .btn-close-panel:hover {{ color: var(--primary-orange); }}
+
         .view-controls {{
             position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
             z-index: 10; display: flex; gap: 5px; background: var(--bg-card);
@@ -381,6 +422,14 @@ namespace Nhaxuong.SERVICE.Services
             background: rgba(2, 132, 199, 0.08); border-left: 3px solid var(--accent-blue);
             font-size: 10px; line-height: 1.4; color: var(--text-main);
         }}
+
+        @media (max-width: 640px) {{
+            .panel-specs {{ width: calc(100vw - 28px); max-height: 58vh; }}
+            .panel-layers {{ width: calc(100vw - 28px); max-height: 58vh; }}
+            .brand-badge h1 {{ font-size: 11px; }}
+            .brand-badge p {{ font-size: 9px; }}
+            .hide-mob {{ display: none; }}
+        }}
     </style>
 </head>
 <body>
@@ -391,34 +440,37 @@ namespace Nhaxuong.SERVICE.Services
             <h1><i class=""fa-solid fa-cube text-orange-600""></i> {title}</h1>
             <p>Mô hình 3D xoay 360° | Kết Cấu Thép Chuẩn Tiền Chế</p>
         </div>
-        <div class=""action-btns"">
-            <button class=""icon-btn active"" id=""btn-roof"" title=""Ẩn / Hiện Mái Tôn""><i class=""fa-solid fa-shield-halved""></i> <span>Mái</span></button>
-            <button class=""icon-btn active"" id=""btn-wall"" title=""Ẩn / Hiện Tôn Vách""><i class=""fa-solid fa-building""></i> <span>Vách</span></button>
-            <button class=""icon-btn active"" id=""btn-purlin"" title=""Ẩn / Hiện Hệ Xà Gồ""><i class=""fa-solid fa-bars""></i> <span>Xà Gồ</span></button>
-            <button class=""icon-btn"" id=""btn-reset"" title=""Đặt lại góc nhìn""><i class=""fa-solid fa-arrows-rotate""></i></button>
+        <div style=""pointer-events:auto; display:flex; gap:6px;"">
+            <button class=""btn-head-quick"" id=""btn-head-specs"" title=""Mở bảng chú thích kết cấu""><i class=""fa-solid fa-list-check""></i> <span class=""hide-mob"">Chú Thích</span></button>
+            <button class=""btn-head-quick"" id=""btn-head-layers"" title=""Mở bảng bật tắt kết cấu""><i class=""fa-solid fa-layer-group""></i> <span class=""hide-mob"">Bật/Tắt</span></button>
+            <button class=""btn-head-quick"" id=""btn-head-reset"" title=""Đặt lại góc nhìn""><i class=""fa-solid fa-arrows-rotate""></i></button>
         </div>
     </div>
 
-    <button class=""btn-toggle-panel"" id=""btn-open-panel"" style=""display:none;""><i class=""fa-solid fa-list""></i> Xem Thông Số</button>
+    <!-- BÊN TRÁI: NÚT MỞ & BẢNG CHÚ THÍCH KẾT CẤU -->
+    <button class=""btn-toggle-specs"" id=""btn-open-specs"" style=""display:none;"">
+        <i class=""fa-solid fa-ruler-combined""></i> <span>Xem Chú Thích Kết Cấu</span>
+    </button>
 
     <div class=""panel-specs"" id=""specs-panel"">
-        <div style=""display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"">
-            <div class=""spec-title""><i class=""fa-solid fa-ruler-combined""></i> Thông Số Kết Cấu</div>
-            <button id=""btn-close-panel"" style=""background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:13px;"">✕</button>
+        <div style=""display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid rgba(0,0,0,0.06);"">
+            <div class=""spec-title""><i class=""fa-solid fa-ruler-combined""></i> Chú Thích Kết Cấu</div>
+            <button id=""btn-close-specs"" class=""btn-close-panel"" title=""Thu gọn"">✕</button>
         </div>
         <table class=""spec-table"">
             <tr><td>Khẩu độ (Rộng):</td><td><b>{width} mét</b></td></tr>
             <tr><td>Chiều dài tổng thể:</td><td><b>{length} mét</b></td></tr>
             <tr><td>Diện tích sàn:</td><td><b>{area:N0} m²</b></td></tr>
+            <tr><td>Bước gian (Bay):</td><td><b>{bayCount} gian ({baySpacing}m/gian)</b></td></tr>
             <tr><td>Chiều cao giọt nước:</td><td><b>{height} mét</b></td></tr>
             <tr><td>Chiều cao đỉnh nóc:</td><td><b>{ridgeHeight} mét</b></td></tr>
-            <tr><td>Số bước gian:</td><td><b>{bayCount} gian ({baySpacing}m/gian)</b></td></tr>
             <tr><td>Hệ khung kết cấu:</td><td><b>{structureType}</b></td></tr>
             {craneHtml}
             <tr><td>Hệ xà gồ mái:</td><td>Thép Z200 mạ kẽm Z275 (~1.3m/thanh)</td></tr>
             <tr><td>Hệ xà gồ vách:</td><td>Thép C150 mạ kẽm Z275 (~1.3m/thanh)</td></tr>
-            <tr><td>Tôn vách bao che:</td><td>Tôn sóng vuông 0.45mm cao cấp</td></tr>
-            <tr><td>Chân tường bao:</td><td>Tường xây gạch cao 1.2m chống ẩm</td></tr>
+            <tr><td>Mái tôn:</td><td>Tôn sóng vuông 0.45mm cao cấp</td></tr>
+            <tr><td>Tôn vách bao che:</td><td>Tôn mạ màu chống nóng 0.45mm</td></tr>
+            <tr><td>Tường gạch chân cột:</td><td>Xây gạch cao 1.2m chống ẩm</td></tr>
             <tr><td>Cửa chính xưởng:</td><td>Cửa cuốn CN + Mái đón Canopy</td></tr>
             <tr><td>Hệ giằng chống xoắn:</td><td>Giằng chữ X + giằng ống Ø114</td></tr>
         </table>
@@ -426,6 +478,63 @@ namespace Nhaxuong.SERVICE.Services
             <b><i class=""fa-solid fa-calculator text-blue-600""></i> Tư vấn giải pháp kỹ thuật:</b><br>
             {aiNote}
         </div>
+    </div>
+
+    <!-- BÊN PHẢI: NÚT MỞ & BẢNG ĐIỀU KHIỂN BẬT / TẮT KẾT CẤU -->
+    <button class=""btn-toggle-layers"" id=""btn-open-layers"" style=""display:none;"">
+        <i class=""fa-solid fa-layer-group""></i> <span>Bật / Tắt Kết Cấu</span>
+    </button>
+
+    <div class=""panel-layers"" id=""layers-panel"">
+        <div style=""display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid rgba(0,0,0,0.06);"">
+            <div class=""layers-title""><i class=""fa-solid fa-layer-group""></i> Bật / Tắt Kết Cấu 3D</div>
+            <button id=""btn-close-layers"" class=""btn-close-panel"" title=""Thu gọn"">✕</button>
+        </div>
+
+        <button class=""layer-btn active"" id=""btn-layer-roof"">
+            <span class=""layer-btn-title""><i class=""fa-solid fa-shield-halved text-blue-600""></i> Mái Tôn</span>
+            <span class=""layer-badge on"" id=""badge-roof"">BẬT</span>
+        </button>
+
+        <button class=""layer-btn active"" id=""btn-layer-wall"">
+            <span class=""layer-btn-title""><i class=""fa-solid fa-building text-slate-600""></i> Tôn Vách</span>
+            <span class=""layer-badge on"" id=""badge-wall"">BẬT</span>
+        </button>
+
+        <button class=""layer-btn active"" id=""btn-layer-roof-purlin"">
+            <span class=""layer-btn-title""><i class=""fa-solid fa-bars text-amber-600""></i> Xà Gồ Mái</span>
+            <span class=""layer-badge on"" id=""badge-roof-purlin"">BẬT</span>
+        </button>
+
+        <button class=""layer-btn active"" id=""btn-layer-wall-girt"">
+            <span class=""layer-btn-title""><i class=""fa-solid fa-grip-lines-vertical text-amber-600""></i> Xà Gồ Vách</span>
+            <span class=""layer-badge on"" id=""badge-wall-girt"">BẬT</span>
+        </button>
+
+        <button class=""layer-btn active"" id=""btn-layer-frame"">
+            <span class=""layer-btn-title""><i class=""fa-solid fa-archway text-orange-600""></i> Cột & Kèo Zamil</span>
+            <span class=""layer-badge on"" id=""badge-frame"">BẬT</span>
+        </button>
+
+        <button class=""layer-btn active"" id=""btn-layer-brick"">
+            <span class=""layer-btn-title""><i class=""fa-solid fa-cubes-stacked text-slate-500""></i> Tường Gạch 1.2m</span>
+            <span class=""layer-badge on"" id=""badge-brick"">BẬT</span>
+        </button>
+
+        <button class=""layer-btn active"" id=""btn-layer-door"">
+            <span class=""layer-btn-title""><i class=""fa-solid fa-door-closed text-indigo-600""></i> Cửa & Mái Đón</span>
+            <span class=""layer-badge on"" id=""badge-door"">BẬT</span>
+        </button>
+
+        <button class=""layer-btn active"" id=""btn-layer-dim"">
+            <span class=""layer-btn-title""><i class=""fa-solid fa-ruler-vertical text-teal-600""></i> Thước Đo 3D</span>
+            <span class=""layer-badge on"" id=""badge-dim"">BẬT</span>
+        </button>
+
+        <button class=""layer-btn"" id=""btn-layer-reset"" style=""margin-top:3px; border-color:var(--primary-orange); color:var(--primary-orange);"">
+            <span class=""layer-btn-title""><i class=""fa-solid fa-arrows-rotate""></i> Đặt Lại Góc Nhìn</span>
+            <span style=""font-size:10px;"">Toàn cảnh</span>
+        </button>
     </div>
 
     <div class=""view-controls"">
@@ -522,17 +631,21 @@ namespace Nhaxuong.SERVICE.Services
         const matDoor = new THREE.MeshStandardMaterial({{ color: 0x1e293b, roughness: 0.4, metalness: 0.7, side: THREE.DoubleSide }});
         const matCanopy = new THREE.MeshStandardMaterial({{ color: 0xea580c, roughness: 0.35, metalness: 0.65 }});
 
-        const factoryGroup = new THREE.Group();
-        const purlinGroup = new THREE.Group();
-        const wallGroup = new THREE.Group();
+        const frameGroup = new THREE.Group();
+        const roofPurlinGroup = new THREE.Group();
+        const wallGirtGroup = new THREE.Group();
+        const wallSheetGroup = new THREE.Group();
+        const brickGroup = new THREE.Group();
+        const doorGroup = new THREE.Group();
         const roofGroup = new THREE.Group();
+        const dimGroup = new THREE.Group();
 
         const halfW = W / 2;
         const halfL = L / 2;
         const rafterLen = Math.sqrt(Math.pow(halfW, 2) + Math.pow(RIDGE_H - H, 2));
         const rafterAngle = Math.atan2(RIDGE_H - H, halfW);
 
-        // 1. Dựng các khung Zamil chính dọc theo bước gian
+        // 1. DỰNG CÁC KHUNG ZAMIL CHÍNH (Cột, Kèo, Móng, Giằng)
         for (let i = 0; i <= BAYS; i++) {{
             const z = -halfL + i * BAY_S;
 
@@ -541,22 +654,22 @@ namespace Nhaxuong.SERVICE.Services
             const colL = new THREE.Mesh(colGeo, matSteelZamil);
             colL.position.set(-halfW + 0.25, H / 2, z);
             colL.castShadow = true;
-            factoryGroup.add(colL);
+            frameGroup.add(colL);
 
             const colR = new THREE.Mesh(colGeo, matSteelZamil);
             colR.position.set(halfW - 0.25, H / 2, z);
             colR.castShadow = true;
-            factoryGroup.add(colR);
+            frameGroup.add(colR);
 
             // Móng bê tông cổ cột
             const footGeo = new THREE.BoxGeometry(0.9, 0.6, 0.9);
             const footL = new THREE.Mesh(footGeo, matFooting);
             footL.position.set(-halfW + 0.25, 0.3, z);
-            factoryGroup.add(footL);
+            frameGroup.add(footL);
 
             const footR = new THREE.Mesh(footGeo, matFooting);
             footR.position.set(halfW - 0.25, 0.3, z);
-            factoryGroup.add(footR);
+            frameGroup.add(footR);
 
             // Kèo Zamil vát tiết diện
             const rafterGeo = new THREE.BoxGeometry(rafterLen, 0.4, 0.32);
@@ -565,13 +678,13 @@ namespace Nhaxuong.SERVICE.Services
             rafterL.position.set(-halfW / 2, H + (RIDGE_H - H) / 2, z);
             rafterL.rotation.z = rafterAngle;
             rafterL.castShadow = true;
-            factoryGroup.add(rafterL);
+            frameGroup.add(rafterL);
 
             const rafterR = new THREE.Mesh(rafterGeo, matSteelZamil);
             rafterR.position.set(halfW / 2, H + (RIDGE_H - H) / 2, z);
             rafterR.rotation.z = -rafterAngle;
             rafterR.castShadow = true;
-            factoryGroup.add(rafterR);
+            frameGroup.add(rafterR);
         }}
 
         // Cột chống gió đầu hồi sau
@@ -579,158 +692,12 @@ namespace Nhaxuong.SERVICE.Services
             const gablePostGeo = new THREE.BoxGeometry(0.35, H, 0.35);
             const pBackL = new THREE.Mesh(gablePostGeo, matSteelZamil);
             pBackL.position.set(-halfW / 2, H / 2, -halfL);
-            factoryGroup.add(pBackL);
+            frameGroup.add(pBackL);
 
             const pBackR = new THREE.Mesh(gablePostGeo, matSteelZamil);
             pBackR.position.set(halfW / 2, H / 2, -halfL);
-            factoryGroup.add(pBackR);
+            frameGroup.add(pBackR);
         }}
-
-        // 2. HỆ XÀ GỒ MÁI (Roof Purlins C/Z)
-        const numRoofPurlins = Math.max(3, Math.round(rafterLen / 1.35));
-        const roofPurlinGeo = new THREE.BoxGeometry(0.12, 0.18, L + 0.4);
-
-        for (let p = 0; p <= numRoofPurlins; p++) {{
-            const d = (p / numRoofPurlins) * rafterLen;
-
-            // Xà gồ mái trái
-            const purlinL = new THREE.Mesh(roofPurlinGeo, matPurlin);
-            const xL = -halfW + d * Math.cos(rafterAngle);
-            const yL = H + d * Math.sin(rafterAngle) + 0.12;
-            purlinL.position.set(xL, yL, 0);
-            purlinL.rotation.z = rafterAngle;
-            purlinL.castShadow = true;
-            purlinGroup.add(purlinL);
-
-            // Xà gồ mái phải
-            const purlinR = new THREE.Mesh(roofPurlinGeo, matPurlin);
-            const xR = halfW - d * Math.cos(rafterAngle);
-            const yR = H + d * Math.sin(rafterAngle) + 0.12;
-            purlinR.position.set(xR, yR, 0);
-            purlinR.rotation.z = -rafterAngle;
-            purlinR.castShadow = true;
-            purlinGroup.add(purlinR);
-        }}
-
-        // 3. HỆ XÀ GỒ VÁCH (Wall Girts C/Z)
-        const numWallGirts = Math.max(2, Math.round((H - 1.4) / 1.3));
-        const sideGirtGeo = new THREE.BoxGeometry(0.12, 0.16, L + 0.4);
-
-        for (let g = 0; g <= numWallGirts; g++) {{
-            const yG = 1.3 + (g / numWallGirts) * (H - 1.5);
-
-            // Xà gồ vách trái
-            const girtL = new THREE.Mesh(sideGirtGeo, matPurlin);
-            girtL.position.set(-halfW - 0.08, yG, 0);
-            purlinGroup.add(girtL);
-
-            // Xà gồ vách phải
-            const girtR = new THREE.Mesh(sideGirtGeo, matPurlin);
-            girtR.position.set(halfW + 0.08, yG, 0);
-            purlinGroup.add(girtR);
-
-            // Xà gồ vách đầu hồi sau
-            const backGirtGeo = new THREE.BoxGeometry(W + 0.3, 0.16, 0.12);
-            const girtBack = new THREE.Mesh(backGirtGeo, matPurlin);
-            girtBack.position.set(0, yG, -halfL - 0.08);
-            purlinGroup.add(girtBack);
-        }}
-
-        // 4. TƯỜNG GẠCH CHÂN CỘT (Brick Skirting 1.2m)
-        const brickH = 1.2;
-        const brickSideGeo = new THREE.BoxGeometry(0.24, brickH, L);
-        const brickL = new THREE.Mesh(brickSideGeo, matBrick);
-        brickL.position.set(-halfW, brickH / 2, 0);
-        wallGroup.add(brickL);
-
-        const brickR = new THREE.Mesh(brickSideGeo, matBrick);
-        brickR.position.set(halfW, brickH / 2, 0);
-        wallGroup.add(brickR);
-
-        const brickBackGeo = new THREE.BoxGeometry(W, brickH, 0.24);
-        const brickBack = new THREE.Mesh(brickBackGeo, matBrick);
-        brickBack.position.set(0, brickH / 2, -halfL);
-        wallGroup.add(brickBack);
-
-        // Kích thước cửa chính xưởng
-        const doorW = Math.min(W * 0.32, 6.0);
-        const doorH = Math.min(H * 0.52, 4.6);
-        const frontBrickSegW = (W - doorW) / 2;
-
-        const brickFrontSegGeo = new THREE.BoxGeometry(frontBrickSegW, brickH, 0.24);
-        const brickFrontL = new THREE.Mesh(brickFrontSegGeo, matBrick);
-        brickFrontL.position.set(-halfW + frontBrickSegW / 2, brickH / 2, halfL);
-        wallGroup.add(brickFrontL);
-
-        const brickFrontR = new THREE.Mesh(brickFrontSegGeo, matBrick);
-        brickFrontR.position.set(halfW - frontBrickSegW / 2, brickH / 2, halfL);
-        wallGroup.add(brickFrontR);
-
-        // 5. TÔN VÁCH BAO CHE (Wall Cladding Sheets)
-        const wallH = H - brickH;
-        const wallSidePlaneGeo = new THREE.PlaneGeometry(L, wallH);
-
-        const wallL = new THREE.Mesh(wallSidePlaneGeo, matWallSheet);
-        wallL.position.set(-halfW - 0.15, brickH + wallH / 2, 0);
-        wallL.rotation.y = Math.PI / 2;
-        wallGroup.add(wallL);
-
-        const wallR = new THREE.Mesh(wallSidePlaneGeo, matWallSheet);
-        wallR.position.set(halfW + 0.15, brickH + wallH / 2, 0);
-        wallR.rotation.y = -Math.PI / 2;
-        wallGroup.add(wallR);
-
-        // Tôn đầu hồi sau
-        const wallBackPlaneGeo = new THREE.PlaneGeometry(W, wallH);
-        const wallBack = new THREE.Mesh(wallBackPlaneGeo, matWallSheet);
-        wallBack.position.set(0, brickH + wallH / 2, -halfL - 0.15);
-        wallGroup.add(wallBack);
-
-        // Tam giác tôn đầu hồi đỉnh nóc (Gable roof triangle)
-        const gableShape = new THREE.Shape();
-        gableShape.moveTo(-halfW, H);
-        gableShape.lineTo(0, RIDGE_H);
-        gableShape.lineTo(halfW, H);
-        gableShape.closePath();
-
-        const gableGeo = new THREE.ShapeGeometry(gableShape);
-        const gableBack = new THREE.Mesh(gableGeo, matWallSheet);
-        gableBack.position.set(0, 0, -halfL - 0.15);
-        wallGroup.add(gableBack);
-
-        const gableFront = new THREE.Mesh(gableGeo, matWallSheet);
-        gableFront.position.set(0, 0, halfL + 0.15);
-        wallGroup.add(gableFront);
-
-        // Tôn đầu hồi trước
-        const frontWallSegGeo = new THREE.PlaneGeometry(frontBrickSegW, wallH);
-        const frontWallL = new THREE.Mesh(frontWallSegGeo, matWallSheet);
-        frontWallL.position.set(-halfW + frontBrickSegW / 2, brickH + wallH / 2, halfL + 0.15);
-        wallGroup.add(frontWallL);
-
-        const frontWallR = new THREE.Mesh(frontWallSegGeo, matWallSheet);
-        frontWallR.position.set(halfW - frontBrickSegW / 2, brickH + wallH / 2, halfL + 0.15);
-        wallGroup.add(frontWallR);
-
-        if (H > doorH) {{
-            const aboveDoorH = H - doorH;
-            const frontWallTopGeo = new THREE.PlaneGeometry(doorW, aboveDoorH);
-            const frontWallTop = new THREE.Mesh(frontWallTopGeo, matWallSheet);
-            frontWallTop.position.set(0, doorH + aboveDoorH / 2, halfL + 0.15);
-            wallGroup.add(frontWallTop);
-        }}
-
-        // 6. CỬA CUỐN CÔNG NGHIỆP & MÁI ĐÓN CANOPY
-        const doorGeo = new THREE.PlaneGeometry(doorW, doorH);
-        const doorMesh = new THREE.Mesh(doorGeo, matDoor);
-        doorMesh.position.set(0, doorH / 2, halfL + 0.16);
-        factoryGroup.add(doorMesh);
-
-        // Mái đón canopy
-        const canopyGeo = new THREE.BoxGeometry(doorW + 1.2, 0.12, 1.8);
-        const canopy = new THREE.Mesh(canopyGeo, matCanopy);
-        canopy.position.set(0, doorH + 0.25, halfL + 0.9);
-        factoryGroup.add(canopy);
 
         // Dầm cẩu trục và ray nếu có
         if (HAS_CRANE) {{
@@ -739,18 +706,18 @@ namespace Nhaxuong.SERVICE.Services
 
             const beamL = new THREE.Mesh(craneBeamGeo, matCrane);
             beamL.position.set(-halfW + 0.9, craneH, 0);
-            factoryGroup.add(beamL);
+            frameGroup.add(beamL);
 
             const beamR = new THREE.Mesh(craneBeamGeo, matCrane);
             beamR.position.set(halfW - 0.9, craneH, 0);
-            factoryGroup.add(beamR);
+            frameGroup.add(beamR);
 
             // Dầm cẩu trục ngang màu vàng
             const bridgeGeo = new THREE.BoxGeometry(W - 1.8, 0.55, 1.4);
             const bridge = new THREE.Mesh(bridgeGeo, matCrane);
             bridge.position.set(0, craneH + 0.38, 0);
             bridge.castShadow = true;
-            factoryGroup.add(bridge);
+            frameGroup.add(bridge);
         }}
 
         // Hệ giằng chữ X ở gian đầu và cuối
@@ -767,18 +734,164 @@ namespace Nhaxuong.SERVICE.Services
             const b1 = new THREE.Mesh(barGeo, matBrace);
             b1.position.set(xPos, yMid, zMid);
             b1.rotation.x = Math.PI / 2 - angle;
-            factoryGroup.add(b1);
+            frameGroup.add(b1);
 
             const b2 = new THREE.Mesh(barGeo, matBrace);
             b2.position.set(xPos, yMid, zMid);
             b2.rotation.x = Math.PI / 2 + angle;
-            factoryGroup.add(b2);
+            frameGroup.add(b2);
         }}
 
         addXBrace(-halfW + 0.25, -halfL, -halfL + BAY_S, 0.6, H * 0.5);
         addXBrace(halfW - 0.25, -halfL, -halfL + BAY_S, 0.6, H * 0.5);
         addXBrace(-halfW + 0.25, halfL - BAY_S, halfL, 0.6, H * 0.5);
         addXBrace(halfW - 0.25, halfL - BAY_S, halfL, 0.6, H * 0.5);
+
+        // 2. HỆ XÀ GỒ MÁI RIÊNG BIỆT (Roof Purlins C/Z)
+        const numRoofPurlins = Math.max(3, Math.round(rafterLen / 1.35));
+        const roofPurlinGeo = new THREE.BoxGeometry(0.12, 0.18, L + 0.4);
+
+        for (let p = 0; p <= numRoofPurlins; p++) {{
+            const d = (p / numRoofPurlins) * rafterLen;
+
+            // Xà gồ mái trái
+            const purlinL = new THREE.Mesh(roofPurlinGeo, matPurlin);
+            const xL = -halfW + d * Math.cos(rafterAngle);
+            const yL = H + d * Math.sin(rafterAngle) + 0.12;
+            purlinL.position.set(xL, yL, 0);
+            purlinL.rotation.z = rafterAngle;
+            purlinL.castShadow = true;
+            roofPurlinGroup.add(purlinL);
+
+            // Xà gồ mái phải
+            const purlinR = new THREE.Mesh(roofPurlinGeo, matPurlin);
+            const xR = halfW - d * Math.cos(rafterAngle);
+            const yR = H + d * Math.sin(rafterAngle) + 0.12;
+            purlinR.position.set(xR, yR, 0);
+            purlinR.rotation.z = -rafterAngle;
+            purlinR.castShadow = true;
+            roofPurlinGroup.add(purlinR);
+        }}
+
+        // 3. HỆ XÀ GỒ VÁCH RIÊNG BIỆT (Wall Girts C/Z)
+        const numWallGirts = Math.max(2, Math.round((H - 1.4) / 1.3));
+        const sideGirtGeo = new THREE.BoxGeometry(0.12, 0.16, L + 0.4);
+
+        for (let g = 0; g <= numWallGirts; g++) {{
+            const yG = 1.3 + (g / numWallGirts) * (H - 1.5);
+
+            // Xà gồ vách trái
+            const girtL = new THREE.Mesh(sideGirtGeo, matPurlin);
+            girtL.position.set(-halfW - 0.08, yG, 0);
+            wallGirtGroup.add(girtL);
+
+            // Xà gồ vách phải
+            const girtR = new THREE.Mesh(sideGirtGeo, matPurlin);
+            girtR.position.set(halfW + 0.08, yG, 0);
+            wallGirtGroup.add(girtR);
+
+            // Xà gồ vách đầu hồi sau
+            const backGirtGeo = new THREE.BoxGeometry(W + 0.3, 0.16, 0.12);
+            const girtBack = new THREE.Mesh(backGirtGeo, matPurlin);
+            girtBack.position.set(0, yG, -halfL - 0.08);
+            wallGirtGroup.add(girtBack);
+        }}
+
+        // 4. TƯỜNG GẠCH CHÂN CỘT (Brick Skirting 1.2m)
+        const brickH = 1.2;
+        const brickSideGeo = new THREE.BoxGeometry(0.24, brickH, L);
+        const brickL = new THREE.Mesh(brickSideGeo, matBrick);
+        brickL.position.set(-halfW, brickH / 2, 0);
+        brickGroup.add(brickL);
+
+        const brickR = new THREE.Mesh(brickSideGeo, matBrick);
+        brickR.position.set(halfW, brickH / 2, 0);
+        brickGroup.add(brickR);
+
+        const brickBackGeo = new THREE.BoxGeometry(W, brickH, 0.24);
+        const brickBack = new THREE.Mesh(brickBackGeo, matBrick);
+        brickBack.position.set(0, brickH / 2, -halfL);
+        brickGroup.add(brickBack);
+
+        // Kích thước cửa chính xưởng
+        const doorW = Math.min(W * 0.32, 6.0);
+        const doorH = Math.min(H * 0.52, 4.6);
+        const frontBrickSegW = (W - doorW) / 2;
+
+        const brickFrontSegGeo = new THREE.BoxGeometry(frontBrickSegW, brickH, 0.24);
+        const brickFrontL = new THREE.Mesh(brickFrontSegGeo, matBrick);
+        brickFrontL.position.set(-halfW + frontBrickSegW / 2, brickH / 2, halfL);
+        brickGroup.add(brickFrontL);
+
+        const brickFrontR = new THREE.Mesh(brickFrontSegGeo, matBrick);
+        brickFrontR.position.set(halfW - frontBrickSegW / 2, brickH / 2, halfL);
+        brickGroup.add(brickFrontR);
+
+        // 5. TÔN VÁCH BAO CHE (Wall Cladding Sheets)
+        const wallH = H - brickH;
+        const wallSidePlaneGeo = new THREE.PlaneGeometry(L, wallH);
+
+        const wallL = new THREE.Mesh(wallSidePlaneGeo, matWallSheet);
+        wallL.position.set(-halfW - 0.15, brickH + wallH / 2, 0);
+        wallL.rotation.y = Math.PI / 2;
+        wallSheetGroup.add(wallL);
+
+        const wallR = new THREE.Mesh(wallSidePlaneGeo, matWallSheet);
+        wallR.position.set(halfW + 0.15, brickH + wallH / 2, 0);
+        wallR.rotation.y = -Math.PI / 2;
+        wallSheetGroup.add(wallR);
+
+        // Tôn đầu hồi sau
+        const wallBackPlaneGeo = new THREE.PlaneGeometry(W, wallH);
+        const wallBack = new THREE.Mesh(wallBackPlaneGeo, matWallSheet);
+        wallBack.position.set(0, brickH + wallH / 2, -halfL - 0.15);
+        wallSheetGroup.add(wallBack);
+
+        // Tam giác tôn đầu hồi đỉnh nóc
+        const gableShape = new THREE.Shape();
+        gableShape.moveTo(-halfW, H);
+        gableShape.lineTo(0, RIDGE_H);
+        gableShape.lineTo(halfW, H);
+        gableShape.closePath();
+
+        const gableGeo = new THREE.ShapeGeometry(gableShape);
+        const gableBack = new THREE.Mesh(gableGeo, matWallSheet);
+        gableBack.position.set(0, 0, -halfL - 0.15);
+        wallSheetGroup.add(gableBack);
+
+        const gableFront = new THREE.Mesh(gableGeo, matWallSheet);
+        gableFront.position.set(0, 0, halfL + 0.15);
+        wallSheetGroup.add(gableFront);
+
+        // Tôn đầu hồi trước
+        const frontWallSegGeo = new THREE.PlaneGeometry(frontBrickSegW, wallH);
+        const frontWallL = new THREE.Mesh(frontWallSegGeo, matWallSheet);
+        frontWallL.position.set(-halfW + frontBrickSegW / 2, brickH + wallH / 2, halfL + 0.15);
+        wallSheetGroup.add(frontWallL);
+
+        const frontWallR = new THREE.Mesh(frontWallSegGeo, matWallSheet);
+        frontWallR.position.set(halfW - frontBrickSegW / 2, brickH + wallH / 2, halfL + 0.15);
+        wallSheetGroup.add(frontWallR);
+
+        if (H > doorH) {{
+            const aboveDoorH = H - doorH;
+            const frontWallTopGeo = new THREE.PlaneGeometry(doorW, aboveDoorH);
+            const frontWallTop = new THREE.Mesh(frontWallTopGeo, matWallSheet);
+            frontWallTop.position.set(0, doorH + aboveDoorH / 2, halfL + 0.15);
+            wallSheetGroup.add(frontWallTop);
+        }}
+
+        // 6. CỬA CUỐN CÔNG NGHIỆP & MÁI ĐÓN CANOPY
+        const doorGeo = new THREE.PlaneGeometry(doorW, doorH);
+        const doorMesh = new THREE.Mesh(doorGeo, matDoor);
+        doorMesh.position.set(0, doorH / 2, halfL + 0.16);
+        doorGroup.add(doorMesh);
+
+        // Mái đón canopy
+        const canopyGeo = new THREE.BoxGeometry(doorW + 1.2, 0.12, 1.8);
+        const canopy = new THREE.Mesh(canopyGeo, matCanopy);
+        canopy.position.set(0, doorH + 0.25, halfL + 0.9);
+        doorGroup.add(canopy);
 
         // 7. MÁI TÔN & DIỀM NÓC GIÓ
         const roofPlaneGeo = new THREE.PlaneGeometry(rafterLen + 0.8, L + 1.0);
@@ -800,59 +913,148 @@ namespace Nhaxuong.SERVICE.Services
         ridgeCap.position.set(0, RIDGE_H + 0.25, 0);
         roofGroup.add(ridgeCap);
 
-        // Thêm tất cả vào Scene
-        scene.add(factoryGroup);
-        scene.add(purlinGroup);
-        scene.add(wallGroup);
+        // 8. THƯỚC ĐO KÍCH THƯỚC 3D TRỰC QUAN BÊN TRÁI XƯỞNG
+        const dimX = -halfW - 2.2;
+        const dimMat = new THREE.MeshBasicMaterial({{ color: 0x0284c7 }});
+
+        const poleGeo = new THREE.CylinderGeometry(0.04, 0.04, RIDGE_H + 0.6, 8);
+        const pole = new THREE.Mesh(poleGeo, dimMat);
+        pole.position.set(dimX, (RIDGE_H + 0.6) / 2, 0);
+        dimGroup.add(pole);
+
+        const tick0 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.04, 0.04), dimMat);
+        tick0.position.set(dimX + 0.4, 0.05, 0);
+        dimGroup.add(tick0);
+
+        const tickH = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.05), dimMat);
+        tickH.position.set(dimX + 0.6, H, 0);
+        dimGroup.add(tickH);
+
+        const tickRidge = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.05), dimMat);
+        tickRidge.position.set(dimX + 0.6, RIDGE_H, 0);
+        dimGroup.add(tickRidge);
+
+        function makeLabelSprite(text, bgCol, borderCol) {{
+            const canvas = document.createElement('canvas');
+            canvas.width = 320;
+            canvas.height = 72;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = bgCol || 'rgba(15, 23, 42, 0.9)';
+            if (ctx.roundRect) {{
+                ctx.roundRect(4, 4, 312, 64, 12);
+            }} else {{
+                ctx.rect(4, 4, 312, 64);
+            }}
+            ctx.fill();
+            ctx.strokeStyle = borderCol || '#ea580c';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 22px Segoe UI, -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 160, 36);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            const sMat = new THREE.SpriteMaterial({{ map: tex, depthTest: false }});
+            const sprite = new THREE.Sprite(sMat);
+            sprite.scale.set(4.4, 1.05, 1);
+            return sprite;
+        }}
+
+        const spH = makeLabelSprite('H Giọt nước: ' + H + 'm', 'rgba(2, 132, 199, 0.92)', '#38bdf8');
+        spH.position.set(dimX - 2.5, H, 0);
+        dimGroup.add(spH);
+
+        const spRidge = makeLabelSprite('Đỉnh nóc: ' + RIDGE_H + 'm', 'rgba(234, 88, 12, 0.92)', '#fb923c');
+        spRidge.position.set(dimX - 2.5, RIDGE_H, 0);
+        dimGroup.add(spRidge);
+
+        const spBay = makeLabelSprite('Bước gian: ' + BAY_S + 'm', 'rgba(15, 23, 42, 0.9)', '#ea580c');
+        spBay.position.set(dimX - 2.2, 0.6, -halfL + BAY_S / 2);
+        dimGroup.add(spBay);
+
+        // THÊM TẤT CẢ VÀO SCENE
+        scene.add(frameGroup);
+        scene.add(roofPurlinGroup);
+        scene.add(wallGirtGroup);
+        scene.add(wallSheetGroup);
+        scene.add(brickGroup);
+        scene.add(doorGroup);
         scene.add(roofGroup);
+        scene.add(dimGroup);
 
-        // Ẩn / Hiện các thành phần kết cấu qua nút bấm
-        let showRoof = true;
-        let showWall = true;
-        let showPurlin = true;
-
-        const btnRoof = document.getElementById('btn-roof');
-        if (btnRoof) {{
-            btnRoof.addEventListener('click', function() {{
-                showRoof = !showRoof;
-                roofGroup.visible = showRoof;
-                btnRoof.classList.toggle('active', showRoof);
+        // CẤU HÌNH BẬT / TẮT TỪNG LỚP KẾT CẤU BÊN PHẢI
+        function setupToggle(btnId, badgeId, group) {{
+            const btn = document.getElementById(btnId);
+            const badge = document.getElementById(badgeId);
+            if (!btn || !group) return;
+            let isVisible = true;
+            btn.addEventListener('click', function() {{
+                isVisible = !isVisible;
+                group.visible = isVisible;
+                btn.classList.toggle('active', isVisible);
+                if (badge) {{
+                    badge.innerText = isVisible ? 'BẬT' : 'TẮT';
+                    badge.className = isVisible ? 'layer-badge on' : 'layer-badge off';
+                }}
             }});
         }}
 
-        const btnWall = document.getElementById('btn-wall');
-        if (btnWall) {{
-            btnWall.addEventListener('click', function() {{
-                showWall = !showWall;
-                wallGroup.visible = showWall;
-                btnWall.classList.toggle('active', showWall);
-            }});
-        }}
+        setupToggle('btn-layer-roof', 'badge-roof', roofGroup);
+        setupToggle('btn-layer-wall', 'badge-wall', wallSheetGroup);
+        setupToggle('btn-layer-roof-purlin', 'badge-roof-purlin', roofPurlinGroup);
+        setupToggle('btn-layer-wall-girt', 'badge-wall-girt', wallGirtGroup);
+        setupToggle('btn-layer-frame', 'badge-frame', frameGroup);
+        setupToggle('btn-layer-brick', 'badge-brick', brickGroup);
+        setupToggle('btn-layer-door', 'badge-door', doorGroup);
+        setupToggle('btn-layer-dim', 'badge-dim', dimGroup);
 
-        const btnPurlin = document.getElementById('btn-purlin');
-        if (btnPurlin) {{
-            btnPurlin.addEventListener('click', function() {{
-                showPurlin = !showPurlin;
-                purlinGroup.visible = showPurlin;
-                btnPurlin.classList.toggle('active', showPurlin);
-            }});
-        }}
+        const resetBtn = document.getElementById('btn-layer-reset');
+        if (resetBtn) resetBtn.addEventListener('click', function() {{ changeView('orbit'); }});
+        const headReset = document.getElementById('btn-head-reset');
+        if (headReset) headReset.addEventListener('click', function() {{ changeView('orbit'); }});
 
-        // Đặt lại góc nhìn
-        document.getElementById('btn-reset').addEventListener('click', function() {{
-            changeView('orbit');
+        // ĐÓNG / MỞ BẢNG CHÚ THÍCH BÊN TRÁI
+        const specsPanel = document.getElementById('specs-panel');
+        const openSpecsBtn = document.getElementById('btn-open-specs');
+        const closeSpecsBtn = document.getElementById('btn-close-specs');
+        const headSpecsBtn = document.getElementById('btn-head-specs');
+
+        function toggleSpecs(open) {{
+            if (open) {{
+                specsPanel.classList.remove('collapsed');
+                openSpecsBtn.style.display = 'none';
+            }} else {{
+                specsPanel.classList.add('collapsed');
+                openSpecsBtn.style.display = 'flex';
+            }}
+        }}
+        if (closeSpecsBtn) closeSpecsBtn.addEventListener('click', function() {{ toggleSpecs(false); }});
+        if (openSpecsBtn) openSpecsBtn.addEventListener('click', function() {{ toggleSpecs(true); }});
+        if (headSpecsBtn) headSpecsBtn.addEventListener('click', function() {{
+            toggleSpecs(specsPanel.classList.contains('collapsed'));
         }});
 
-        // Ẩn / hiện bảng thông số
-        const panel = document.getElementById('specs-panel');
-        const openBtn = document.getElementById('btn-open-panel');
-        document.getElementById('btn-close-panel').addEventListener('click', function() {{
-            panel.classList.add('collapsed');
-            openBtn.style.display = 'block';
-        }});
-        openBtn.addEventListener('click', function() {{
-            panel.classList.remove('collapsed');
-            openBtn.style.display = 'none';
+        // ĐÓNG / MỞ BẢNG ĐIỀU KHIỂN BẬT / TẮT BÊN PHẢI
+        const layersPanel = document.getElementById('layers-panel');
+        const openLayersBtn = document.getElementById('btn-open-layers');
+        const closeLayersBtn = document.getElementById('btn-close-layers');
+        const headLayersBtn = document.getElementById('btn-head-layers');
+
+        function toggleLayers(open) {{
+            if (open) {{
+                layersPanel.classList.remove('collapsed');
+                openLayersBtn.style.display = 'none';
+            }} else {{
+                layersPanel.classList.add('collapsed');
+                openLayersBtn.style.display = 'flex';
+            }}
+        }}
+        if (closeLayersBtn) closeLayersBtn.addEventListener('click', function() {{ toggleLayers(false); }});
+        if (openLayersBtn) openLayersBtn.addEventListener('click', function() {{ toggleLayers(true); }});
+        if (headLayersBtn) headLayersBtn.addEventListener('click', function() {{
+            toggleLayers(layersPanel.classList.contains('collapsed'));
         }});
 
         // Chuyển đổi các góc nhìn an toàn không phụ thuộc biến toàn cục event

@@ -109,7 +109,7 @@ namespace Nhaxuong.API.CONTROLLER
                     if (ext == ".html" || ext == ".htm")
                     {
                         var html = await System.IO.File.ReadAllTextAsync(filePath);
-                        if (html.Contains("Gemini AI Engine") || !html.Contains("purlinGroup"))
+                        if (html.Contains("Gemini AI Engine") || !html.Contains("roofPurlinGroup"))
                         {
                             double w = 24; double l = 84;
                             var dimMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"(\d{1,3})x(\d{1,3})");
