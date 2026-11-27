@@ -19,9 +19,9 @@ interface ToastItem {
 interface PropertyContextType {
   // Properties
   properties: Property[]
-  addProperty: (property: Omit<Property, 'id' | 'created'>, triggerEmail?: boolean) => void
-  updateProperty: (id: string | number, updated: Partial<Property>, triggerBroadcast?: boolean) => void
-  deleteProperty: (id: string | number) => void
+  addProperty: (property: Omit<Property, 'id' | 'created'>, triggerEmail?: boolean) => Promise<Property>
+  updateProperty: (id: string | number, updated: Partial<Property>, triggerBroadcast?: boolean) => Promise<Property>
+  deleteProperty: (id: string | number) => Promise<void>
 
   // Categories
   categories: Category[]
@@ -342,21 +342,39 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   }
 
   // Properties CRUD
-  const addProperty = (property: Omit<Property, 'id' | 'created'>, triggerEmail = true) => {
-    const newId = 'prop-' + Date.now()
-    const newProp: Property = {
-      ...property,
-      id: newId,
-      created: 'Vừa xong',
-      emailNotified: triggerEmail,
-    }
-    setProperties((prev) => [newProp, ...prev])
-
+  const addProperty = async (property: Omit<Property, 'id' | 'created'>, triggerEmail = true): Promise<Property> => {
+    let finalProp: Property
     if (!ENV.USE_MOCK_API) {
-      propertyApi.createProperty({ ...property, triggerEmail }).catch((err) => {
+      try {
+        const res = await propertyApi.createProperty({ ...property, triggerEmail })
+        finalProp = {
+          ...property,
+          ...res,
+          id: res.id || ('prop-' + Date.now()),
+          created: res.created || 'Vừa xong',
+          emailNotified: triggerEmail,
+          images: (res.images && res.images.length > 0) ? res.images : property.images,
+          gallery: (res.gallery && res.gallery.length > 0) ? res.gallery : property.gallery,
+        }
+      } catch (err: any) {
         console.warn('API sync warning:', err.message)
-      })
+        finalProp = {
+          ...property,
+          id: 'prop-' + Date.now(),
+          created: 'Vừa xong',
+          emailNotified: triggerEmail,
+        }
+      }
+    } else {
+      finalProp = {
+        ...property,
+        id: 'prop-' + Date.now(),
+        created: 'Vừa xong',
+        emailNotified: triggerEmail,
+      }
     }
+
+    setProperties((prev) => [finalProp, ...prev])
 
     if (triggerEmail) {
       showToast(
@@ -366,18 +384,29 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     } else {
       showToast('Đã đăng tin mới thành công!', 'success')
     }
+
+    return finalProp
   }
 
-  const updateProperty = (id: string | number, updated: Partial<Property>, triggerBroadcast = false) => {
-    setProperties((prev) =>
-      prev.map((p) => (String(p.id) === String(id) ? { ...p, ...updated } : p))
-    )
-
+  const updateProperty = async (id: string | number, updated: Partial<Property>, triggerBroadcast = false): Promise<Property> => {
     if (!ENV.USE_MOCK_API) {
-      propertyApi.updateProperty(id, updated).catch((err) => {
+      try {
+        await propertyApi.updateProperty(id, updated)
+      } catch (err: any) {
         console.warn('API sync warning:', err.message)
-      })
+      }
     }
+
+    let updatedResult: Property | null = null
+    setProperties((prev) =>
+      prev.map((p) => {
+        if (String(p.id) === String(id)) {
+          updatedResult = { ...p, ...updated }
+          return updatedResult
+        }
+        return p
+      })
+    )
 
     if (triggerBroadcast) {
       showToast(
@@ -387,14 +416,18 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     } else {
       showToast('Đã lưu cập nhật thông tin thành công')
     }
+
+    return updatedResult || ({ id, ...updated } as Property)
   }
 
-  const deleteProperty = (id: string | number) => {
+  const deleteProperty = async (id: string | number): Promise<void> => {
     setProperties((prev) => prev.filter((p) => String(p.id) !== String(id)))
     if (!ENV.USE_MOCK_API) {
-      propertyApi.deleteProperty(id).catch((err) => {
+      try {
+        await propertyApi.deleteProperty(id)
+      } catch (err: any) {
         console.warn('API sync warning:', err.message)
-      })
+      }
     }
     showToast('Đã xóa mặt hàng khỏi hệ thống')
   }

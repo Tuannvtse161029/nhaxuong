@@ -88,6 +88,8 @@ namespace Nhaxuong.SERVICE.DTOs.Request
         public string? Model3DUrl { get; set; } // File HTML 3D hoặc GLB
         public string? Drawing2DUrl { get; set; } // Bản vẽ 2D DXF / STEP / PDF
         public string? Image { get; set; }
+        public List<string>? Images { get; set; }
+        public List<string>? Gallery { get; set; }
         public string? Desc { get; set; }
         public bool TriggerEmail { get; set; } = true;
     }

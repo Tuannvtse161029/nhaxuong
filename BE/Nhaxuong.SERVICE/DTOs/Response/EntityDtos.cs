@@ -26,6 +26,8 @@ namespace Nhaxuong.SERVICE.DTOs.Response
         public string? CraneCapacity { get; set; }
         public string? BrokerPhone { get; set; }
         public string Image { get; set; } = string.Empty;
+        public List<string> Images { get; set; } = new();
+        public List<string> Gallery { get; set; } = new();
         public string? VideoUrl { get; set; }
         public string? AudioUrl { get; set; }
         public string? Model3DUrl { get; set; }

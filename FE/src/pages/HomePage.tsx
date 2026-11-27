@@ -191,7 +191,7 @@ export function HomePage() {
             <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-cyan-500 text-white shadow-xs">
               <Layers className="w-3 h-3" />
             </span>
-            <span>{t('cat_header_title')} ({categories.length} DANH MỤC)</span>
+            <span>{t('cat_header_title')}</span>
           </div>
 
           <div className="flex items-center gap-1 text-[11px] font-bold text-cyan-700 dark:text-cyan-300 bg-cyan-100/90 dark:bg-cyan-950/80 border border-cyan-300 dark:border-cyan-700/60 px-2.5 py-0.5 rounded-full shadow-2xs animate-pulse select-none">

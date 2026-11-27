@@ -34,7 +34,7 @@ const DICTIONARY: Record<Language, Record<string, string>> = {
 
     // Horizontal Category Strip
     'cat_header_title': 'DANH MỤC SẢN PHẨM',
-    'cat_scroll_hint': 'Vuốt ngang xem 8 danh mục',
+    'cat_scroll_hint': 'Vuốt ngang xem thêm',
     'cat_all': 'Tất Cả (Tin Mới Nhất)',
     'cat_BAN_KHUNG_XUONG': 'Bán Khung Nhà Xưởng',
     'cat_COT_KEO': 'Cột Kèo & Dầm Thép',
@@ -120,7 +120,7 @@ const DICTIONARY: Record<Language, Record<string, string>> = {
 
     // Horizontal Category Strip
     'cat_header_title': 'PRODUCT CATEGORIES',
-    'cat_scroll_hint': 'Swipe to view 8 categories',
+    'cat_scroll_hint': 'Swipe to see more',
     'cat_all': 'All (Latest Listings)',
     'cat_BAN_KHUNG_XUONG': 'Pre-engineered Factories',
     'cat_COT_KEO': 'Steel Columns & Trusses',

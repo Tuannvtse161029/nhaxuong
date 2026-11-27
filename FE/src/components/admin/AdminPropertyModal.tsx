@@ -73,6 +73,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   const [triggerEmail, setTriggerEmail] = useState(true)
   const [isUploading3D, setIsUploading3D] = useState(false)
   const [isUploadingImages, setIsUploadingImages] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadProgress, setUploadProgress] = useState('')
 
   // Inline Quick Add Category
@@ -325,7 +326,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
     setShowAddCatInput(false)
   }
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) {
       alert('Vui lòng nhập tiêu đề bài đăng!')
@@ -337,6 +338,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       return
     }
 
+    setIsSubmitting(true)
     try {
       const catObj = categories.find((c) => c.code === type || (categoryId && c.id === categoryId))
       const typeDisplay = catObj ? catObj.name : 'Nhà Xưởng & Sắt Thép'
@@ -385,15 +387,17 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       }
 
       if (property) {
-        updateProperty(property.id, propertyPayload, triggerEmail)
+        await updateProperty(property.id, propertyPayload, triggerEmail)
       } else {
-        addProperty(propertyPayload, triggerEmail)
+        await addProperty(propertyPayload, triggerEmail)
       }
 
       onClose()
     } catch (saveErr: any) {
       console.error('Lỗi lưu bài đăng:', saveErr)
       alert('Có lỗi khi lưu bài đăng: ' + (saveErr?.message || 'Vui lòng thử lại!'))
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -1050,11 +1054,20 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
           {/* Action buttons */}
           <div className="pt-2 flex items-center justify-end gap-3">
-            <Button variant="ghost" type="button" onClick={onClose}>
+            <Button variant="ghost" type="button" disabled={isSubmitting} onClick={onClose}>
               Hủy bỏ
             </Button>
-            <Button type="submit">
-              {property ? 'Lưu thay đổi' : 'Xuất bản bài viết'}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <span className="flex items-center gap-1.5">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Đang lưu xuống máy chủ...
+                </span>
+              ) : property ? (
+                'Lưu thay đổi'
+              ) : (
+                'Xuất bản bài viết'
+              )}
             </Button>
           </div>
         </form>
