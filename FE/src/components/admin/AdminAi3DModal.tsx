@@ -77,16 +77,18 @@ export function AdminAi3DModal({ isOpen, onClose, onSelectModelUrl }: AdminAi3DM
       })
 
       if (res && res.success) {
+        const modelUrl = (res as any).model3DUrl || res.model3dUrl || (res as any).model3dUrl || ''
+        const htmlCode = res.htmlContent || ''
         const aiMsg: ChatMessage = {
           id: 'msg-ai-' + Date.now(),
           sender: 'ai',
           text: res.aiMessage || `Đã hoàn tất tính toán kết cấu và dựng mô hình 3D theo yêu cầu: "${promptText}". Bạn có thể xoay 360 độ hoặc phóng to để kiểm tra chi tiết dầm, cột, xà gồ và cẩu trục bên dưới:`,
           modelResult: {
             fileName: res.fileName,
-            model3dUrl: res.model3dUrl,
+            model3dUrl: modelUrl,
             title: res.title,
             specsSummary: res.specsSummary,
-            htmlContent: res.htmlContent,
+            htmlContent: htmlCode,
           },
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         }
@@ -204,12 +206,12 @@ export function AdminAi3DModal({ isOpen, onClose, onSelectModelUrl }: AdminAi3DM
                     </div>
 
                     {/* Interactive 3D Iframe with direct srcDoc (Chống đen màn hình 100%) */}
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border-2 border-orange-400/50 shadow-md bg-slate-100">
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border-2 border-orange-400/50 shadow-md bg-white">
                       <iframe
                         srcDoc={msg.modelResult.htmlContent || undefined}
                         src={!msg.modelResult.htmlContent ? getFullUrl(msg.modelResult.model3dUrl) : undefined}
                         title={msg.modelResult.title}
-                        className="w-full h-full border-0"
+                        className="w-full h-full border-0 bg-white"
                         allow="fullscreen; accelerometer; gyroscope"
                       />
                     </div>

@@ -21,6 +21,7 @@ namespace Nhaxuong.SERVICE.Services
         public bool Success { get; set; }
         public string FileName { get; set; } = string.Empty;
         public string Model3DUrl { get; set; } = string.Empty;
+        public string Model3dUrl => Model3DUrl; // Lowercase alias for frontend compatibility
         public string Title { get; set; } = string.Empty;
         public string SpecsSummary { get; set; } = string.Empty;
         public string AiMessage { get; set; } = string.Empty;
@@ -254,6 +255,12 @@ namespace Nhaxuong.SERVICE.Services
             var halfW = width / 2.0;
             var halfL = length / 2.0;
 
+            var invW = width.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var invL = length.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var invH = height.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var invRidgeH = ridgeHeight.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var invBayS = baySpacing.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
             var craneHtml = hasCrane
                 ? $@"<tr><td>Cẩu trục chạy suốt:</td><td><b>{craneCapacity}</b> (Dầm ray & dầm đỡ thép)</td></tr>"
                 : "<tr><td>Cẩu trục:</td><td>Không bố trí (Tiết kiệm chi phí khung)</td></tr>";
@@ -264,9 +271,19 @@ namespace Nhaxuong.SERVICE.Services
     <meta charset=""UTF-8"">
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
     <title>{title}</title>
-    <!-- Three.js + OrbitControls -->
+    <!-- Three.js + OrbitControls with multi-CDN fallback -->
     <script src=""https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js""></script>
+    <script>
+      if (typeof THREE === 'undefined') {{
+        document.write('<script src=""https://unpkg.com/three@0.128.0/build/three.min.js""><\/script>');
+      }}
+    </script>
     <script src=""https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js""></script>
+    <script>
+      if (typeof THREE !== 'undefined' && !THREE.OrbitControls) {{
+        document.write('<script src=""https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js""><\/script>');
+      }}
+    </script>
     <link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"">
     <style>
         :root {{
@@ -398,39 +415,45 @@ namespace Nhaxuong.SERVICE.Services
     </div>
 
     <script>
-        const W = {width};
-        const L = {length};
-        const H = {height};
-        const RIDGE_H = {ridgeHeight};
+        const W = {invW};
+        const L = {invL};
+        const H = {invH};
+        const RIDGE_H = {invRidgeH};
         const BAYS = {bayCount};
-        const BAY_S = {baySpacing};
+        const BAY_S = {invBayS};
         const HAS_CRANE = {(hasCrane ? "true" : "false")};
 
         const container = document.getElementById('webgl-container');
+        const getW = () => (container && container.clientWidth > 0 ? container.clientWidth : window.innerWidth) || 360;
+        const getH = () => (container && container.clientHeight > 0 ? container.clientHeight : window.innerHeight) || 240;
+
         const scene = new THREE.Scene();
         // NỀN SÁNG BẠC HIỆN ĐẠI (CHỐNG ĐEN MÀN HÌNH)
         scene.background = new THREE.Color(0xf8fafc);
         scene.fog = new THREE.FogExp2(0xf8fafc, 0.0035);
 
-        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.2, 2000);
+        const camera = new THREE.PerspectiveCamera(40, getW() / getH(), 0.2, 2000);
         camera.position.set(W * 1.35, H * 1.9, L * 0.95);
 
         const renderer = new THREE.WebGLRenderer({{ antialias: true, alpha: false, powerPreference: 'high-performance' }});
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(getW(), getH());
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.15;
         container.appendChild(renderer.domElement);
 
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.maxPolarAngle = Math.PI / 2 - 0.01;
-        controls.minDistance = 3;
-        controls.maxDistance = 500;
-        controls.target.set(0, H * 0.45, 0);
+        let controls = null;
+        if (typeof THREE.OrbitControls !== 'undefined') {{
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 - 0.01;
+            controls.minDistance = 3;
+            controls.maxDistance = 500;
+            controls.target.set(0, H * 0.45, 0);
+        }}
 
         // HỆ THỐNG ÁNH SÁNG SÁNG RỰC RỠ
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
@@ -636,9 +659,9 @@ namespace Nhaxuong.SERVICE.Services
                 controls.target.set(0, 0, 0);
             }} else if (name === 'inside') {{
                 camera.position.set(0, 2.2, halfL - 4);
-                controls.target.set(0, 3.2, -halfL + 8);
+                if (controls) controls.target.set(0, 3.2, -halfL + 8);
             }}
-            controls.update();
+            if (controls) controls.update();
         }}
 
         document.getElementById('btn-view-orbit').addEventListener('click', function() {{ changeView('orbit'); }});
@@ -647,15 +670,20 @@ namespace Nhaxuong.SERVICE.Services
         document.getElementById('btn-view-bird').addEventListener('click', function() {{ changeView('bird'); }});
         document.getElementById('btn-view-inside').addEventListener('click', function() {{ changeView('inside'); }});
 
-        window.addEventListener('resize', function() {{
-            camera.aspect = window.innerWidth / window.innerHeight;
+        function onResize() {{
+            const w = getW();
+            const h = getH();
+            camera.aspect = w / h;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }});
+            renderer.setSize(w, h);
+        }}
+        window.addEventListener('resize', onResize);
+        setTimeout(onResize, 250);
+        setTimeout(onResize, 1000);
 
         function animate() {{
             requestAnimationFrame(animate);
-            controls.update();
+            if (controls) controls.update();
             renderer.render(scene, camera);
         }}
         animate();

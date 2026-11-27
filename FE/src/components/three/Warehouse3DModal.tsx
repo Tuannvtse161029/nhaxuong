@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { X, RotateCw, Maximize2, Minimize2, Box, Layers, Globe } from 'lucide-react'
 import type { Property } from '@/types/property.types'
+import { ENV } from '@/config/env.config'
 import { cn } from '@/utils/cn'
 
 interface Warehouse3DModalProps {
@@ -46,10 +47,10 @@ export function Warehouse3DModal({ isOpen, onClose, property }: Warehouse3DModal
     const height = container.clientHeight || window.innerHeight
     const isMobile = width < 640
 
-    // 1. Scene
+    // 1. Scene - Nền sáng công nghiệp hiện đại
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x090d16)
-    scene.fog = new THREE.FogExp2(0x090d16, 0.007)
+    scene.background = new THREE.Color(0xf8fafc)
+    scene.fog = new THREE.FogExp2(0xf8fafc, 0.003)
 
     // 2. Camera - adjust position for mobile portrait vs desktop landscape
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1000)
@@ -271,13 +272,19 @@ export function Warehouse3DModal({ isOpen, onClose, property }: Warehouse3DModal
         </div>
 
         {/* 3D Content Area */}
-        <div className="relative flex-1 w-full bg-slate-950 overflow-hidden">
+        <div className="relative flex-1 w-full bg-slate-100 dark:bg-slate-900 overflow-hidden">
           {viewMode === 'html' && property?.model3dUrl ? (
-            <div className="w-full h-full bg-slate-950">
+            <div className="w-full h-full bg-white">
               <iframe
-                src={property.model3dUrl}
+                src={
+                  property.model3dUrl.startsWith('http')
+                    ? property.model3dUrl
+                    : property.model3dUrl.startsWith('/uploads/')
+                    ? `${ENV.API_BASE_URL.replace(/\/api\/?$/, '')}${property.model3dUrl}`
+                    : property.model3dUrl
+                }
                 title={property.title || 'Mô hình 3D HTML'}
-                className="w-full h-full border-0"
+                className="w-full h-full border-0 bg-white"
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
               />
             </div>
