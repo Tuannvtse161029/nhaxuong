@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Megaphone, Bell, User, ShieldCheck } from 'lucide-react'
+import { Megaphone, Bell } from 'lucide-react'
 import { useProperties } from '@/context/PropertyContext'
-import { cn } from '@/utils/cn'
 
 export function NoticeTickerBar() {
-  const { activeNoticeText, role, setRole, openNoticeModal } = useProperties()
+  const { activeNoticeText, openNoticeModal } = useProperties()
   const [clock, setClock] = useState('')
 
   useEffect(() => {
@@ -35,51 +34,20 @@ export function NoticeTickerBar() {
           </div>
         </div>
 
-        {/* Quick Controls: Clock & Discrete Role Switcher */}
+        {/* Quick Controls: Clock & Bell Notification */}
         <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
           <span className="font-mono text-slate-400 text-xs hidden md:inline-block">
             {clock}
           </span>
 
-          <span className="text-slate-700 hidden md:inline">•</span>
-
-          {/* DISCRETE ROLE SWITCHER PILL */}
-          <div className="bg-slate-900 p-0.5 rounded-lg border border-slate-800 flex items-center text-xs">
-            <button
-              type="button"
-              onClick={() => setRole('user')}
-              className={cn(
-                'px-2.5 py-1 rounded-md font-medium text-xs transition flex items-center gap-1.5',
-                role === 'user'
-                  ? 'bg-slate-800 text-teal-300 shadow-xs'
-                  : 'text-slate-400 hover:text-white'
-              )}
-            >
-              <User className="w-3 h-3" />
-              <span>Khách Hàng</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('admin')}
-              className={cn(
-                'px-2.5 py-1 rounded-md font-medium text-xs transition flex items-center gap-1.5',
-                role === 'admin'
-                  ? 'bg-slate-800 text-amber-300 shadow-xs'
-                  : 'text-slate-400 hover:text-white'
-              )}
-            >
-              <ShieldCheck className="w-3 h-3" />
-              <span>Quản Trị</span>
-            </button>
-          </div>
-
           <button
             type="button"
             onClick={openNoticeModal}
-            className="text-xs text-slate-400 hover:text-white p-1 transition"
+            className="flex items-center gap-1 text-xs text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
             title="Xem danh sách thông báo"
           >
             <Bell className="w-4 h-4" />
+            <span className="hidden sm:inline text-[11px]">Thông báo</span>
           </button>
         </div>
       </div>

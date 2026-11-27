@@ -24,8 +24,8 @@ export function AdminPage() {
   const navigate = useNavigate()
 
   // Admin login form states
-  const [username, setUsername] = useState('admin')
-  const [password, setPassword] = useState('baopro2147!')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -220,27 +220,14 @@ export function AdminPage() {
           {/* Submit Button */}
           <button
             type="submit"
+            formNoValidate
             disabled={isSubmitting || authLoading}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-500 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-teal-600/30 active:scale-95 transition disabled:opacity-50 cursor-pointer mt-2"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-500 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-teal-600/30 active:scale-95 transition disabled:opacity-50 cursor-pointer mt-4"
           >
             <KeyRound className="w-4 h-4" />
             <span>ĐĂNG NHẬP VÀO TRANG QUẢN TRỊ</span>
             <ArrowRight className="w-4 h-4" />
           </button>
-
-          {/* 1-Click Fast Fill & Login Button */}
-          <div
-            onClick={() => handleAdminLogin()}
-            className="cursor-pointer rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 p-3 text-center transition"
-          >
-            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-amber-300">
-              <KeyRound className="w-4 h-4 text-amber-400" />
-              <span>Đăng nhập nhanh 1 chạm: admin / baopro2147!</span>
-            </div>
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              Nhấn vào đây để đăng nhập trực tiếp với thông tin đã cài đặt sẵn
-            </p>
-          </div>
         </form>
 
         <p className="text-[11px] text-center text-slate-500 mt-6">

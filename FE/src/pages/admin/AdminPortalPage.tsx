@@ -119,12 +119,14 @@ export function AdminPortalPage() {
             bài đăng, kích thước kết cấu 3D, vị trí địa lý và trạng thái 2 ô vuông Còn Hàng / Hết Hàng.
           </span>
         </div>
-        <button
-          onClick={() => setRole('user')}
-          className="rounded-xl bg-teal-700 text-white px-3.5 py-1.5 font-bold hover:bg-teal-600 transition shrink-0"
+        <a
+          href="/"
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-xl bg-teal-700 text-white px-3.5 py-1.5 font-bold hover:bg-teal-600 transition shrink-0 inline-flex items-center gap-1.5"
         >
-          Trở Về Chế Độ Khách Hàng
-        </button>
+          <span>Xem Sàn Ngoài Trang Chủ ↗</span>
+        </a>
       </div>
 
       {/* 3 Stat Summary Cards */}

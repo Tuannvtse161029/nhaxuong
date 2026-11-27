@@ -14,7 +14,7 @@ export function AuthLayout() {
           Hệ Thống Nhà Xưởng
         </h2>
         <p className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
-          Cổng thông tin quản trị và vận hành
+          Sàn giao dịch mua bán & thanh lý kết cấu nhà xưởng
         </p>
       </div>
 
