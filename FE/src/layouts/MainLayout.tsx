@@ -10,7 +10,7 @@ export function MainLayout() {
   const { toasts, removeToast } = useProperties()
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 antialiased">
+    <div className="flex min-h-screen w-full flex-col bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 antialiased overflow-x-hidden">
       {/* 1. Top Notice Ticker Bar */}
       <NoticeTickerBar />
 

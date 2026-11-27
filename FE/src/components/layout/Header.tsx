@@ -30,7 +30,7 @@ export function Header() {
   const navigate = useNavigate()
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs dark:bg-slate-900/95 dark:border-slate-800">
+    <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs dark:bg-slate-900/95 dark:border-slate-800">
       {/* Top Hotline Strip */}
       <div className="bg-slate-900 text-slate-300 text-[11px] py-1.5 px-4 sm:px-8 border-b border-slate-800 hidden sm:block">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -65,25 +65,25 @@ export function Header() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 w-full">
+        <div className="flex items-center justify-between h-14 sm:h-20 gap-1.5 sm:gap-4">
           {/* Logo Brand: NHAXUONG.VN */}
           <Link
             to="/"
             onClick={() => {
               setFilterState({ type: 'ALL' })
             }}
-            className="flex items-center gap-2.5 cursor-pointer group shrink-0"
+            className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer group shrink-0"
           >
-            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-teal-400 shadow-md border border-slate-800 group-hover:from-teal-800 group-hover:to-slate-950 group-hover:text-white transition duration-300">
-              <Factory className="h-5 w-5 sm:h-7 sm:w-7" />
+            <div className="flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-teal-400 shadow-md border border-slate-800 group-hover:from-teal-800 group-hover:to-slate-950 group-hover:text-white transition duration-300 shrink-0">
+              <Factory className="h-4 w-4 sm:h-7 sm:w-7" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-lg sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase font-sans">
+                <span className="text-base sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase font-sans whitespace-nowrap">
                   NHAXUONG<span className="text-teal-600 dark:text-teal-400">.VN</span>
                 </span>
-                <span className="rounded-md border border-teal-500/30 bg-teal-50 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:border-teal-900 dark:bg-teal-950/60 dark:text-teal-300">
+                <span className="hidden lg:inline-block rounded-md border border-teal-500/30 bg-teal-50 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:border-teal-900 dark:bg-teal-950/60 dark:text-teal-300">
                   KHO BÃI & SẮT THÉP
                 </span>
               </div>
@@ -160,26 +160,26 @@ export function Header() {
           </nav>
 
           {/* Right Action CTAs */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
               title="Đổi giao diện Sáng / Tối"
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+              {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
 
             {/* Wishlist Button */}
             <button
               type="button"
               onClick={openSavedModal}
-              className="relative p-2 rounded-xl text-slate-600 hover:text-red-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition cursor-pointer"
+              className="relative p-1.5 sm:p-2 rounded-xl text-slate-600 hover:text-red-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
               title="Danh sách đã lưu"
             >
-              <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Heart className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
               {savedPropertyIds.length > 0 && (
-                <span className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9.5px] font-bold text-white shadow-xs">
+                <span className="absolute top-0.5 right-0.5 flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-red-500 text-[8.5px] sm:text-[9.5px] font-bold text-white shadow-xs">
                   {savedPropertyIds.length}
                 </span>
               )}
@@ -190,13 +190,13 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => openAuthModal('login')}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 sm:py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1 sm:gap-1.5 rounded-xl border border-slate-300 bg-white px-2 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition shadow-xs cursor-pointer shrink-0"
               >
-                <LogIn className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                <span>Đăng Nhập</span>
+                <LogIn className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                <span className="whitespace-nowrap">Đăng Nhập</span>
               </button>
             ) : (
-              <div className="flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 p-1 pl-1.5">
+              <div className="flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 p-1 pl-1.5 shrink-0">
                 <div className="h-6 w-6 rounded-full overflow-hidden bg-teal-600 flex items-center justify-center text-[10px] text-white font-bold shrink-0">
                   {user.avatar ? (
                     <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
