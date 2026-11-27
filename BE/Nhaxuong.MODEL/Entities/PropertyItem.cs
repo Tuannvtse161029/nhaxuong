@@ -81,6 +81,8 @@ namespace Nhaxuong.MODEL.Entities
 
         public string Image { get; set; } = string.Empty;
 
+        public string? GalleryJson { get; set; } // Danh sách toàn bộ ảnh thực tế dưới dạng JSON array
+
         public string? VideoUrl { get; set; }
 
         public string? AudioUrl { get; set; }

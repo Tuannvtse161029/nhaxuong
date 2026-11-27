@@ -113,6 +113,8 @@ export const propertyApi = {
     model3dUrl: string
     title: string
     specsSummary: string
+    aiMessage?: string
+    htmlContent?: string
     message: string
   }> {
     return axiosClient.post(API_ENDPOINTS.AI.GENERATE_3D, data)

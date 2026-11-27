@@ -195,12 +195,17 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
   const handlePriceFormattedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawDigits = e.target.value.replace(/\D/g, '')
-    if (!rawDigits) {
+    if (!rawDigits || rawDigits === '0') {
       setPrice(0)
       setPriceFormatted('')
       return
     }
     const numVal = parseInt(rawDigits, 10)
+    if (isNaN(numVal) || numVal <= 0) {
+      setPrice(0)
+      setPriceFormatted('')
+      return
+    }
     setPrice(numVal)
     setPriceFormatted(numVal.toLocaleString('vi-VN'))
   }
@@ -215,12 +220,17 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   const handleUnitPriceValChange = (val: string) => {
     // Tự động định dạng số đơn giá có dấu chấm hàng nghìn (VD: 380000 -> 380.000)
     const rawDigits = val.replace(/\D/g, '')
-    if (!rawDigits) {
+    if (!rawDigits || rawDigits === '0') {
       setUnitPriceVal('')
       setUnitPrice('')
       return
     }
     const num = parseInt(rawDigits, 10)
+    if (isNaN(num) || num <= 0) {
+      setUnitPriceVal('')
+      setUnitPrice('')
+      return
+    }
     const formatted = num.toLocaleString('vi-VN')
     setUnitPriceVal(formatted)
     setUnitPrice(`${formatted} ${unitPriceUnit}`)
@@ -775,51 +785,61 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                   type="text"
                   inputMode="numeric"
                   value={priceFormatted}
+                  onFocus={() => {
+                    if (price === 0) setPriceFormatted('')
+                  }}
                   onChange={handlePriceFormattedChange}
                   placeholder="VD: 500.000.000"
                   className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 font-mono font-bold dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   required
                 />
                 {/* Nút bấm chọn nhanh giá tiền */}
-                <div className="flex flex-wrap gap-1 mt-1.5">
+                <div className="flex flex-wrap gap-1.5 mt-2">
                   <button
                     type="button"
                     onClick={() => addPricePreset(50_000_000)}
-                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer transition shadow-xs"
                   >
                     + 50 Tr
                   </button>
                   <button
                     type="button"
                     onClick={() => addPricePreset(100_000_000)}
-                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer transition shadow-xs"
                   >
                     + 100 Tr
                   </button>
                   <button
                     type="button"
                     onClick={() => setExactPrice(500_000_000)}
-                    className="px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900 border border-teal-300 dark:border-teal-700 text-[10px] font-bold text-teal-700 dark:text-teal-300 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900 border border-teal-300 dark:border-teal-700 text-xs font-bold text-teal-700 dark:text-teal-300 cursor-pointer transition shadow-xs"
                   >
                     500 Triệu
                   </button>
                   <button
                     type="button"
                     onClick={() => setExactPrice(1_000_000_000)}
-                    className="px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900 border border-teal-300 dark:border-teal-700 text-[10px] font-bold text-teal-700 dark:text-teal-300 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900 border border-teal-300 dark:border-teal-700 text-xs font-bold text-teal-700 dark:text-teal-300 cursor-pointer transition shadow-xs"
                   >
                     1 Tỷ
                   </button>
                   <button
                     type="button"
+                    onClick={() => setExactPrice(2_000_000_000)}
+                    className="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900 border border-teal-300 dark:border-teal-700 text-xs font-bold text-teal-700 dark:text-teal-300 cursor-pointer transition shadow-xs"
+                  >
+                    2 Tỷ
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setExactPrice(0)}
-                    className="px-2 py-0.5 rounded-md bg-red-50 hover:bg-red-100 dark:bg-red-950/60 text-[10px] font-bold text-red-600 dark:text-red-400 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-xs font-bold text-red-600 dark:text-red-400 cursor-pointer transition shadow-xs"
                   >
                     Xóa
                   </button>
                 </div>
                 {price > 0 && (
-                  <div className="mt-1.5 p-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-[11px] text-teal-800 dark:text-teal-300 font-bold flex items-center gap-1 flex-wrap">
+                  <div className="mt-2 p-2 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-xs text-teal-800 dark:text-teal-300 font-bold flex items-center gap-1.5 flex-wrap">
                     <span>💰 Đọc giá:</span>
                     <span className="underline">{formatPriceInWords(price)}</span>
                     <span className="text-slate-500 dark:text-slate-400 font-normal">
@@ -875,23 +895,27 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                 <div className="flex items-center gap-1.5">
                   <input
                     type="text"
+                    inputMode="numeric"
                     value={unitPriceVal}
+                    onFocus={() => {
+                      if (!unitPriceVal || unitPriceVal === '0') setUnitPriceVal('')
+                    }}
                     onChange={(e) => handleUnitPriceValChange(e.target.value)}
                     placeholder="VD: 380.000"
-                    className="flex-1 rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="flex-1 rounded-xl border border-slate-200 bg-white p-2 text-xs font-mono font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                   <span className="px-3 py-2 rounded-xl bg-teal-100 dark:bg-teal-950/60 font-bold text-xs text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700">
                     {unitPriceUnit}
                   </span>
                 </div>
                 {/* Gợi ý đơn giá nhanh */}
-                <div className="flex flex-wrap gap-1 mt-1.5">
+                <div className="flex flex-wrap gap-1.5 mt-2">
                   {(['15.000', '25.000', '380.000', '719.000'] as const).map((pVal) => (
                     <button
                       key={pVal}
                       type="button"
                       onClick={() => handleUnitPriceValChange(pVal)}
-                      className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+                      className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer transition shadow-xs"
                     >
                       {pVal}
                     </button>

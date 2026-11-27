@@ -106,6 +106,84 @@ namespace Nhaxuong.SERVICE.Services
             var page = query.Page <= 0 ? 1 : query.Page;
             var pageSize = query.PageSize <= 0 ? 12 : query.PageSize;
 
+            // Synchronize from PostgreSQL Supabase (ensures persistence across Render restarts)
+            try
+            {
+                var dbCount = await _context.Properties.CountAsync();
+                if (dbCount > 0)
+                {
+                    var dbItems = await _context.Properties.AsNoTracking().OrderByDescending(p => p.Id).ToListAsync();
+                    var currentStore = GetStore();
+                    bool needsSave = false;
+
+                    foreach (var item in dbItems)
+                    {
+                        var inStore = currentStore.FirstOrDefault(p => p.Id == item.Id);
+                        var gallery = new List<string>();
+                        if (!string.IsNullOrEmpty(item.GalleryJson))
+                        {
+                            try { gallery = JsonSerializer.Deserialize<List<string>>(item.GalleryJson) ?? new(); } catch { }
+                        }
+                        if (gallery.Count == 0 && !string.IsNullOrEmpty(item.Image))
+                        {
+                            gallery.Add(item.Image);
+                        }
+
+                        if (inStore == null)
+                        {
+                            var newDto = new PropertyDto
+                            {
+                                Id = item.Id,
+                                Title = item.Title,
+                                Type = item.Type,
+                                TypeDisplay = item.TypeDisplay,
+                                Status = item.Status,
+                                StockStatus = item.StockStatus ?? "IN_STOCK",
+                                StorageLocation = item.StorageLocation ?? "AT_YARD",
+                                CategoryId = item.CategoryId,
+                                CategoryName = item.TypeDisplay,
+                                Province = item.Province,
+                                City = item.City ?? item.Province,
+                                District = item.District,
+                                Kcn = item.Kcn,
+                                Price = item.Price,
+                                PriceDisplay = item.PriceDisplay,
+                                UnitPrice = item.UnitPrice,
+                                Area = item.Area,
+                                Length = item.Length,
+                                Width = item.Width,
+                                StructureType = item.StructureType ?? "Zamil",
+                                HasCrane = item.HasCrane,
+                                CraneCapacity = item.CraneCapacity,
+                                BrokerPhone = item.BrokerPhone ?? "0965 985 468",
+                                Image = item.Image,
+                                Images = gallery,
+                                Gallery = gallery,
+                                VideoUrl = item.VideoUrl,
+                                AudioUrl = item.AudioUrl,
+                                Model3DUrl = item.Model3DUrl,
+                                Drawing2DUrl = item.Drawing2DUrl,
+                                Desc = item.Desc,
+                                EmailNotified = item.EmailNotified,
+                                Created = item.CreatedAt.ToString("HH:mm dd/MM/yyyy")
+                            };
+                            currentStore.Insert(0, newDto);
+                            needsSave = true;
+                        }
+                    }
+
+                    if (needsSave)
+                    {
+                        SaveStore(currentStore);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silently fallback to memory store if database is momentarily slow or offline
+                Console.WriteLine($"[PropertyService] DB sync notice: {ex.Message}");
+            }
+
             var store = GetStore();
             IEnumerable<PropertyDto> filtered = new List<PropertyDto>(store);
 
@@ -343,6 +421,12 @@ namespace Nhaxuong.SERVICE.Services
             // Sync with PostgreSQL database if available (non-blocking fallback)
             try
             {
+                string? galleryJson = null;
+                if (imageList.Count > 0)
+                {
+                    try { galleryJson = JsonSerializer.Serialize(imageList); } catch { }
+                }
+
                 var entity = new PropertyItem
                 {
                     Title = dto.Title,
@@ -367,6 +451,7 @@ namespace Nhaxuong.SERVICE.Services
                     CraneCapacity = dto.CraneCapacity,
                     BrokerPhone = dto.BrokerPhone,
                     Image = dto.Image,
+                    GalleryJson = galleryJson,
                     VideoUrl = dto.VideoUrl,
                     AudioUrl = dto.AudioUrl,
                     Model3DUrl = dto.Model3DUrl,
@@ -445,10 +530,34 @@ namespace Nhaxuong.SERVICE.Services
                 if (dbEntity != null)
                 {
                     dbEntity.Title = existing.Title;
+                    dbEntity.Type = existing.Type;
+                    dbEntity.TypeDisplay = existing.TypeDisplay;
+                    dbEntity.Status = existing.Status;
                     dbEntity.Price = existing.Price;
                     dbEntity.PriceDisplay = existing.PriceDisplay;
+                    dbEntity.UnitPrice = existing.UnitPrice;
+                    dbEntity.Area = existing.Area;
+                    dbEntity.Length = existing.Length;
+                    dbEntity.Width = existing.Width;
+                    dbEntity.StructureType = existing.StructureType;
+                    dbEntity.HasCrane = existing.HasCrane;
+                    dbEntity.CraneCapacity = existing.CraneCapacity;
                     dbEntity.StockStatus = existing.StockStatus;
                     dbEntity.StorageLocation = existing.StorageLocation;
+                    dbEntity.Province = existing.Province;
+                    dbEntity.City = existing.City;
+                    dbEntity.District = existing.District;
+                    dbEntity.Kcn = existing.Kcn;
+                    dbEntity.BrokerPhone = existing.BrokerPhone;
+                    dbEntity.Image = existing.Image;
+                    dbEntity.VideoUrl = existing.VideoUrl;
+                    dbEntity.AudioUrl = existing.AudioUrl;
+                    dbEntity.Model3DUrl = existing.Model3DUrl;
+                    dbEntity.Drawing2DUrl = existing.Drawing2DUrl;
+                    if (existing.Images != null && existing.Images.Count > 0)
+                    {
+                        try { dbEntity.GalleryJson = JsonSerializer.Serialize(existing.Images); } catch { }
+                    }
                     dbEntity.Desc = existing.Desc;
                     await _context.SaveChangesAsync();
                 }

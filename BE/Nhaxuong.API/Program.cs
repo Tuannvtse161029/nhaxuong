@@ -151,6 +151,7 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""HasCrane"" BOOLEAN DEFAULT FALSE;
             ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""CraneCapacity"" VARCHAR(100);
             ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""Drawing2DUrl"" TEXT;
+            ALTER TABLE ""Properties"" ADD COLUMN IF NOT EXISTS ""GalleryJson"" TEXT;
         ");
         Console.WriteLine("--> [Database] Extended columns verified and applied.");
     }
