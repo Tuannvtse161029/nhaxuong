@@ -23,10 +23,11 @@ import {
 } from 'lucide-react'
 import { useProperties } from '@/context/PropertyContext'
 import { AdminPropertyModal } from '@/components/admin/AdminPropertyModal'
+import { AdminAi3DModal } from '@/components/admin/AdminAi3DModal'
 import { formatCurrency } from '@/utils/formatters'
 import { cn } from '@/utils/cn'
 
-type AdminSubTab = 'crud' | 'categories' | 'publish' | 'subscribers' | 'notices'
+type AdminSubTab = 'crud' | 'categories' | 'publish' | 'subscribers' | 'notices' | 'ai3d'
 
 export function AdminPortalPage() {
   const {
@@ -48,6 +49,7 @@ export function AdminPortalPage() {
   } = useProperties()
 
   const [activeSubTab, setActiveSubTab] = useState<AdminSubTab>('crud')
+  const [showAi3DModal, setShowAi3DModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
 
@@ -181,13 +183,20 @@ export function AdminPortalPage() {
       <div className="flex items-center gap-1.5 overflow-x-auto border-b border-slate-200/80 pb-2 dark:border-slate-800 text-xs font-bold">
         {[
           { key: 'crud', label: 'Quản Lý Bài Đăng & 3D', icon: <Boxes className="w-4 h-4" /> },
+          { key: 'ai3d', label: '🤖 Gemini AI Dựng 3D', icon: <Sparkles className="w-4 h-4 text-orange-400" /> },
           { key: 'categories', label: 'Quản Lý Danh Mục', icon: <Tags className="w-4 h-4" /> },
           { key: 'subscribers', label: 'Khách Đăng Ký Nhận Tin', icon: <Users className="w-4 h-4" /> },
           { key: 'notices', label: 'Bản Tin & Ticker', icon: <Megaphone className="w-4 h-4" /> },
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveSubTab(tab.key as AdminSubTab)}
+            onClick={() => {
+              if (tab.key === 'ai3d') {
+                setShowAi3DModal(true)
+              } else {
+                setActiveSubTab(tab.key as AdminSubTab)
+              }
+            }}
             className={cn(
               'flex items-center gap-2 rounded-xl px-4 py-2.5 transition whitespace-nowrap',
               activeSubTab === tab.key
@@ -231,13 +240,25 @@ export function AdminPortalPage() {
               </select>
             </div>
 
-            <button
-              onClick={() => openAdminEditModal()}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-teal-700 transition shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Đăng Bài / Bản Vẽ Mới</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAi3DModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition shrink-0 cursor-pointer"
+                title="Khởi chạy Gemini AI tự động tính toán kết cấu & sinh file HTML 3D"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>🤖 AI Dựng Mô Hình 3D</span>
+              </button>
+
+              <button
+                onClick={() => openAdminEditModal()}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-teal-700 transition shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Đăng Bài / Bản Vẽ Mới</span>
+              </button>
+            </div>
           </div>
 
           {/* Posts Table */}
@@ -584,6 +605,20 @@ export function AdminPortalPage() {
         isOpen={activeModal === 'admin-edit'}
         onClose={closeModal}
         property={selectedProperty}
+      />
+
+      {/* Standalone AI 3D Modal */}
+      <AdminAi3DModal
+        isOpen={showAi3DModal}
+        onClose={() => setShowAi3DModal(false)}
+        onSelectModelUrl={(url, newTitle) => {
+          openAdminEditModal({
+            model3dUrl: url,
+            title: newTitle || 'Mô hình nhà xưởng 3D tương tác',
+            type: 'THIET_KE_3D',
+            typeDisplay: 'Xem Thiết Kế 3D Nhà Xưởng',
+          } as any)
+        }}
       />
     </div>
   )

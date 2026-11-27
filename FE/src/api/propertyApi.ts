@@ -98,6 +98,26 @@ export const propertyApi = {
     return axiosClient.delete<any, { message: string }>(API_ENDPOINTS.NOTICES.DELETE(id))
   },
 
+  // Gemini AI 3D Generator
+  async generate3DModel(data: {
+    prompt?: string
+    width?: number
+    length?: number
+    height?: number
+    structureType?: string
+    hasCrane?: boolean
+    craneCapacity?: string
+  }): Promise<{
+    success: boolean
+    fileName: string
+    model3dUrl: string
+    title: string
+    specsSummary: string
+    message: string
+  }> {
+    return axiosClient.post(API_ENDPOINTS.AI.GENERATE_3D, data)
+  },
+
   async getTicker(): Promise<{ ticker: string }> {
     return axiosClient.get<any, { ticker: string }>(API_ENDPOINTS.NOTICES.TICKER)
   },

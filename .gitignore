@@ -26,6 +26,8 @@ obj/
 .env.test.local
 .env.production.local
 *.env.backup
+appsettings.Development.json
+appsettings.*.local.json
 
 # Logs
 logs/

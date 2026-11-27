@@ -52,4 +52,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string | number) => `/items/${id}`,
     DELETE: (id: string | number) => `/items/${id}`,
   },
+  AI: {
+    GENERATE_3D: '/ai/generate-3d',
+  },
 } as const

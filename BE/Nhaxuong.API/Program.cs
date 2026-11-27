@@ -27,6 +27,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 Console.WriteLine("--> [Database] Configured Supabase PostgreSQL");
 
 // 3. Register Application Services (DI)
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -34,6 +35,7 @@ builder.Services.AddScoped<IPropertyService, PropertyService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ISubscriberService, SubscriberService>();
 builder.Services.AddScoped<INoticeService, NoticeService>();
+builder.Services.AddScoped<IAi3DService, Ai3DService>();
 
 // 4. Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "Nhaxuong_DevOnly_LocalJwtSecretKey_ChangeInProduction_AtLeast32Bytes";

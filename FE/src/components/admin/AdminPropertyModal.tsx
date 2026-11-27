@@ -12,6 +12,7 @@ import {
   Trash2,
   Image as ImageIcon,
   Loader2,
+  Sparkles,
 } from 'lucide-react'
 import type { Property, PropertyType, Category } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
@@ -23,6 +24,7 @@ import { propertyApi } from '@/api/propertyApi'
 import { ENV } from '@/config/env.config'
 import { cn } from '@/utils/cn'
 import { compressImage } from '@/utils/imageCompressor'
+import { AdminAi3DModal } from './AdminAi3DModal'
 
 interface AdminPropertyModalProps {
   isOpen: boolean
@@ -74,6 +76,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   const [isUploading3D, setIsUploading3D] = useState(false)
   const [isUploadingImages, setIsUploadingImages] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showAi3DModal, setShowAi3DModal] = useState(false)
   const [uploadProgress, setUploadProgress] = useState('')
 
   // Inline Quick Add Category
@@ -703,17 +706,29 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                   Mô hình 3D tương tác (File HTML / GLB xoay 360°)
                 </label>
 
-                <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-cyan-600 text-white hover:bg-cyan-500 transition shadow-xs">
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>{isUploading3D ? 'Đang tải...' : 'Tải File 3D (.html/.glb)'}</span>
-                  <input
-                    type="file"
-                    accept=".html,.htm,.glb"
-                    className="hidden"
-                    disabled={isUploading3D}
-                    onChange={handleModel3DUpload}
-                  />
-                </label>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowAi3DModal(true)}
+                    className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition shadow-xs"
+                    title="Dùng Gemini AI tự động sinh mã mô hình 3D"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Gemini AI Dựng 3D</span>
+                  </button>
+
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-cyan-600 text-white hover:bg-cyan-500 transition shadow-xs">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isUploading3D ? 'Đang tải...' : 'Tải File 3D'}</span>
+                    <input
+                      type="file"
+                      accept=".html,.htm,.glb"
+                      className="hidden"
+                      disabled={isUploading3D}
+                      onChange={handleModel3DUpload}
+                    />
+                  </label>
+                </div>
               </div>
               <Input
                 value={model3dUrl}
@@ -1072,6 +1087,17 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
           </div>
         </form>
       </div>
+
+      {showAi3DModal && (
+        <AdminAi3DModal
+          isOpen={showAi3DModal}
+          onClose={() => setShowAi3DModal(false)}
+          onSelectModelUrl={(url, newTitle) => {
+            setModel3dUrl(url)
+            if (!title.trim() && newTitle) setTitle(newTitle)
+          }}
+        />
+      )}
     </div>
   )
 }
