@@ -14,6 +14,7 @@ import {
 import { useProperties } from '@/context/PropertyContext'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
+import { useLanguage } from '@/hooks/useLanguage'
 import { Link, useNavigate } from 'react-router-dom'
 import { cn } from '@/utils/cn'
 
@@ -27,6 +28,7 @@ export function Header() {
     setFilterState,
   } = useProperties()
   const { theme, toggleTheme } = useTheme()
+  const { language, toggleLanguage, t } = useLanguage()
   const navigate = useNavigate()
 
   return (
@@ -159,15 +161,30 @@ export function Header() {
             </button>
           </nav>
 
-          {/* Right Action CTAs */}
-          <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
-            {/* Theme Toggle */}
+          {/* Right Action CTAs: Language, Theme, Wishlist, Login */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Language Toggle */}
             <button
-              onClick={toggleTheme}
-              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
-              title="Đổi giao diện Sáng / Tối"
+              type="button"
+              onClick={toggleLanguage}
+              className="inline-flex items-center justify-center px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 font-extrabold text-[10.5px] sm:text-xs transition shadow-2xs cursor-pointer shrink-0"
+              title={language === 'vi' ? 'Switch to English (Chuyển sang Tiếng Anh)' : 'Chuyển sang Tiếng Việt'}
             >
-              {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+              <span>{language === 'vi' ? '🇻🇳 VI' : '🇬🇧 EN'}</span>
+            </button>
+
+            {/* Theme Toggle (Sáng / Tối) */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition cursor-pointer shrink-0 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+              title={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-600" />
+              )}
             </button>
 
             {/* Wishlist Button */}
@@ -175,9 +192,9 @@ export function Header() {
               type="button"
               onClick={openSavedModal}
               className="relative p-1.5 sm:p-2 rounded-xl text-slate-600 hover:text-red-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
-              title="Danh sách đã lưu"
+              title={t('saved_list')}
             >
-              <Heart className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+              <Heart className="w-4 h-4" />
               {savedPropertyIds.length > 0 && (
                 <span className="absolute top-0.5 right-0.5 flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-red-500 text-[8.5px] sm:text-[9.5px] font-bold text-white shadow-xs">
                   {savedPropertyIds.length}
@@ -185,15 +202,15 @@ export function Header() {
               )}
             </button>
 
-            {/* User Account / Login Button */}
+            {/* User Account / Login Button (Tối ưu không bao giờ bị lệch sang viền trắng) */}
             {!user ? (
               <button
                 type="button"
                 onClick={() => openAuthModal('login')}
-                className="inline-flex items-center gap-1 sm:gap-1.5 rounded-xl border border-slate-300 bg-white px-2 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition shadow-xs cursor-pointer shrink-0"
+                className="inline-flex items-center gap-1 rounded-xl border border-teal-500/40 bg-teal-50/50 px-2 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-xs font-bold text-teal-700 hover:bg-teal-100 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-300 dark:hover:bg-teal-900/60 transition shadow-2xs cursor-pointer shrink-0"
               >
                 <LogIn className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
-                <span className="whitespace-nowrap">Đăng Nhập</span>
+                <span className="whitespace-nowrap">{t('login')}</span>
               </button>
             ) : (
               <div className="flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 p-1 pl-1.5 shrink-0">

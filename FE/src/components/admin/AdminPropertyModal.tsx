@@ -22,6 +22,7 @@ import { formatCurrency } from '@/utils/formatters'
 import { propertyApi } from '@/api/propertyApi'
 import { ENV } from '@/config/env.config'
 import { cn } from '@/utils/cn'
+import { compressImage } from '@/utils/imageCompressor'
 
 interface AdminPropertyModalProps {
   isOpen: boolean
@@ -47,6 +48,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
   // Pricing & Area
   const [price, setPrice] = useState(0)
+  const [priceFormatted, setPriceFormatted] = useState('')
   const [unitPrice, setUnitPrice] = useState('')
   const [unitPriceVal, setUnitPriceVal] = useState('')
   const [unitPriceUnit, setUnitPriceUnit] = useState('đ/kg')
@@ -89,6 +91,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setDistrict(property.district || 'Dĩ An')
       setKcn(property.kcn || '')
       setPrice(property.price || 0)
+      setPriceFormatted(property.price ? property.price.toLocaleString('vi-VN') : '')
       
       const up = property.unitPrice || ''
       setUnitPrice(up)
@@ -146,6 +149,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setDistrict('Dĩ An')
       setKcn('Kho Bãi ICD Tân Cảng, TP. Dĩ An')
       setPrice(0)
+      setPriceFormatted('')
       setUnitPrice('')
       setUnitPriceVal('')
       setUnitPriceUnit('đ/kg')
@@ -167,6 +171,36 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   }, [property, isOpen, categories])
 
   if (!isOpen) return null
+
+  const formatPriceInWords = (num: number) => {
+    if (!num || num <= 0) return '0 VNĐ'
+    if (num >= 1_000_000_000) {
+      const ty = Math.floor(num / 1_000_000_000)
+      const remainder = num % 1_000_000_000
+      const trieu = Math.round(remainder / 1_000_000)
+      return trieu > 0 ? `${ty} Tỷ ${trieu} Triệu VNĐ` : `${ty} Tỷ VNĐ`
+    }
+    if (num >= 1_000_000) {
+      const trieu = (num / 1_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })
+      return `${trieu} Triệu VNĐ`
+    }
+    if (num >= 1_000) {
+      return `${(num / 1_000).toLocaleString('vi-VN')} Ngàn VNĐ`
+    }
+    return `${num.toLocaleString('vi-VN')} VNĐ`
+  }
+
+  const handlePriceFormattedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawDigits = e.target.value.replace(/\D/g, '')
+    if (!rawDigits) {
+      setPrice(0)
+      setPriceFormatted('')
+      return
+    }
+    const numVal = parseInt(rawDigits, 10)
+    setPrice(numVal)
+    setPriceFormatted(numVal.toLocaleString('vi-VN'))
+  }
 
   const handleUnitSelect = (unit: string) => {
     setUnitPriceUnit(unit)
@@ -200,40 +234,47 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
     setImagesList((prev) => prev.filter((_, idx) => idx !== index))
   }
 
-  // Tải nhiều ảnh trực tiếp từ máy / điện thoại
+  // Tải nhiều ảnh trực tiếp từ máy / điện thoại có nén canvas siêu nhẹ
   const handleMultipleImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
 
     setIsUploadingImages(true)
     const filesArr = Array.from(files)
-    setUploadProgress(`Đang tải 0/${filesArr.length} ảnh...`)
+    setUploadProgress(`Đang nén & tối ưu 0/${filesArr.length} ảnh...`)
 
     const newUploadedUrls: string[] = []
 
     for (let i = 0; i < filesArr.length; i++) {
       const file = filesArr[i]
-      setUploadProgress(`Đang tải ${i + 1}/${filesArr.length} ảnh (${file.name})...`)
+      setUploadProgress(`Đang nén & tải ảnh ${i + 1}/${filesArr.length} (${file.name})...`)
 
       try {
-        const res = await propertyApi.uploadImage(file)
-        const fullUrl = res.url.startsWith('http')
-          ? res.url
-          : `${(ENV.API_BASE_URL || '').replace(/\/api\/?$/, '')}${res.url}`
-        newUploadedUrls.push(fullUrl)
-      } catch (err) {
-        console.warn('Backend upload failed, converting to local preview URL:', err)
+        // 1. Luôn nén ảnh qua HTML5 Canvas (giảm từ 10MB xuống ~80KB, resize max 1200px)
+        const { file: compressedFile, dataUrl } = await compressImage(file, 1200, 0.75)
+
+        // 2. Thử tải lên backend với timeout race 3.5s (tránh bị treo nếu Render cold-start)
+        let finalUrl = dataUrl
         try {
-          const dataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(reader.result as string)
-            reader.onerror = reject
-            reader.readAsDataURL(file)
-          })
-          newUploadedUrls.push(dataUrl)
-        } catch (readErr) {
-          console.error('Failed to read file as dataUrl:', readErr)
+          const uploadPromise = propertyApi.uploadImage(compressedFile)
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Backend timeout 3.5s')), 3500)
+          )
+          const res: any = await Promise.race([uploadPromise, timeoutPromise])
+          if (res && res.url) {
+            finalUrl = res.url.startsWith('http')
+              ? res.url
+              : `${(ENV.API_BASE_URL || '').replace(/\/api\/?$/, '')}${res.url}`
+          }
+        } catch {
+          // Backend bận hoặc timeout -> dùng DataURL nén cực nhẹ (~80KB), hiển thị tức thì
         }
+
+        if (finalUrl) {
+          newUploadedUrls.push(finalUrl)
+        }
+      } catch (compressErr) {
+        console.error('Lỗi nén ảnh:', compressErr)
       }
     }
 
@@ -283,61 +324,74 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return
-
-    const catObj = categories.find((c) => c.code === type || (categoryId && c.id === categoryId))
-    const typeDisplay = catObj ? catObj.name : 'Nhà Xưởng & Sắt Thép'
-    const priceDisplay = formatCurrency(price)
-
-    const validImages = imagesList.filter((s) => s.trim().length > 5)
-    const defaultImage =
-      validImages[0] ||
-      image.trim() ||
-      'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
-
-    // Area auto-compute if length and width provided and area empty
-    const computedArea =
-      area.trim() ||
-      (length && width ? `${Number(length) * Number(width)} m²` : 'Quy cách chuẩn')
-
-    const propertyPayload = {
-      title: title.trim(),
-      type,
-      typeDisplay,
-      status: stockStatus === 'OUT_OF_STOCK' ? 'Hết hàng' : 'Còn hàng',
-      stockStatus,
-      storageLocation,
-      categoryId: categoryId ?? catObj?.id ?? null,
-      province,
-      city: province,
-      district,
-      kcn: kcn.trim() || 'Vị trí bãi kho',
-      price,
-      priceDisplay,
-      unitPrice: unitPrice.trim(),
-      area: computedArea,
-      length: length !== '' ? Number(length) : undefined,
-      width: width !== '' ? Number(width) : undefined,
-      structureType,
-      hasCrane,
-      craneCapacity: hasCrane ? craneCapacity : undefined,
-      brokerPhone: brokerPhone.trim() || '0965 985 468',
-      videoUrl: videoUrl.trim(),
-      model3dUrl: model3dUrl.trim() || null,
-      drawing2DUrl: drawing2DUrl.trim() || null,
-      image: defaultImage,
-      images: validImages.length > 0 ? validImages : [defaultImage],
-      gallery: validImages.length > 0 ? validImages : [defaultImage],
-      desc: desc.trim(),
+    if (!title.trim()) {
+      alert('Vui lòng nhập tiêu đề bài đăng!')
+      return
     }
 
-    if (property) {
-      updateProperty(property.id, propertyPayload, triggerEmail)
-    } else {
-      addProperty(propertyPayload, triggerEmail)
+    if (!price || price <= 0) {
+      alert('Vui lòng nhập tổng giá tiền niêm yết (VD: 500.000.000 đ)!')
+      return
     }
 
-    onClose()
+    try {
+      const catObj = categories.find((c) => c.code === type || (categoryId && c.id === categoryId))
+      const typeDisplay = catObj ? catObj.name : 'Nhà Xưởng & Sắt Thép'
+      const priceDisplay = formatCurrency(price)
+
+      const validImages = imagesList.filter((s) => s.trim().length > 5)
+      const defaultImage =
+        validImages[0] ||
+        image.trim() ||
+        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
+
+      // Area auto-compute if length and width provided and area empty
+      const computedArea =
+        area.trim() ||
+        (length && width ? `${Number(length) * Number(width)} m²` : 'Quy cách chuẩn')
+
+      const propertyPayload = {
+        title: title.trim(),
+        type,
+        typeDisplay,
+        status: stockStatus === 'OUT_OF_STOCK' ? 'Hết hàng' : 'Còn hàng',
+        stockStatus,
+        storageLocation,
+        categoryId: categoryId ?? catObj?.id ?? null,
+        province,
+        city: province,
+        district,
+        kcn: kcn.trim() || 'Vị trí bãi kho',
+        price,
+        priceDisplay,
+        unitPrice: unitPrice.trim(),
+        area: computedArea,
+        length: length !== '' ? Number(length) : undefined,
+        width: width !== '' ? Number(width) : undefined,
+        structureType,
+        hasCrane,
+        craneCapacity: hasCrane ? craneCapacity : undefined,
+        brokerPhone: brokerPhone.trim() || '0965 985 468',
+        videoUrl: videoUrl.trim(),
+        model3dUrl: model3dUrl.trim() || null,
+        drawing2DUrl: drawing2DUrl.trim() || null,
+        image: defaultImage,
+        images: validImages.length > 0 ? validImages : [defaultImage],
+        gallery: validImages.length > 0 ? validImages : [defaultImage],
+        desc: desc.trim(),
+      }
+
+      if (property) {
+        updateProperty(property.id, propertyPayload, triggerEmail)
+      } else {
+        addProperty(propertyPayload, triggerEmail)
+      }
+
+      onClose()
+    } catch (saveErr: any) {
+      console.error('Lỗi lưu bài đăng:', saveErr)
+      alert('Có lỗi khi lưu bài đăng: ' + (saveErr?.message || 'Vui lòng thử lại!'))
+    }
   }
 
   return (
@@ -689,17 +743,30 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Tổng giá trị niêm yết (VNĐ) *
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                  <span>Tổng giá trị niêm yết (VNĐ) *</span>
+                  <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold">
+                    Có dấu chấm hàng nghìn
+                  </span>
                 </label>
                 <input
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(Number(e.target.value))}
-                  placeholder="VD: 1450000000"
+                  type="text"
+                  inputMode="numeric"
+                  value={priceFormatted}
+                  onChange={handlePriceFormattedChange}
+                  placeholder="VD: 500.000.000"
                   className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 font-mono font-bold dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   required
                 />
+                {price > 0 && (
+                  <div className="mt-1.5 p-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-[11px] text-teal-800 dark:text-teal-300 font-bold flex items-center gap-1 flex-wrap">
+                    <span>💰 Đọc giá:</span>
+                    <span className="underline">{formatPriceInWords(price)}</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-normal">
+                      ({price.toLocaleString('vi-VN')} đ)
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div>

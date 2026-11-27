@@ -19,9 +19,11 @@ import {
   PhoneCall,
   Check,
   ChevronUp,
+  ChevronRight,
   X,
 } from 'lucide-react'
 import { useProperties } from '@/context/PropertyContext'
+import { useLanguage } from '@/hooks/useLanguage'
 import { PropertyCard } from '@/components/property/PropertyCard'
 import { PropertyDetailModal } from '@/components/property/PropertyDetailModal'
 import { Warehouse3DModal } from '@/components/three/Warehouse3DModal'
@@ -44,6 +46,7 @@ export function HomePage() {
     categories,
     showToast,
   } = useProperties()
+  const { t } = useLanguage()
 
   // Local draft state for Advanced Filter (Only applies when clicking "Tìm Hàng")
   const [draft, setDraft] = useState({
@@ -180,9 +183,25 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* 2. HORIZONTAL CATEGORY TABS (Quick Tap Filter) */}
-      <div className="relative">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar select-none">
+      {/* 2. HORIZONTAL CATEGORY TABS (Khung viền Cyan Neon nổi bật với chỉ dẫn vuốt ngang) */}
+      <div className="rounded-2xl border-2 border-cyan-500/70 dark:border-cyan-400/60 p-3 sm:p-4 bg-gradient-to-r from-cyan-950/20 via-slate-900/10 to-teal-950/20 dark:from-slate-900/90 dark:to-cyan-950/40 shadow-lg shadow-cyan-500/10 space-y-2.5">
+        {/* Category Header with Title & Animated Swipe Hint */}
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-cyan-950 dark:text-cyan-300">
+            <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-cyan-500 text-white shadow-xs">
+              <Layers className="w-3 h-3" />
+            </span>
+            <span>{t('cat_header_title')} ({categories.length} DANH MỤC)</span>
+          </div>
+
+          <div className="flex items-center gap-1 text-[11px] font-bold text-cyan-700 dark:text-cyan-300 bg-cyan-100/90 dark:bg-cyan-950/80 border border-cyan-300 dark:border-cyan-700/60 px-2.5 py-0.5 rounded-full shadow-2xs animate-pulse select-none">
+            <span>👉 {t('cat_scroll_hint')}</span>
+            <ChevronRight className="w-3.5 h-3.5 stroke-[3]" />
+          </div>
+        </div>
+
+        {/* Horizontal Scrollable Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar select-none pt-0.5">
           {/* 'All' / 'Tin Mới Nhất' Pill */}
           <button
             type="button"
@@ -191,14 +210,14 @@ export function HomePage() {
               setFilterState({ type: 'ALL', categoryId: undefined })
             }}
             className={cn(
-              'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold whitespace-nowrap transition-all shrink-0 shadow-xs border',
+              'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold whitespace-nowrap transition-all shrink-0 shadow-xs border cursor-pointer',
               filterState.type === 'ALL'
-                ? 'bg-teal-600 text-white border-teal-500 shadow-teal-500/20'
-                : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400 hover:text-teal-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
+                ? 'bg-teal-600 text-white border-teal-500 shadow-teal-500/20 scale-102'
+                : 'bg-white text-slate-700 border-slate-200 hover:border-cyan-400 hover:text-cyan-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
             )}
           >
             <Flame className="w-3.5 h-3.5 text-amber-400" />
-            <span>Tất Cả (Tin Mới Nhất)</span>
+            <span>{t('cat_all')}</span>
           </button>
 
           {/* Categories List Pills */}
@@ -213,12 +232,12 @@ export function HomePage() {
                   setFilterState({ type: cat.code })
                 }}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold whitespace-nowrap transition-all shrink-0 shadow-xs border',
+                  'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold whitespace-nowrap transition-all shrink-0 shadow-xs border cursor-pointer',
                   isSelected
                     ? cat.code === 'THIET_KE_3D'
-                      ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-500/20'
-                      : 'bg-teal-600 text-white border-teal-500 shadow-teal-500/20'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400 hover:text-teal-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
+                      ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-500/20 scale-102'
+                      : 'bg-teal-600 text-white border-teal-500 shadow-teal-500/20 scale-102'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-cyan-400 hover:text-cyan-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
                 )}
               >
                 {getCategoryIcon(cat.code)}
