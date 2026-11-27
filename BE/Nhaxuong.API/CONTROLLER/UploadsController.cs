@@ -54,7 +54,6 @@ namespace Nhaxuong.API.CONTROLLER
         /// Xem / tải hình ảnh đã upload
         /// </summary>
         [HttpGet("{fileName}")]
-        [HttpGet("/uploads/{fileName}")]
         public IActionResult GetImage(string fileName)
         {
             var uploadsDir = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads");
@@ -91,44 +90,83 @@ namespace Nhaxuong.API.CONTROLLER
         /// Xem / nhúng mô hình 3D tương tác
         /// </summary>
         [HttpGet("3d/{fileName}")]
-        [HttpGet("/uploads/3d/{fileName}")]
-        public IActionResult GetModel3D(string fileName)
+        public async Task<IActionResult> GetModel3D(string fileName)
         {
             try
             {
                 var baseDir = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                var filePath = Path.GetFullPath(Path.Combine(baseDir, "uploads", "3d", fileName));
-
-                if (!System.IO.File.Exists(filePath))
+                var uploadsDir = Path.Combine(baseDir, "uploads", "3d");
+                if (!Directory.Exists(uploadsDir))
                 {
-                    var altPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "3d", fileName));
-                    if (System.IO.File.Exists(altPath))
+                    Directory.CreateDirectory(uploadsDir);
+                }
+                var filePath = Path.GetFullPath(Path.Combine(uploadsDir, fileName));
+
+                // 1. Kiểm tra file tại đường dẫn chính thức wwwroot/uploads/3d
+                if (System.IO.File.Exists(filePath))
+                {
+                    var ext = Path.GetExtension(fileName).ToLowerInvariant();
+                    if (ext == ".html" || ext == ".htm")
                     {
-                        filePath = altPath;
+                        var html = await System.IO.File.ReadAllTextAsync(filePath);
+                        return Content(html, "text/html; charset=utf-8");
                     }
-                    else
-                    {
-                        var appDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads", "3d", fileName));
-                        if (System.IO.File.Exists(appDir))
-                        {
-                            filePath = appDir;
-                        }
-                        else
-                        {
-                            return NotFound(new { message = "Không tìm thấy file 3D: " + fileName });
-                        }
-                    }
+                    return PhysicalFile(filePath, ext == ".glb" ? "model/gltf-binary" : "application/octet-stream");
                 }
 
-                var ext = Path.GetExtension(fileName).ToLowerInvariant();
-                var contentType = ext switch
+                // 2. Kiểm tra các đường dẫn phụ (relative to current directory hoặc app base)
+                var altPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "3d", fileName));
+                if (System.IO.File.Exists(altPath))
                 {
-                    ".html" or ".htm" => "text/html; charset=utf-8",
-                    ".glb" => "model/gltf-binary",
-                    _ => "application/octet-stream"
-                };
+                    var ext = Path.GetExtension(fileName).ToLowerInvariant();
+                    if (ext == ".html" || ext == ".htm")
+                    {
+                        var html = await System.IO.File.ReadAllTextAsync(altPath);
+                        return Content(html, "text/html; charset=utf-8");
+                    }
+                    return PhysicalFile(altPath, ext == ".glb" ? "model/gltf-binary" : "application/octet-stream");
+                }
 
-                return PhysicalFile(filePath, contentType);
+                var appDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads", "3d", fileName));
+                if (System.IO.File.Exists(appDir))
+                {
+                    var ext = Path.GetExtension(fileName).ToLowerInvariant();
+                    if (ext == ".html" || ext == ".htm")
+                    {
+                        var html = await System.IO.File.ReadAllTextAsync(appDir);
+                        return Content(html, "text/html; charset=utf-8");
+                    }
+                    return PhysicalFile(appDir, ext == ".glb" ? "model/gltf-binary" : "application/octet-stream");
+                }
+
+                // 3. Nếu file không tồn tại trên ổ đĩa (do Render container khởi động lại hoặc deploy mới),
+                // tự động phân tích kích thước từ tên file (vd: nha_xuong_15x60_...) và sinh lại mã Three.js 3D ngay lập tức!
+                var fileExt = Path.GetExtension(fileName).ToLowerInvariant();
+                if (fileExt == ".html" || fileExt == ".htm")
+                {
+                    double w = 24;
+                    double l = 84;
+                    var dimMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"(\d{1,3})x(\d{1,3})");
+                    if (dimMatch.Success)
+                    {
+                        if (double.TryParse(dimMatch.Groups[1].Value, out var pw)) w = pw;
+                        if (double.TryParse(dimMatch.Groups[2].Value, out var pl)) l = pl;
+                    }
+
+                    var fallbackHtml = Nhaxuong.SERVICE.Services.Ai3DService.GenerateFallbackThreeJsHtml(w, l);
+                    try
+                    {
+                        await System.IO.File.WriteAllTextAsync(filePath, fallbackHtml, System.Text.Encoding.UTF8);
+                    }
+                    catch
+                    {
+                        // Bỏ qua lỗi ghi disk nếu container read-only
+                    }
+
+                    return Content(fallbackHtml, "text/html; charset=utf-8");
+                }
+
+                return NotFound(new { message = "Không tìm thấy file 3D: " + fileName });
             }
             catch (Exception ex)
             {

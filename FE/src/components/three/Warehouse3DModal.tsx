@@ -15,10 +15,20 @@ interface Warehouse3DModalProps {
 export function Warehouse3DModal({ isOpen, onClose, property }: Warehouse3DModalProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isIframeLoading, setIsIframeLoading] = useState(true)
   const [isAutoRotate, setIsAutoRotate] = useState(true)
   const [isRoofOpen, setIsRoofOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [viewMode, setViewMode] = useState<'html' | 'three'>('three')
+
+  const resolve3DUrl = (rawUrl?: string | null): string => {
+    if (!rawUrl) return ''
+    const trimmed = rawUrl.trim()
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
+    const baseUrl = ENV.API_BASE_URL.replace(/\/api\/?$/, '')
+    const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+    return `${baseUrl}${path}`
+  }
 
   // Three.js instances ref
   const threeRefs = useRef<{
@@ -33,6 +43,7 @@ export function Warehouse3DModal({ isOpen, onClose, property }: Warehouse3DModal
   useEffect(() => {
     if (property?.model3dUrl || property?.model3DUrl) {
       setViewMode('html')
+      setIsIframeLoading(true)
     } else {
       setViewMode('three')
     }
@@ -232,30 +243,35 @@ export function Warehouse3DModal({ isOpen, onClose, property }: Warehouse3DModal
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* View Mode Toggle when HTML 3D is available */}
             {(property?.model3dUrl || property?.model3DUrl) && (
-              <div className="hidden sm:flex items-center gap-1 bg-slate-800/90 p-0.5 rounded-xl text-xs border border-slate-700">
+              <div className="flex items-center gap-0.5 sm:gap-1 bg-slate-800/90 p-0.5 rounded-xl text-xs border border-slate-700">
                 <button
                   type="button"
-                  onClick={() => setViewMode('html')}
+                  onClick={() => {
+                    setViewMode('html')
+                    setIsIframeLoading(true)
+                  }}
                   className={cn(
-                    'px-2.5 py-1 rounded-lg font-semibold transition flex items-center gap-1',
+                    'px-2 py-1 rounded-lg font-semibold transition flex items-center gap-1 text-[10px] sm:text-xs cursor-pointer',
                     viewMode === 'html' ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                   )}
+                  title="Mô hình 3D thực tế theo file HTML"
                 >
-                  <Globe className="w-3 h-3" />
+                  <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   <span>3D HTML</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode('three')}
                   className={cn(
-                    'px-2.5 py-1 rounded-lg font-semibold transition flex items-center gap-1',
+                    'px-2 py-1 rounded-lg font-semibold transition flex items-center gap-1 text-[10px] sm:text-xs cursor-pointer',
                     viewMode === 'three' ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                   )}
+                  title="Xem mô hình 3D cơ bản Three.js"
                 >
-                  <Box className="w-3 h-3" />
+                  <Box className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   <span>Three.js</span>
                 </button>
               </div>
@@ -272,19 +288,28 @@ export function Warehouse3DModal({ isOpen, onClose, property }: Warehouse3DModal
         </div>
 
         {/* 3D Content Area */}
-        <div className="relative flex-1 w-full bg-slate-100 dark:bg-slate-900 overflow-hidden">
+        <div className="relative flex-1 w-full bg-slate-950 overflow-hidden">
           {viewMode === 'html' && (property?.model3dUrl || property?.model3DUrl) ? (
-            <div className="w-full h-full bg-white">
+            <div className="relative w-full h-full bg-slate-950">
+              {isIframeLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/95 text-white z-10 p-4">
+                  <Box className="w-9 h-9 text-teal-400 animate-bounce mb-3" />
+                  <p className="text-xs sm:text-sm font-semibold text-slate-200">Đang nạp mô hình 3D thực tế...</p>
+                  <p className="text-[11px] text-slate-400 mt-1">Đang kết nối và tải kết cấu nhà xưởng</p>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('three')}
+                    className="mt-4 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-semibold border border-slate-700 transition cursor-pointer"
+                  >
+                    Chuyển sang Engine Three.js mặc định
+                  </button>
+                </div>
+              )}
               <iframe
-                src={
-                  (property.model3dUrl || property.model3DUrl)!.startsWith('http')
-                    ? (property.model3dUrl || property.model3DUrl)!
-                    : (property.model3dUrl || property.model3DUrl)!.startsWith('/uploads/')
-                    ? `${ENV.API_BASE_URL.replace(/\/api\/?$/, '')}${property.model3dUrl || property.model3DUrl}`
-                    : (property.model3dUrl || property.model3DUrl)!
-                }
+                src={resolve3DUrl(property.model3dUrl || property.model3DUrl)}
                 title={property.title || 'Mô hình 3D HTML'}
-                className="w-full h-full border-0 bg-white"
+                className="w-full h-full border-0 bg-slate-950"
+                onLoad={() => setIsIframeLoading(false)}
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
               />
             </div>

@@ -237,7 +237,16 @@ namespace Nhaxuong.SERVICE.Services
             return "";
         }
 
-        private static string GenerateBrightThreeJsHtml(
+        public static string GenerateFallbackThreeJsHtml(double width, double length)
+        {
+            var h = 9.0;
+            var baySpacing = 6.0;
+            var bayCount = (int)Math.Max(2, Math.Round(length / baySpacing));
+            baySpacing = Math.Round(length / bayCount, 2);
+            return GenerateBrightThreeJsHtml(width, length, h, baySpacing, bayCount, "Kèo Zamil Vát Tiết Diện", false, "", $"Nhà Xưởng {width}m x {length}m", "Mô hình 3D kết cấu nhà xưởng thép chuẩn.");
+        }
+
+        public static string GenerateBrightThreeJsHtml(
             double width,
             double length,
             double height,
