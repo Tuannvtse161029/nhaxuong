@@ -5,8 +5,6 @@ import {
   Box,
   Sun,
   Moon,
-  Plus,
-  ShieldCheck,
   User as UserIcon,
   PhoneCall,
   LogIn,
@@ -25,14 +23,11 @@ export function Header() {
     savedPropertyIds,
     openSavedModal,
     openSubscribeModal,
-    openAdminEditModal,
     filterState,
     setFilterState,
   } = useProperties()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
-
-  const isAdmin = user?.role === 'admin'
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs dark:bg-slate-900/95 dark:border-slate-800">
@@ -189,28 +184,6 @@ export function Header() {
                 </span>
               )}
             </button>
-
-            {/* Only shown for authenticated Admin users */}
-            {isAdmin && (
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => openAdminEditModal()}
-                  className="flex items-center gap-1 rounded-xl bg-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-teal-700 transition cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Đăng Tin Mới</span>
-                </button>
-
-                <Link
-                  to="/admin"
-                  className="flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-amber-400 border border-amber-500/30 shadow-sm hover:bg-slate-800 transition shrink-0"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Quản Trị</span>
-                </Link>
-              </div>
-            )}
 
             {/* User Account / Login Button */}
             {!user ? (

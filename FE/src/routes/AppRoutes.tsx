@@ -2,17 +2,20 @@ import { Routes, Route } from 'react-router-dom'
 import { MainLayout } from '@/layouts/MainLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { AdminPage } from '@/pages/admin/AdminPage'
 import { NotFoundPage } from '@/pages/errors/NotFoundPage'
 
 export function AppRoutes() {
   return (
     <Routes>
-      {/* Main KCN Land Portal (User & Admin mode switchable in-app) */}
+      {/* Main Public Marketplace Portal */}
       <Route path="/" element={<MainLayout />} />
       <Route path="/dashboard" element={<MainLayout />} />
-      <Route path="/admin" element={<MainLayout />} />
 
-      {/* Auth Routes */}
+      {/* Dedicated Standalone Admin Portal Access (/admin) */}
+      <Route path="/admin" element={<AdminPage />} />
+
+      {/* User Auth Routes */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />

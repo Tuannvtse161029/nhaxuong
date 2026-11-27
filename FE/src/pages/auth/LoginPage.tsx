@@ -1050,16 +1050,13 @@ export function LoginPage() {
 
               <button
                 type="submit"
+                formNoValidate
                 disabled={isSubmitting}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-slate-800 dark:bg-teal-700 dark:hover:bg-teal-600 transition disabled:opacity-50 mt-2"
               >
                 <span>Đăng Nhập Với Mã PIN</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-
-              <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 p-2.5 text-[11px] text-amber-900 dark:text-amber-300">
-                <span className="font-bold">Tài khoản Admin mẫu:</span> admin@nhaxuong.vn | Mã PIN: 123456
-              </div>
             </form>
           )}
         </>

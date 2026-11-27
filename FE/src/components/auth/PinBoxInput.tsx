@@ -135,6 +135,9 @@ export function PinBoxInput({
               type={showMask ? 'password' : 'text'}
               inputMode="numeric"
               autoComplete={isOtp ? 'one-time-code' : 'off'}
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               maxLength={1}
               value={char}
               disabled={disabled}

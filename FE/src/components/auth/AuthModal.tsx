@@ -168,27 +168,6 @@ export function AuthModal() {
     }
   }
 
-  // Quick 1-Click Admin Login
-  const handleQuickAdminLogin = async () => {
-    setLoginIdentifier('admin')
-    setLoginPassword('baopro2147!')
-    setUseSmsOtpLogin(false)
-    setError(null)
-    setIsLoading(true)
-    try {
-      await login({
-        email: 'admin@nhaxuong.vn',
-        password: 'baopro2147!',
-        pin: 'baopro2147!',
-      })
-      closeAuthModal()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đăng nhập Admin thất bại')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   // Send SMS OTP for Login
   const handleSendLoginOtp = async () => {
     const cleaned = loginIdentifier.replace(/\D/g, '')
@@ -532,7 +511,7 @@ export function AuthModal() {
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {isLogin
-                    ? 'Nhập tài khoản admin, email hoặc số điện thoại để tiếp tục.'
+                    ? 'Nhập email hoặc số điện thoại của bạn để đăng nhập.'
                     : 'Điền thông tin và tạo mã PIN 6 số để đăng ký tài khoản.'}
                 </p>
               </div>
@@ -760,7 +739,7 @@ export function AuthModal() {
                       <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="admin, email hoặc số điện thoại..."
+                        placeholder="Nhập email hoặc số điện thoại của bạn..."
                         value={loginIdentifier}
                         onChange={(e) => setLoginIdentifier(e.target.value)}
                         className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
@@ -793,7 +772,7 @@ export function AuthModal() {
                         <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                         <input
                           type={showLoginPassword ? 'text' : 'password'}
-                          placeholder="Nhập mật khẩu (VD: baopro2147!) hoặc mã PIN..."
+                          placeholder="Nhập mã PIN 6 số hoặc mật khẩu..."
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
                           className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-10 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white font-mono"
@@ -852,32 +831,13 @@ export function AuthModal() {
                   {/* Submit Button */}
                   <button
                     type="submit"
+                    formNoValidate
                     disabled={isLoading}
                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md active:scale-95 transition cursor-pointer disabled:opacity-50"
                   >
                     <span>ĐĂNG NHẬP</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
-
-                  {/* 1-Click Quick Admin Login Card */}
-                  <div
-                    onClick={handleQuickAdminLogin}
-                    className="cursor-pointer rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 p-3 hover:border-amber-400 dark:hover:border-amber-700 transition shadow-xs"
-                    title="Bấm để đăng nhập ngay tài khoản Quản Trị Viên"
-                  >
-                    <div className="flex items-center justify-between font-bold text-xs text-amber-900 dark:text-amber-300">
-                      <div className="flex items-center gap-1.5">
-                        <KeyRound className="w-4 h-4 text-amber-600" />
-                        <span>🔑 Đăng nhập nhanh Admin</span>
-                      </div>
-                      <span className="text-[10px] bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 border border-amber-300 px-2 py-0.5 rounded-lg shadow-2xs">
-                        Bấm 1 Chạm
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-                      Tài khoản: <code className="font-mono font-bold text-amber-900 dark:text-amber-300">admin</code> • Mật khẩu: <code className="font-mono font-bold text-amber-900 dark:text-amber-300">baopro2147!</code>
-                    </div>
-                  </div>
                 </form>
               ) : (
                 /* 3B. REGISTRATION STEP 1 (Phone or Email) */
@@ -968,6 +928,7 @@ export function AuthModal() {
 
                       <button
                         type="submit"
+                        formNoValidate
                         disabled={isLoading}
                         className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md active:scale-95 transition disabled:opacity-50 mt-2 cursor-pointer"
                       >
@@ -1028,6 +989,7 @@ export function AuthModal() {
 
                       <button
                         type="submit"
+                        formNoValidate
                         disabled={isLoading}
                         className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md active:scale-95 transition disabled:opacity-50 mt-2 cursor-pointer"
                       >
