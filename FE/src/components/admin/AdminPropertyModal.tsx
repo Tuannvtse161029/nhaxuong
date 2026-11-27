@@ -11,6 +11,7 @@ import {
   Plus,
   Trash2,
   Image as ImageIcon,
+  Loader2,
 } from 'lucide-react'
 import type { Property, PropertyType, Category } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
@@ -19,6 +20,7 @@ import { Input } from '@/components/common/Input'
 import { PROVINCES_LIST, DISTRICTS_LIST } from '@/data/mockData'
 import { formatCurrency } from '@/utils/formatters'
 import { propertyApi } from '@/api/propertyApi'
+import { ENV } from '@/config/env.config'
 import { cn } from '@/utils/cn'
 
 interface AdminPropertyModalProps {
@@ -68,6 +70,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   const [desc, setDesc] = useState('')
   const [triggerEmail, setTriggerEmail] = useState(true)
   const [isUploading3D, setIsUploading3D] = useState(false)
+  const [isUploadingImages, setIsUploadingImages] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState('')
 
   // Inline Quick Add Category
   const [showAddCatInput, setShowAddCatInput] = useState(false)
@@ -194,6 +198,52 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
 
   const handleRemoveImage = (index: number) => {
     setImagesList((prev) => prev.filter((_, idx) => idx !== index))
+  }
+
+  // Tải nhiều ảnh trực tiếp từ máy / điện thoại
+  const handleMultipleImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setIsUploadingImages(true)
+    const filesArr = Array.from(files)
+    setUploadProgress(`Đang tải 0/${filesArr.length} ảnh...`)
+
+    const newUploadedUrls: string[] = []
+
+    for (let i = 0; i < filesArr.length; i++) {
+      const file = filesArr[i]
+      setUploadProgress(`Đang tải ${i + 1}/${filesArr.length} ảnh (${file.name})...`)
+
+      try {
+        const res = await propertyApi.uploadImage(file)
+        const fullUrl = res.url.startsWith('http')
+          ? res.url
+          : `${(ENV.API_BASE_URL || '').replace(/\/api\/?$/, '')}${res.url}`
+        newUploadedUrls.push(fullUrl)
+      } catch (err) {
+        console.warn('Backend upload failed, converting to local preview URL:', err)
+        try {
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = reject
+            reader.readAsDataURL(file)
+          })
+          newUploadedUrls.push(dataUrl)
+        } catch (readErr) {
+          console.error('Failed to read file as dataUrl:', readErr)
+        }
+      }
+    }
+
+    if (newUploadedUrls.length > 0) {
+      setImagesList((prev) => Array.from(new Set([...prev, ...newUploadedUrls])))
+    }
+
+    setIsUploadingImages(false)
+    setUploadProgress('')
+    e.target.value = ''
   }
 
   const handleModel3DUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -747,28 +797,66 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
                 </span>
               </div>
 
-              {/* Input thêm ảnh (hỗ trợ nhiều link cách nhau bằng dấu phẩy hoặc xuống dòng) */}
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  value={rawImageInput}
-                  onChange={(e) => setRawImageInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleAddImagesFromInput()
-                    }
-                  }}
-                  placeholder="Dán link ảnh tại đây (hoặc dán nhiều link cách nhau bằng dấu phẩy)..."
-                  className="flex-1 rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddImagesFromInput}
-                  className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition shrink-0 cursor-pointer shadow-xs"
+              {/* DIRECT MULTI-FILE UPLOAD BUTTON (TẢI NHIỀU ẢNH TRỰC TIẾP TỪ MÁY HOẶC ĐIỆN THOẠI) */}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="admin-multi-image-upload"
+                  className={cn(
+                    'flex items-center justify-center gap-2.5 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold text-white transition shadow-md cursor-pointer border',
+                    isUploadingImages
+                      ? 'bg-slate-500 cursor-not-allowed border-transparent'
+                      : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 active:scale-95 border-teal-400/50'
+                  )}
                 >
-                  + Thêm Ảnh
-                </button>
+                  {isUploadingImages ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Upload className="w-5 h-5" />
+                  )}
+                  <span>
+                    {isUploadingImages
+                      ? uploadProgress || 'Đang tải nhiều ảnh lên...'
+                      : '📁 Tải Lên Nhiều Ảnh Trực Tiếp Từ Máy / Điện Thoại (Chọn 1 hoặc nhiều ảnh)'}
+                  </span>
+                  <input
+                    type="file"
+                    id="admin-multi-image-upload"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isUploadingImages}
+                    onChange={handleMultipleImagesUpload}
+                  />
+                </label>
+
+                {/* Hoặc dán link ảnh bổ sung */}
+                <div className="pt-2 border-t border-slate-200/80 dark:border-slate-700/80">
+                  <span className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                    Hoặc dán thêm link ảnh bên ngoài (cách nhau bởi dấu phẩy):
+                  </span>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      value={rawImageInput}
+                      onChange={(e) => setRawImageInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleAddImagesFromInput()
+                        }
+                      }}
+                      placeholder="Dán link ảnh (https://...) rồi nhấn Thêm Link..."
+                      className="flex-1 rounded-xl border border-slate-200 bg-white p-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImagesFromInput}
+                      className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs transition shrink-0 cursor-pointer shadow-xs"
+                    >
+                      + Thêm Link
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Dải ảnh Preview có nút xóa */}

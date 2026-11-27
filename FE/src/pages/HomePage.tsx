@@ -253,12 +253,19 @@ export function HomePage() {
             </div>
           </div>
 
+          {/* Mũi tên thu phóng bộ lọc viền cam nổi bật cho khách hàng dễ nhìn */}
           <button
             type="button"
             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-            className="sm:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-orange-500 bg-orange-50/90 text-orange-700 hover:bg-orange-100 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-500 font-extrabold text-xs shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
+            title={isAdvancedOpen ? 'Bấm để thu gọn bộ lọc' : 'Bấm để mở rộng bộ lọc'}
           >
-            {isAdvancedOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <span className="text-[11px] font-bold">{isAdvancedOpen ? 'Thu gọn' : 'Mở rộng'}</span>
+            {isAdvancedOpen ? (
+              <ChevronUp className="w-4 h-4 stroke-[3] text-orange-600 dark:text-orange-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 stroke-[3] text-orange-600 dark:text-orange-400" />
+            )}
           </button>
         </div>
 
