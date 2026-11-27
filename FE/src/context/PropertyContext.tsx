@@ -152,10 +152,24 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         .getProperties()
         .then((props) => {
           if (Array.isArray(props) && props.length > 0) {
-            // Merge backend items with all 24 initial items so no category data is lost
+            // Merge backend items with initial items, preserving rich multi-images & specs
+            const initialMap = new Map(INITIAL_PROPERTIES.map((p) => [p.id, p]))
+            const enrichedProps = props.map((p) => {
+              const init = initialMap.get(p.id)
+              if (init) {
+                return {
+                  ...init,
+                  ...p,
+                  images: (p.images && p.images.length > 0) ? p.images : init.images,
+                  gallery: (p.gallery && p.gallery.length > 0) ? p.gallery : init.gallery,
+                  unitPrice: p.unitPrice || init.unitPrice,
+                }
+              }
+              return p
+            })
             const apiIds = new Set(props.map((p) => p.id))
             const missingProps = INITIAL_PROPERTIES.filter((p) => !apiIds.has(p.id))
-            const merged = [...props, ...missingProps]
+            const merged = [...enrichedProps, ...missingProps]
             setProperties(merged)
             storage.setItem('nhaxuong_properties_v6', merged)
           } else {

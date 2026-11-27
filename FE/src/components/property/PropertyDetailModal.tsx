@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   X,
   Heart,
@@ -8,6 +8,8 @@ import {
   Maximize2,
   Box,
   Phone,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import type { Property } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
@@ -21,11 +23,50 @@ interface PropertyDetailModalProps {
 
 export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetailModalProps) {
   const { isSaved, toggleSaveProperty, open3DModal } = useProperties()
-  const [activeMediaTab, setActiveMediaTab] = useState<'video' | 'photo'>('video')
+  const [activeMediaTab, setActiveMediaTab] = useState<'video' | 'photo'>('photo')
+  const [currentPhotoIdx, setCurrentPhotoIdx] = useState(0)
+
+  // Normalize photos array from property.images, property.gallery, property.image
+  const photos: string[] = (() => {
+    if (!property) return []
+    const list: string[] = []
+    if (Array.isArray(property.images)) {
+      list.push(...property.images)
+    }
+    if (Array.isArray(property.gallery)) {
+      list.push(...property.gallery)
+    }
+    if (property.image) {
+      const split = property.image.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
+      list.push(...split)
+    }
+    const unique = Array.from(new Set(list.filter((url) => typeof url === 'string' && url.trim().length > 0)))
+    return unique.length > 0
+      ? unique
+      : ['https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80']
+  })()
+
+  useEffect(() => {
+    setCurrentPhotoIdx(0)
+    if (property) {
+      setActiveMediaTab(property.videoUrl ? 'video' : 'photo')
+    }
+  }, [property?.id, property?.videoUrl])
 
   if (!isOpen || !property) return null
 
   const saved = isSaved(property.id)
+  const safePhotoIdx = Math.min(Math.max(0, currentPhotoIdx), Math.max(0, photos.length - 1))
+
+  const handlePrevPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setCurrentPhotoIdx((prev) => (prev <= 0 ? photos.length - 1 : prev - 1))
+  }
+
+  const handleNextPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setCurrentPhotoIdx((prev) => (prev >= photos.length - 1 ? 0 : prev + 1))
+  }
 
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -112,41 +153,49 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
 
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Media Switcher: Video Flycam vs Photo */}
+          {/* Media Switcher: Video Flycam vs Photo Gallery */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
-                <button
-                  type="button"
-                  onClick={() => setActiveMediaTab('video')}
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition',
-                    activeMediaTab === 'video'
-                      ? 'bg-slate-900 text-white shadow-sm dark:bg-teal-600'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
-                  )}
-                >
-                  <Film className="w-3.5 h-3.5" />
-                  <span>Video Drone (1080p HD)</span>
-                </button>
+                {property.videoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveMediaTab('video')}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer',
+                      activeMediaTab === 'video'
+                        ? 'bg-slate-900 text-white shadow-sm dark:bg-teal-600'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                    )}
+                  >
+                    <Film className="w-3.5 h-3.5" />
+                    <span>Video Drone (1080p HD)</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setActiveMediaTab('photo')}
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition',
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer',
                     activeMediaTab === 'photo'
                       ? 'bg-slate-900 text-white shadow-sm dark:bg-teal-600'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                   )}
                 >
                   <Image className="w-3.5 h-3.5" />
-                  <span>Hình Ảnh Thực Tế</span>
+                  <span>Hình Ảnh Thực Tế ({photos.length})</span>
                 </button>
               </div>
+
+              {photos.length > 1 && activeMediaTab === 'photo' && (
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Vuốt hoặc bấm mũi tên để xem {photos.length} ảnh
+                </span>
+              )}
             </div>
 
             {/* Video / Image Display */}
-            <div className="relative aspect-video w-full rounded-2xl bg-black overflow-hidden shadow-inner">
+            <div className="relative aspect-video w-full rounded-2xl bg-black overflow-hidden shadow-inner group/viewer">
               {activeMediaTab === 'video' ? (
                 <video
                   src={
@@ -159,13 +208,77 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <img
-                  src={property.image}
-                  alt={property.title}
-                  className="h-full w-full object-cover"
-                />
+                <div className="relative h-full w-full select-none flex items-center justify-center bg-slate-950">
+                  <img
+                    src={photos[safePhotoIdx]}
+                    alt={`${property.title} - Ảnh ${safePhotoIdx + 1}`}
+                    className="h-full w-full object-cover transition-all duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
+                    }}
+                  />
+
+                  {/* Photo Counter Badge */}
+                  <div className="absolute top-3 right-3 rounded-full bg-slate-950/85 border border-slate-700/80 px-3 py-1 text-[11px] font-bold text-white backdrop-blur-md shadow-md z-10">
+                    Ảnh {safePhotoIdx + 1} / {photos.length}
+                  </div>
+
+                  {/* Prev Button */}
+                  {photos.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={handlePrevPhoto}
+                      className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-slate-950/75 hover:bg-slate-900 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl transition active:scale-90 z-20 cursor-pointer"
+                      title="Ảnh trước"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  )}
+
+                  {/* Next Button */}
+                  {photos.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={handleNextPhoto}
+                      className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-slate-950/75 hover:bg-slate-900 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl transition active:scale-90 z-20 cursor-pointer"
+                      title="Ảnh tiếp theo"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
+
+            {/* Thumbnail Navigation Strip (Khi bài viết có nhiều ảnh thực tế) */}
+            {activeMediaTab === 'photo' && photos.length > 1 && (
+              <div className="flex items-center gap-2 overflow-x-auto py-1 px-0.5 scrollbar-thin">
+                {photos.map((pUrl, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCurrentPhotoIdx(idx)}
+                    className={cn(
+                      'relative h-14 w-20 shrink-0 overflow-hidden rounded-xl border-2 transition active:scale-95 cursor-pointer',
+                      safePhotoIdx === idx
+                        ? 'border-teal-500 scale-105 shadow-md ring-2 ring-teal-400/50'
+                        : 'border-slate-200 dark:border-slate-700 opacity-60 hover:opacity-100'
+                    )}
+                  >
+                    <img
+                      src={pUrl}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Specs Grid */}
@@ -188,7 +301,7 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
                 {property.priceDisplay}
               </p>
               {property.unitPrice && (
-                <span className="text-[11px] text-slate-500 font-medium block">
+                <span className="text-[11.5px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/50 border border-teal-200/50 dark:border-teal-800/50 px-2 py-0.5 rounded-md inline-block mt-1">
                   {property.unitPrice}
                 </span>
               )}

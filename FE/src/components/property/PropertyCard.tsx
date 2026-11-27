@@ -100,22 +100,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
           <span>Flycam 1080p</span>
         </div>
 
-        {/* Top-Left Category Badge */}
-        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
-          <span className="flex items-center gap-1 rounded-lg bg-teal-700/95 border border-teal-500/40 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md backdrop-blur-md">
-            <span>{property.typeDisplay || 'Nhà Xưởng'}</span>
-          </span>
-
-          {property.model3dUrl && (
-            <span className="flex items-center gap-1 rounded-md bg-cyan-950/90 border border-cyan-400/40 px-2 py-0.5 text-[9px] font-black text-cyan-300 shadow-md">
-              <Box className="w-3 h-3 text-cyan-400" />
-              <span>3D 360°</span>
-            </span>
-          )}
-        </div>
-
-        {/* Top-Right: DUAL SQUARE STATUS BADGE (🟩 🟩 Còn hàng vs 🟥 🟥 Hết hàng) */}
-        <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
+        {/* Top-Left: DUAL SQUARE STATUS BADGE (🟩 🟩 Còn hàng vs 🟥 🟥 Hết hàng) & 3D Badge */}
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1.5 items-start">
           {isOutOfStock ? (
             /* 🟥 🟥 2 Ô VUÔNG ĐỎ: HẾT HÀNG / ĐÃ BÁN */
             <div
@@ -144,7 +130,16 @@ export function PropertyCard({ property }: PropertyCardProps) {
             </div>
           )}
 
-          {/* Wishlist Heart */}
+          {property.model3dUrl && (
+            <span className="flex items-center gap-1 rounded-md bg-cyan-950/90 border border-cyan-400/40 px-2 py-0.5 text-[9px] font-black text-cyan-300 shadow-md">
+              <Box className="w-3 h-3 text-cyan-400" />
+              <span>3D 360°</span>
+            </span>
+          )}
+        </div>
+
+        {/* Top-Right: Wishlist Heart Only (Tránh hoàn toàn việc đè lấn badge) */}
+        <div className="absolute top-2.5 right-2.5 z-10 flex items-center">
           <button
             type="button"
             onClick={(e) => {
@@ -193,6 +188,16 @@ export function PropertyCard({ property }: PropertyCardProps) {
       {/* 2. Card Content */}
       <div className="flex flex-1 flex-col justify-between p-3.5 sm:p-4 space-y-3">
         <div>
+          {/* Category Tag & Time Posted (Đưa danh mục xuống body card, không bị đè trên ảnh) */}
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <span className="inline-flex items-center gap-1 rounded-md bg-teal-50 dark:bg-teal-950/70 border border-teal-200/80 dark:border-teal-800/80 px-2 py-0.5 text-[10.5px] font-black text-teal-800 dark:text-teal-300 uppercase tracking-wide truncate max-w-[70%]">
+              {property.typeDisplay || 'Nhà Xưởng'}
+            </span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium shrink-0">
+              {property.created || 'Vừa đăng'}
+            </span>
+          </div>
+
           {/* Title */}
           <h3
             onClick={() => openDetailModal(property)}
@@ -203,13 +208,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </h3>
 
           {/* Price & Unit Price Row */}
-          <div className="mt-2 flex flex-wrap items-baseline gap-1.5">
+          <div className="mt-2 flex flex-wrap items-baseline gap-2">
             <span className="text-base sm:text-lg font-black text-red-600 dark:text-red-400">
               {property.priceDisplay}
             </span>
             {property.unitPrice && (
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                ({property.unitPrice})
+              <span className="text-[11.5px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/50 border border-teal-200/60 dark:border-teal-800/50 px-2 py-0.5 rounded-md">
+                {property.unitPrice}
               </span>
             )}
           </div>

@@ -39,6 +39,7 @@ export interface Property {
   brokerPhone?: string
   brokerName?: string
   image: string
+  images?: string[]
   gallery?: string[]
   videoUrl?: string
   audioUrl?: string

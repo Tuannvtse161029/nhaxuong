@@ -1,5 +1,17 @@
 import { useState, useEffect } from 'react'
-import { X, Mail, Layers, Warehouse, Box, Upload, MapPin, SlidersHorizontal, Plus } from 'lucide-react'
+import {
+  X,
+  Mail,
+  Layers,
+  Warehouse,
+  Box,
+  Upload,
+  MapPin,
+  SlidersHorizontal,
+  Plus,
+  Trash2,
+  Image as ImageIcon,
+} from 'lucide-react'
 import type { Property, PropertyType, Category } from '@/types/property.types'
 import { useProperties } from '@/context/PropertyContext'
 import { Button } from '@/components/common/Button'
@@ -34,6 +46,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   // Pricing & Area
   const [price, setPrice] = useState(0)
   const [unitPrice, setUnitPrice] = useState('')
+  const [unitPriceVal, setUnitPriceVal] = useState('')
+  const [unitPriceUnit, setUnitPriceUnit] = useState('đ/kg')
   const [area, setArea] = useState('')
 
   // 3D & Structural specifications
@@ -49,6 +63,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
   const [model3dUrl, setModel3dUrl] = useState('')
   const [drawing2DUrl, setDrawing2DUrl] = useState('')
   const [image, setImage] = useState('')
+  const [imagesList, setImagesList] = useState<string[]>([])
+  const [rawImageInput, setRawImageInput] = useState('')
   const [desc, setDesc] = useState('')
   const [triggerEmail, setTriggerEmail] = useState(true)
   const [isUploading3D, setIsUploading3D] = useState(false)
@@ -69,7 +85,28 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setDistrict(property.district || 'Dĩ An')
       setKcn(property.kcn || '')
       setPrice(property.price || 0)
-      setUnitPrice(property.unitPrice || '')
+      
+      const up = property.unitPrice || ''
+      setUnitPrice(up)
+      if (up.includes('đ/kg')) {
+        setUnitPriceUnit('đ/kg')
+        setUnitPriceVal(up.replace('đ/kg', '').trim())
+      } else if (up.includes('đ/m²') || up.includes('đ/m2')) {
+        setUnitPriceUnit('đ/m²')
+        setUnitPriceVal(up.replace(/đ\/m[²2]/, '').trim())
+      } else if (up.includes('Tr/m²') || up.includes('Tr/m2')) {
+        setUnitPriceUnit('Tr/m²')
+        setUnitPriceVal(up.replace(/Tr\/m[²2]/, '').trim())
+      } else if (up.includes('Tr/Tấn') || up.includes('Tr/tấn')) {
+        setUnitPriceUnit('Tr/Tấn')
+        setUnitPriceVal(up.replace(/Tr\/[Tt]ấn/, '').trim())
+      } else if (up.includes('đ/cây')) {
+        setUnitPriceUnit('đ/cây')
+        setUnitPriceVal(up.replace('đ/cây', '').trim())
+      } else {
+        setUnitPriceVal(up)
+      }
+
       setArea(property.area || '')
       setLength(property.length ?? '')
       setWidth(property.width ?? '')
@@ -81,6 +118,17 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setModel3dUrl(property.model3dUrl || '')
       setDrawing2DUrl(property.drawing2DUrl || '')
       setImage(property.image || '')
+
+      // Populate images list
+      const list: string[] = []
+      if (Array.isArray(property.images)) list.push(...property.images)
+      if (Array.isArray(property.gallery)) list.push(...property.gallery)
+      if (property.image) {
+        const parts = property.image.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
+        list.push(...parts)
+      }
+      setImagesList(Array.from(new Set(list)))
+      setRawImageInput('')
       setDesc(property.desc || '')
     } else {
       setTitle('')
@@ -95,6 +143,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setKcn('Kho Bãi ICD Tân Cảng, TP. Dĩ An')
       setPrice(0)
       setUnitPrice('')
+      setUnitPriceVal('')
+      setUnitPriceUnit('đ/kg')
       setArea('')
       setLength('')
       setWidth('')
@@ -106,11 +156,45 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setModel3dUrl('')
       setDrawing2DUrl('')
       setImage('')
+      setImagesList([])
+      setRawImageInput('')
       setDesc('')
     }
   }, [property, isOpen, categories])
 
   if (!isOpen) return null
+
+  const handleUnitSelect = (unit: string) => {
+    setUnitPriceUnit(unit)
+    if (unitPriceVal.trim()) {
+      setUnitPrice(`${unitPriceVal.trim()} ${unit}`)
+    }
+  }
+
+  const handleUnitPriceValChange = (val: string) => {
+    setUnitPriceVal(val)
+    if (val.trim()) {
+      setUnitPrice(`${val.trim()} ${unitPriceUnit}`)
+    } else {
+      setUnitPrice('')
+    }
+  }
+
+  const handleAddImagesFromInput = () => {
+    if (!rawImageInput.trim()) return
+    const splitted = rawImageInput
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 5)
+    if (splitted.length > 0) {
+      setImagesList((prev) => Array.from(new Set([...prev, ...splitted])))
+      setRawImageInput('')
+    }
+  }
+
+  const handleRemoveImage = (index: number) => {
+    setImagesList((prev) => prev.filter((_, idx) => idx !== index))
+  }
 
   const handleModel3DUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -155,8 +239,11 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
     const typeDisplay = catObj ? catObj.name : 'Nhà Xưởng & Sắt Thép'
     const priceDisplay = formatCurrency(price)
 
+    const validImages = imagesList.filter((s) => s.trim().length > 5)
     const defaultImage =
-      image.trim() || 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
+      validImages[0] ||
+      image.trim() ||
+      'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
 
     // Area auto-compute if length and width provided and area empty
     const computedArea =
@@ -189,6 +276,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       model3dUrl: model3dUrl.trim() || null,
       drawing2DUrl: drawing2DUrl.trim() || null,
       image: defaultImage,
+      images: validImages.length > 0 ? validImages : [defaultImage],
+      gallery: validImages.length > 0 ? validImages : [defaultImage],
       desc: desc.trim(),
     }
 
@@ -535,64 +624,192 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
             </div>
           </div>
 
-          {/* 6. PRICING & AREA */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Tổng giá trị (VNĐ) *
-              </label>
-              <input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                placeholder="VD: 1450000000"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 font-mono dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                required
-              />
+          {/* 6. PRICING & AREA & UNIT PRICE SELECTOR */}
+          <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-800/40 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">
+                Định Giá & Đơn Vị Tính (kg / m²)
+              </h4>
+              {unitPrice && (
+                <span className="text-teal-600 dark:text-teal-400 font-mono text-[11px] font-bold bg-teal-50 dark:bg-teal-950/60 border border-teal-300 dark:border-teal-700 px-2 py-0.5 rounded-lg">
+                  Hiển thị: {unitPrice}
+                </span>
+              )}
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Đơn giá hiển thị (text)
-              </label>
-              <input
-                type="text"
-                value={unitPrice}
-                onChange={(e) => setUnitPrice(e.target.value)}
-                placeholder="VD: 719.000 đ/m² hoặc 14.500 đ/kg"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Tổng giá trị niêm yết (VNĐ) *
+                </label>
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  placeholder="VD: 1450000000"
+                  className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 font-mono font-bold dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Quy cách / Diện tích / Khối lượng *
+                </label>
+                <input
+                  type="text"
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  placeholder="VD: 2.016 m² hoặc 95 Tấn hoặc 45 Cây"
+                  className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Đơn vị tính đơn giá (chọn nhanh)
+                </label>
+                <div className="flex flex-wrap gap-1">
+                  {(['đ/kg', 'đ/m²', 'Tr/m²', 'Tr/Tấn', 'đ/cây'] as const).map((u) => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => handleUnitSelect(u)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-lg text-xs font-bold transition border cursor-pointer',
+                        unitPriceUnit === u
+                          ? 'bg-teal-600 text-white border-teal-500 shadow-sm'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                      )}
+                    >
+                      {u}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Diện tích / Khối lượng *
-              </label>
-              <input
-                type="text"
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                placeholder="VD: 2.016 m² hoặc 95 Tấn"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-              />
+            {/* Input Đơn giá số & Đơn vị ghép */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Nhập số đơn giá (VD: 15.000 hoặc 719.000)
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={unitPriceVal}
+                    onChange={(e) => handleUnitPriceValChange(e.target.value)}
+                    placeholder="VD: 15.000"
+                    className="flex-1 rounded-xl border border-slate-200 bg-white p-2 text-xs font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  />
+                  <span className="px-3 py-2 rounded-xl bg-teal-100 dark:bg-teal-950/60 font-bold text-xs text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700">
+                    {unitPriceUnit}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Chuỗi đơn giá hiển thị trên web
+                </label>
+                <input
+                  type="text"
+                  value={unitPrice}
+                  onChange={(e) => setUnitPrice(e.target.value)}
+                  placeholder="VD: 15.000 đ/kg hoặc 719.000 đ/m²"
+                  className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-medium text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                />
+              </div>
             </div>
           </div>
 
-          {/* 7. Broker Phone & Thumbnail Image */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input
-              label="Số điện thoại liên hệ *"
-              value={brokerPhone}
-              onChange={(e) => setBrokerPhone(e.target.value)}
-              placeholder="VD: 0965 985 468"
-            />
+          {/* 7. CONTACT & MULTI-IMAGE GALLERY (Quản lý nhiều hình ảnh thực tế) */}
+          <div className="space-y-3">
+            <div>
+              <Input
+                label="Số điện thoại liên hệ *"
+                value={brokerPhone}
+                onChange={(e) => setBrokerPhone(e.target.value)}
+                placeholder="VD: 0965 985 468"
+              />
+            </div>
 
-            <Input
-              label="URL Hình ảnh Thumbnail"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="https://images.unsplash.com/..."
-            />
+            {/* Quản lý danh sách hình ảnh thực tế */}
+            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-800/40 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wide">
+                  <ImageIcon className="w-4 h-4 text-teal-600" />
+                  <span>Bộ Sưu Tập Hình Ảnh Thực Tế ({imagesList.length} ảnh)</span>
+                </label>
+                <span className="text-[11px] text-slate-400">
+                  * Ảnh đầu tiên làm ảnh đại diện
+                </span>
+              </div>
+
+              {/* Input thêm ảnh (hỗ trợ nhiều link cách nhau bằng dấu phẩy hoặc xuống dòng) */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  value={rawImageInput}
+                  onChange={(e) => setRawImageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleAddImagesFromInput()
+                    }
+                  }}
+                  placeholder="Dán link ảnh tại đây (hoặc dán nhiều link cách nhau bằng dấu phẩy)..."
+                  className="flex-1 rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddImagesFromInput}
+                  className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition shrink-0 cursor-pointer shadow-xs"
+                >
+                  + Thêm Ảnh
+                </button>
+              </div>
+
+              {/* Dải ảnh Preview có nút xóa */}
+              {imagesList.length > 0 ? (
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 pt-1">
+                  {imagesList.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className="group relative aspect-video rounded-xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-xs"
+                    >
+                      <img
+                        src={url}
+                        alt={`Ảnh ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80'
+                        }}
+                      />
+                      {idx === 0 && (
+                        <span className="absolute bottom-1 left-1 rounded bg-teal-600/90 px-1 py-0.5 text-[8.5px] font-bold text-white shadow-xs">
+                          Ảnh chính
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(idx)}
+                        className="absolute top-1 right-1 h-5 w-5 rounded-full bg-red-600/90 text-white flex items-center justify-center opacity-80 sm:opacity-0 group-hover:opacity-100 transition shadow cursor-pointer hover:bg-red-700"
+                        title="Xóa ảnh này"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[11.5px] text-slate-500 italic">
+                  Chưa có ảnh nào trong bộ sưu tập. Dán link ảnh và nhấn "+ Thêm Ảnh" để người mua xem chi tiết.
+                </p>
+              )}
+            </div>
           </div>
 
           {/* 8. Description */}
