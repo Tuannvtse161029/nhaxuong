@@ -65,7 +65,7 @@ export function AdminPortalPage() {
 
   // Calculate statistics
   const totalListedValue = properties.reduce((acc, cur) => acc + (cur.price || 0), 0)
-  const totalWith3D = properties.filter((p) => p.model3dUrl).length
+  const totalWith3D = properties.filter((p) => p.model3dUrl || p.model3DUrl).length
 
   // Filtered properties for Admin table
   const adminFilteredProps = properties.filter((p) => {
@@ -342,7 +342,7 @@ export function AdminPortalPage() {
 
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {p.model3dUrl && (
+                          {(p.model3dUrl || p.model3DUrl) && (
                             <button
                               onClick={() => open3DModal(p)}
                               className="p-1.5 rounded-lg text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-950/40"
@@ -614,6 +614,7 @@ export function AdminPortalPage() {
         onSelectModelUrl={(url, newTitle) => {
           openAdminEditModal({
             model3dUrl: url,
+            model3DUrl: url,
             title: newTitle || 'Mô hình nhà xưởng 3D tương tác',
             type: 'THIET_KE_3D',
             typeDisplay: 'Xem Thiết Kế 3D Nhà Xưởng',

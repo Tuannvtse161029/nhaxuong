@@ -31,7 +31,7 @@ export function Warehouse3DModal({ isOpen, onClose, property }: Warehouse3DModal
   }>({})
 
   useEffect(() => {
-    if (property?.model3dUrl) {
+    if (property?.model3dUrl || property?.model3DUrl) {
       setViewMode('html')
     } else {
       setViewMode('three')
@@ -234,7 +234,7 @@ export function Warehouse3DModal({ isOpen, onClose, property }: Warehouse3DModal
 
           <div className="flex items-center gap-2 shrink-0">
             {/* View Mode Toggle when HTML 3D is available */}
-            {property?.model3dUrl && (
+            {(property?.model3dUrl || property?.model3DUrl) && (
               <div className="hidden sm:flex items-center gap-1 bg-slate-800/90 p-0.5 rounded-xl text-xs border border-slate-700">
                 <button
                   type="button"
@@ -273,15 +273,15 @@ export function Warehouse3DModal({ isOpen, onClose, property }: Warehouse3DModal
 
         {/* 3D Content Area */}
         <div className="relative flex-1 w-full bg-slate-100 dark:bg-slate-900 overflow-hidden">
-          {viewMode === 'html' && property?.model3dUrl ? (
+          {viewMode === 'html' && (property?.model3dUrl || property?.model3DUrl) ? (
             <div className="w-full h-full bg-white">
               <iframe
                 src={
-                  property.model3dUrl.startsWith('http')
-                    ? property.model3dUrl
-                    : property.model3dUrl.startsWith('/uploads/')
-                    ? `${ENV.API_BASE_URL.replace(/\/api\/?$/, '')}${property.model3dUrl}`
-                    : property.model3dUrl
+                  (property.model3dUrl || property.model3DUrl)!.startsWith('http')
+                    ? (property.model3dUrl || property.model3DUrl)!
+                    : (property.model3dUrl || property.model3DUrl)!.startsWith('/uploads/')
+                    ? `${ENV.API_BASE_URL.replace(/\/api\/?$/, '')}${property.model3dUrl || property.model3DUrl}`
+                    : (property.model3dUrl || property.model3DUrl)!
                 }
                 title={property.title || 'Mô hình 3D HTML'}
                 className="w-full h-full border-0 bg-white"

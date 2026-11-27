@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Nhaxuong.SERVICE.DTOs.Response
 {
     public class PropertyDto
@@ -30,6 +32,7 @@ namespace Nhaxuong.SERVICE.DTOs.Response
         public List<string> Gallery { get; set; } = new();
         public string? VideoUrl { get; set; }
         public string? AudioUrl { get; set; }
+        [JsonPropertyName("model3dUrl")]
         public string? Model3DUrl { get; set; }
         public string? Drawing2DUrl { get; set; }
         public string Desc { get; set; } = string.Empty;

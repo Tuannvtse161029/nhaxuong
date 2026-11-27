@@ -45,6 +45,7 @@ export interface Property {
   audioUrl?: string
   audioDuration?: string
   model3dUrl?: string | null // Link file 3D HTML hoặc GLB
+  model3DUrl?: string | null // Casing alias
   drawing2DUrl?: string | null // Link file bản vẽ DXF / STEP / PDF
   desc: string
   created: string

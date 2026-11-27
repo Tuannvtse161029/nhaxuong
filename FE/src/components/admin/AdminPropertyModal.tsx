@@ -125,8 +125,8 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
       setCraneCapacity(property.craneCapacity || '10 Tấn')
       setBrokerPhone(property.brokerPhone || '0965 985 468')
       setVideoUrl(property.videoUrl || '')
-      setModel3dUrl(property.model3dUrl || '')
-      setDrawing2DUrl(property.drawing2DUrl || '')
+      setModel3dUrl(property.model3dUrl || property.model3DUrl || '')
+      setDrawing2DUrl(property.drawing2DUrl || (property as any).drawing2dUrl || '')
       setImage(property.image || '')
 
       // Populate images list
@@ -392,6 +392,7 @@ export function AdminPropertyModal({ isOpen, onClose, property }: AdminPropertyM
         brokerPhone: brokerPhone.trim() || '0965 985 468',
         videoUrl: videoUrl.trim(),
         model3dUrl: model3dUrl.trim() || null,
+        model3DUrl: model3dUrl.trim() || null,
         drawing2DUrl: drawing2DUrl.trim() || null,
         image: defaultImage,
         images: validImages.length > 0 ? validImages : [defaultImage],

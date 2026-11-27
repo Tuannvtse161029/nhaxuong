@@ -155,17 +155,27 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
             // Merge backend items with initial items, preserving rich multi-images & specs
             const initialMap = new Map(INITIAL_PROPERTIES.map((p) => [p.id, p]))
             const enrichedProps = props.map((p) => {
+              const model3d = p.model3dUrl || (p as any).model3DUrl || (p as any).Model3DUrl || null
+              const drawing2d = p.drawing2DUrl || (p as any).drawing2dUrl || null
               const init = initialMap.get(p.id)
               if (init) {
                 return {
                   ...init,
                   ...p,
+                  model3dUrl: model3d || init.model3dUrl || init.model3DUrl || null,
+                  model3DUrl: model3d || init.model3dUrl || init.model3DUrl || null,
+                  drawing2DUrl: drawing2d || init.drawing2DUrl || null,
                   images: (p.images && p.images.length > 0) ? p.images : init.images,
                   gallery: (p.gallery && p.gallery.length > 0) ? p.gallery : init.gallery,
                   unitPrice: p.unitPrice || init.unitPrice,
                 }
               }
-              return p
+              return {
+                ...p,
+                model3dUrl: model3d,
+                model3DUrl: model3d,
+                drawing2DUrl: drawing2d,
+              }
             })
             const apiIds = new Set(props.map((p) => p.id))
             const missingProps = INITIAL_PROPERTIES.filter((p) => !apiIds.has(p.id))
@@ -344,12 +354,27 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   // Properties CRUD
   const addProperty = async (property: Omit<Property, 'id' | 'created'>, triggerEmail = true): Promise<Property> => {
     let finalProp: Property
+    const model3d = property.model3dUrl || property.model3DUrl || null
+    const drawing2d = property.drawing2DUrl || null
+    const payload = {
+      ...property,
+      model3dUrl: model3d,
+      model3DUrl: model3d,
+      drawing2DUrl: drawing2d,
+      triggerEmail,
+    }
+
     if (!ENV.USE_MOCK_API) {
       try {
-        const res = await propertyApi.createProperty({ ...property, triggerEmail })
+        const res = await propertyApi.createProperty(payload as any)
+        const returnedModel3d = (res as any)?.model3dUrl || (res as any)?.model3DUrl || model3d || null
+        const returnedDrawing2d = (res as any)?.drawing2DUrl || (res as any)?.drawing2dUrl || drawing2d || null
         finalProp = {
           ...property,
           ...res,
+          model3dUrl: returnedModel3d,
+          model3DUrl: returnedModel3d,
+          drawing2DUrl: returnedDrawing2d,
           id: res.id || ('prop-' + Date.now()),
           created: res.created || 'Vừa xong',
           emailNotified: triggerEmail,
@@ -360,6 +385,9 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         console.warn('API sync warning:', err.message)
         finalProp = {
           ...property,
+          model3dUrl: model3d,
+          model3DUrl: model3d,
+          drawing2DUrl: drawing2d,
           id: 'prop-' + Date.now(),
           created: 'Vừa xong',
           emailNotified: triggerEmail,
@@ -368,6 +396,9 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     } else {
       finalProp = {
         ...property,
+        model3dUrl: model3d,
+        model3DUrl: model3d,
+        drawing2DUrl: drawing2d,
         id: 'prop-' + Date.now(),
         created: 'Vừa xong',
         emailNotified: triggerEmail,
@@ -389,9 +420,17 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   }
 
   const updateProperty = async (id: string | number, updated: Partial<Property>, triggerBroadcast = false): Promise<Property> => {
+    const model3d = updated.model3dUrl !== undefined ? updated.model3dUrl : updated.model3DUrl
+    const drawing2d = updated.drawing2DUrl
+    const normalizedUpdate: Partial<Property> = {
+      ...updated,
+      ...(model3d !== undefined ? { model3dUrl: model3d, model3DUrl: model3d } : {}),
+      ...(drawing2d !== undefined ? { drawing2DUrl: drawing2d } : {}),
+    }
+
     if (!ENV.USE_MOCK_API) {
       try {
-        await propertyApi.updateProperty(id, updated)
+        await propertyApi.updateProperty(id, normalizedUpdate as any)
       } catch (err: any) {
         console.warn('API sync warning:', err.message)
       }
@@ -401,7 +440,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     setProperties((prev) =>
       prev.map((p) => {
         if (String(p.id) === String(id)) {
-          updatedResult = { ...p, ...updated }
+          updatedResult = { ...p, ...normalizedUpdate }
           return updatedResult
         }
         return p

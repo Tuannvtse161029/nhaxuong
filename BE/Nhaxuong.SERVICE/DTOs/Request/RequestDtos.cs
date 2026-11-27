@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Nhaxuong.SERVICE.DTOs.Request
 {
     public class LoginRequest
@@ -85,6 +87,7 @@ namespace Nhaxuong.SERVICE.DTOs.Request
         public string? BrokerPhone { get; set; }
         public string? VideoUrl { get; set; }
         public string? AudioUrl { get; set; }
+        [JsonPropertyName("model3dUrl")]
         public string? Model3DUrl { get; set; } // File HTML 3D hoặc GLB
         public string? Drawing2DUrl { get; set; } // Bản vẽ 2D DXF / STEP / PDF
         public string? Image { get; set; }

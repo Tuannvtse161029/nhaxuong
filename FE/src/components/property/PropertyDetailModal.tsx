@@ -118,7 +118,7 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
               </span>
             )}
 
-            {property.model3dUrl && (
+            {(property.model3dUrl || property.model3DUrl) && (
               <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
                 3D HTML
               </span>
@@ -378,13 +378,13 @@ export function PropertyDetailModal({ isOpen, onClose, property }: PropertyDetai
               }}
               className={cn(
                 'flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer',
-                property.model3dUrl
+                (property.model3dUrl || property.model3DUrl)
                   ? 'bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700'
                   : 'bg-slate-800 dark:bg-slate-700 hover:bg-slate-900'
               )}
             >
               <Box className="w-4 h-4 text-amber-400" />
-              <span>{property.model3dUrl ? 'Xem mô hình 3D HTML' : 'Xem demo mô hình 3D'}</span>
+              <span>{(property.model3dUrl || property.model3DUrl) ? 'Xem mô hình 3D HTML' : 'Xem demo mô hình 3D'}</span>
             </button>
 
             {/* Hotline Call CTA */}

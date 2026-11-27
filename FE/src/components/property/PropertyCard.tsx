@@ -130,7 +130,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             </div>
           )}
 
-          {property.model3dUrl && (
+          {(property.model3dUrl || property.model3DUrl) && (
             <span className="flex items-center gap-1 rounded-md bg-cyan-950/90 border border-cyan-400/40 px-2 py-0.5 text-[9px] font-black text-cyan-300 shadow-md">
               <Box className="w-3 h-3 text-cyan-400" />
               <span>3D 360°</span>
@@ -169,7 +169,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </div>
 
           {/* 3D Interactive trigger button */}
-          {property.model3dUrl && (
+          {(property.model3dUrl || property.model3DUrl) && (
             <button
               type="button"
               onClick={(e) => {
